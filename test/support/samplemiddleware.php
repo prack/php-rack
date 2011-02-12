@@ -2,12 +2,16 @@
 
 class SampleMiddleware implements Prack_IMiddlewareApp
 {
-	function __construct() {
-		$args = func_get_args();
+	private $app;
+	private $message;
+	
+	function __construct( $app = null, $message = "Hello world!" ) {
+		$this->app     = $app;
+		$this->message = $message;
 	}
 	
-	public function call(&$env)
+	public function call( &$env )
 	{
-		return array(200, array(), array());
+		return array( 200, array( 'Content-Type' => 'text/html' ), $message );
 	}
 }

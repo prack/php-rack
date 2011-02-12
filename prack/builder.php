@@ -2,69 +2,210 @@
 
 class Prack_Builder
 {
-	private $context;
-	private $middleware;
+	private $location;         // string containing fully-qualified mount point:
+	                           //   If parent is mounted at '/admin' and this object is constructed with a location of
+	                           //   '/console', this property will be set to '/admin/console'.
+	private $parent;           // Prack_Builder instance which created this one
+	private $middleware_stack; // array of indexed 'specification' arrays containing: 
+	                           //   [0]=>string  (middleware class name)
+	                           //   [1]=>array() (args for the specified middleware's constructor)
+	private $endpoint;         // Prack_IMiddlewareApp OR indexed array of child builders
+	                           //   NOTE: If array, lazily converted to Prack_URLMap in toMiddlewareApp().
+	                           //   (Prack_URLMap is an instance of Prack_IMiddlewareApp, and is thus callable middleware)
+	private $fi_using_class;   // string containing previous value on call to using(): state for fluent interface.
 	
-	// Fluent interface state:
-	private $parent_builder;
-	private $mw_class;
 	
-	function __construct($parent_builder = null) 
+	function __construct( $location = null, $parent = null )
 	{
-		$this->parent_builder = $parent_builder;
-		$this->context        = null;
-		$this->middleware     = array();
+		if ( isset( $location ) && isset( $parent ) )
+		{
+			$components     = array_filter( array( $parent->getLocation(), $location ), 'strlen' );
+			$this->location = implode( '', $components );
+		}
+		else
+			$this->location = $location;
+		
+		$this->parent           = $parent;
+		$this->middleware_stack = array();
+		$this->endpoint         = array();
 	}
 	
-	public static function build()
+	
+	public static function domain()
 	{
 		return new Prack_Builder();
 	}
 	
-	public function using($mw_class)
+	
+	public static function chain( $from, $to )
 	{
-		$this->mw_class = $mw_class;
+		if ( is_null( $from ) ) // Workaround for array_reduce() $initial arg limitations in PHP5.2
+			return $to;           // First item passed in will likely be null. In that case, return $to.
+			
+		$class = $to[0];
+		$args  = $to[1];
+		array_unshift( $args, $to );
+		
+		$reflection     = new ReflectionClass( $class );
+		$middleware_app = $reflection->newInstanceArgs( $args );
+		
+		return $middleware_app;
+	}
+	
+	
+	public function using( $middleware_class )
+	{
+		$this->setFIUsingClass( $middleware_class );
 		return $this;
 	}
 	
-	public function withArgs() 
+	
+	public function withArgs()
 	{
-		if ( empty( $this->mw_class ) )
-			throw new Prack_Error_FluentInterfacePreconditionFailed();
+		$middleware_class = $this->getFIUsingClass();
 		
-		$class = $this->mw_class;
-		$args  = func_get_args();
+		if ( empty( $middleware_class ) )
+			throw new Prack_Error_Builder_FluentInterfacePreconditionNotMet( 'withArgs() called without prior using() call' );
 		
-		if( empty( $args ) )
-			$middleware = new $class;
-		else 
+		$args = func_get_args();
+		$this->specify( $middleware_class, $args );
+		
+		return $this;
+	}
+	
+	
+	public function run( $middleware_app )
+	{
+		if ( $this->isShallow() )
+			throw new Prack_Error_Builder_ShallowEndpointRedeclared();
+		else if ( $this->isDeep() )
+			throw new Prack_Error_Builder_BothMapAndRunDeclaredAtSameLevel();
+		
+		$this->setEndpoint( $middleware_app );
+		
+		return $this->parent;
+	}
+	
+	
+	public function map( $location )
+	{
+		if ( $this->isShallow() )
+			throw new Prack_Error_Builder_BothMapAndRunDeclaredAtSameLevel();
+		
+		$children = &$this->getEndpoint();
+		foreach ( $children as $child )
 		{
-			$reflection = new ReflectionClass($class);
-			$middleware = $reflection->newInstanceArgs($args);
+			if ( $location == $child->getLocation() )
+				throw new Prack_Error_Builder_DuplicateMapping();
 		}
 		
-		array_push($this->middleware, $middleware);
-		
+		$builder_for_location = new Prack_Builder( $location, $this );
+		array_push( $children, $builder_for_location );
+		return $builder_for_location;
+	}
+	
+	
+	public function wherein()
+	{
 		return $this;
 	}
 	
-	public function run() 
+	
+	public function toMiddlewareApp()
 	{
-		return $this->context;
+		$middleware_stack = $this->getMiddlewareStack();
+		
+		if ( $this->isShallow() )
+			$inner_app = $this->getEndpoint();
+		else if ( $this->isDeep() )
+			$inner_app = new Prack_URLMap( $this->getEndpoint() );
+		else
+			throw new Prack_Error_Builder_NoMiddlewareSpecified();
+		
+		array_push( $middleware_stack, $inner_app );
+		
+		return array_reduce( array_reverse( $middleware_stack ), array( 'Prack_Builder', 'chain' ) );
 	}
 	
-	public function getContext() 
+	public function toArray()
 	{
-		return $this->context;
+		$matches  = array();
+		$location = $this->getLocation();
+		
+		$host = '';
+		if ( preg_match_all( '/\Ahttps?:\/\/(.*?)(\/.*)/', $location, $matches ) > 0 ) {
+			$host     = $matches[1][0];
+			$location = $matches[2][0];
+		}
+		
+		if ( substr( $location, 0, 1 ) != '/' )
+			throw new Prack_Error_Builder_ResourceLocationInvalid();
+		
+		$location            = chop( $location, '/' );
+		$normalized_location = preg_replace( '/\//', '\/+', preg_quote( $location ) );
+		$pattern             = "/\A{$normalized_location}(.*)/";
+		
+		return array( $host, $location, $pattern, $this->toMiddlewareApp() );
 	}
 	
-	public function getMiddleware() 
+	
+	public function getLocation()
 	{
-		return $this->middleware;
+		return $this->location;
 	}
 	
-	public function getStateMiddlewareClass() 
+	
+	public function getParent()
+	{ 
+		return $this->parent;
+	}
+	
+	
+	public function getMiddlewareStack()
 	{
-		return $this->mw_class;
+		return $this->middleware_stack;
+	}
+	
+	
+	public function &getEndpoint()
+	{ 
+		return $this->endpoint;
+	}
+	
+	
+	public function getFIUsingClass()
+	{
+		return $this->fi_using_class;
+	}
+	
+	
+	public function isShallow()
+	{
+		return ( $this->endpoint instanceof Prack_IMiddlewareApp );
+	}
+	
+	
+	public function isDeep() 
+	{
+		return is_array( $this->endpoint ) && !empty( $this->endpoint );
+	}
+	
+	
+	private function specify( $middleware_class, $args )
+	{
+		$specification = array( $middleware_class, $args );
+		array_push( $this->middleware_stack, $specification );
+	}
+	
+	
+	private function setEndpoint( $endpoint )
+	{
+		$this->endpoint = $endpoint;
+	}
+	
+	
+	private function setFIUsingClass( $fi_using_class )
+	{
+		$this->fi_using_class = $fi_using_class;
 	}
 }
