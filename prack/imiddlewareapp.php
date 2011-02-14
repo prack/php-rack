@@ -2,5 +2,5 @@
 
 interface Prack_IMiddlewareApp
 {
-	public function call(&$env);
+	public function call( &$env );
 }
