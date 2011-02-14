@@ -39,12 +39,12 @@ class Prack_Builder
 	
 	public static function chain( $from, $to )
 	{
-		if ( is_null( $from ) ) // Workaround for array_reduce() $initial arg limitations in PHP5.2
-			return $to;           // First item passed in will likely be null. In that case, return $to.
-			
+		if ( empty( $from ) ) // Workaround for array_reduce() $initial arg limitations in PHP5.2
+			return $to;         // First item passed in will likely be null. In that case, return $to.
+		
 		$class = $to[0];
 		$args  = $to[1];
-		array_unshift( $args, $to );
+		array_unshift( $args, $from );
 		
 		$reflection     = new ReflectionClass( $class );
 		$middleware_app = $reflection->newInstanceArgs( $args );

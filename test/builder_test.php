@@ -275,5 +275,4 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( $host, $entry[0] );
 		$this->assertEquals( $location, $entry[1] );
 	} // Instance method toArray should extract host and location properly if provided in the location
-	
 }
