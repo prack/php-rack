@@ -12,6 +12,6 @@ class SampleMiddleware implements Prack_IMiddlewareApp
 	
 	public function call( &$env )
 	{
-		return array( 200, array( 'Content-Type' => 'text/html' ), $message );
+		return array( 200, array( 'Content-Type' => 'text/html' ), $this->message );
 	}
 }
