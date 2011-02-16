@@ -1,5 +1,7 @@
 <?php
 
+require_once join( DIRECTORY_SEPARATOR, array(dirname(__FILE__), 'support', 'samplemiddleware.php') );
+
 class Prack_URLMapTest extends PHPUnit_Framework_TestCase 
 {
 	private $domain;
