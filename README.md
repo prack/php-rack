@@ -31,7 +31,7 @@ PHPUnit 3.5.
 Getting started
 ---------------
 
-To date, Prack has two classes: Prack_Builder and PrackURLMap.
+To date, Prack has two classes: Prack_Builder and Prack_URLMap.
 
 Prack_Builder is the class for setting up middleware:
 
@@ -87,10 +87,10 @@ This example assumes the existence of several classes:
 All middleware must conform to the Prack_IMiddlewareApp interface, which is stupidly
 straight-forward:
 
-		interface Prack_IMiddlewareApp
-		{
-			public function call( &$env );
-		}
+	interface Prack_IMiddlewareApp
+	{
+		public function call( &$env );
+	}
 
 I put this restriction in place for 5.2-compatibility, but when 5.3 is implemented,
 I will revisit the decision on account of the viability of anonymous functions.
@@ -133,6 +133,12 @@ HTTP and HTTPS, as with Ruby's Rack, are the only protocols supported.
 
 All requests to '/admin', for example, will be routed through the mapped middleware.
 
+Done
+----
+
+* Builder
+* URLMap (used by Builder)
+* RewindableInput -- Rack requires a rewindable stream. This provides a wrapper ensuring any stream is bufferable.
 
 To Do
 -----
