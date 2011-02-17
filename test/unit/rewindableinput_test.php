@@ -1,21 +1,22 @@
 <?php
 
+// TODO: Document!
 class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase 
 {
 	private $callback_invocation_count;
 	
 	/**
-	 * New instance should be made rewindable whenever a read operation method is invoked
+	 * new instance should be made rewindable whenever a read operation method is invoked
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function New_instance_should_be_made_rewindable_whenever_a_read_operation_method_is_invoked()
+	public function new_instance_should_be_made_rewindable_whenever_a_read_operation_method_is_invoked()
 	{
 		$methods_to_test = array( 'gets', 'read', 'each', 'rewind' );
 		
 		foreach ( $methods_to_test as $method )
 		{
-			$stream = tmpfile();
+			$stream = fopen( 'php://memory', 'x+b');
 			
 			fwrite( $stream, TestHelper::gibberish() );
 			rewind( $stream );
@@ -29,22 +30,22 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 			
 			fclose( $stream );
 		}
-	} // New instance should be made rewindable whenever a read operation method is invoked
-	
+	} // new instance should be made rewindable whenever a read operation method is invoked
 	
 	/**
-	 * Instance method each should invoke the specified callback for each line in stream
+	 * instance method each should invoke the specified callback for each line in stream
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function Instance_method_each_should_invoke_the_specified_callback_for_each_line_in_stream()
+	public function instance_method_each_should_invoke_the_specified_callback_for_each_line_in_stream()
 	{
-		$stream = tmpfile();
+		$stream = fopen( 'php://memory', 'x+b');
 		
 		fwrite( $stream, "Line 1\n" );
 		fwrite( $stream, "Line 2\n" );
 		fwrite( $stream, "Line 3\n" );
 		fwrite( $stream, "Line 4\n" );
+		
 		rewind( $stream );
 		
 		$this->callback_invocation_count = 0;
@@ -54,8 +55,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		$rewindable_input->close();
 		
 		$this->assertTrue( $this->callback_invocation_count == 4 );
-	} // Instance method each should invoke the specified callback for each line in stream
-	
+	} // instance method each should invoke the specified callback for each line in stream
 	
 	/**
 	 * Callback used by above test for each instance method of Prack_RewindableInput
@@ -64,4 +64,24 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$this->callback_invocation_count += 1;
 	}
+	
+	/**
+	 * instance method getLength should return the correct size of bytes previously written to rewindable stream
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function instance_method_getLength_should_return_the_correct_size_of_bytes_previously_written_to_rewindable_stream()
+	{
+		$stream = fopen( 'php://memory', 'x+b');
+		
+		fwrite( $stream, TestHelper::gibberish() );
+		$length = ftell( $stream );
+		
+		rewind( $stream );
+		
+		$rewindable_input = new Prack_RewindableInput( $stream );
+		$this->assertEquals( $length, $rewindable_input->getLength() );
+		
+		$rewindable_input->close();
+	} // instance method getLength should return the correct size of bytes previously written to rewindable stream
 }

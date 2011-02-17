@@ -7,12 +7,14 @@ class Prack_RewindableInput
 	private $io;
 	private $rewindable_io;
 	private $unliked;
+	private $length;
 	
 	function __construct( $io )
 	{
 		$this->io            = $io;
 		$this->rewindable_io = null;
 		$this->unlinked      = false;
+		$this->size          = 0;
 	}
 	
 	public function gets()
@@ -49,6 +51,14 @@ class Prack_RewindableInput
 			$this->makeRewindable();
 		
 		rewind( $this->rewindable_io );
+	}
+	
+	public function getLength()
+	{
+		if ( !$this->rewindable_io )
+			$this->makeRewindable();
+		
+		return $this->length;
 	}
 	
 	# Closes this RewindableInput object without closing the originally
@@ -96,6 +106,7 @@ class Prack_RewindableInput
 				if ( !$entire_buffer_written_out )
 					$buffer = substr( $written - 1, strlen( $buffer ) - $written );
 			}
+			$this->length += strlen( $buffer );
 		}
 		rewind( $this->rewindable_io );
 	}

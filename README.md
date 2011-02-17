@@ -136,22 +136,26 @@ All requests to '/admin', for example, will be routed through the mapped middlew
 Done
 ----
 
-* Builder
-* URLMap (used by Builder)
-* RewindableInput -- Rack requires a rewindable stream. This provides a wrapper ensuring any stream is bufferable
-* Object-oriented error logging wrapper--defaults to stderror, but can be created with a stream
+By class:
+
+* Prack_Builder: Fluent interface for building middleware stacks in a domain
+* Prack_URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
+* Prack_RewindableInput: Wrapper implements rewindability for stdin and other streams
+* Prack_ErrorLog: Wrapper around arbitrary stream for reporting errors
+* Prack_MockRequest: Useful for testing, simulates a request to the server
 
 To Do
 -----
 
-A whole, whole lot, including but not limited to:
+By functionality:
 
+* Prack Attack (Rack Lobster analog)
+* Mock Response object
 * Multipart-form processing
 * Lint middleware, for ensuring request sanity
 * Actual implementation of HTTP auth (basic, digest, etc.) and other essential middleware
 * E-tag generation
 * Middleware to make apache's mod_php compatible with the Rack specfication
-* Stream and logger wrappers
 * HTTP request method override (for REST) middleware
 
 And a whole ton more, added as I have time.
