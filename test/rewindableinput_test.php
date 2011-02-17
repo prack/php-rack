@@ -4,10 +4,6 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 {
 	private $callback_invocation_count;
 	
-	function setUp()
-	{
-		$this->callback_invocation_count = 0;
-	}
 	
 	public static function gibberish( $length = 128 )
 	{
@@ -17,6 +13,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 			$out .= (string)$aZ09[ mt_rand( 0, count( $aZ09 ) - 1 ) ];
 		return $out;
 	}
+	
 	
 	/**
 	 * New instance should be made rewindable whenever a read operation method is invoked
@@ -34,16 +31,20 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 			fwrite( $stream, self::gibberish() );
 			rewind( $stream );
 			
-			$rewindable_input = $this->getMock( 'Prack_RewindableInput', array( 'makeRewindable' ), array( $stream ) );
+			$rewindable_input = new Prack_RewindableInput( $stream );
 			$rewindable_input->$method();
+			
 			$this->assertNotNull( $rewindable_input->getRewindableIO() );
+			
+			$rewindable_input->close();
 			
 			fclose( $stream );
 		}
 	} // New instance should be made rewindable whenever a read operation method is invoked
 	
+	
 	/**
-	 * Instance method each_should_invoke_the_specified_callback_for_each_line_in_stream
+	 * Instance method each should invoke the specified callback for each line in stream
 	 * @author Joshua Morris
 	 * @test
 	 */
@@ -57,12 +58,19 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		fwrite( $stream, "Line 4\n" );
 		rewind( $stream );
 		
-		$rewindable_io = new Prack_RewindableInput( $stream );
-		$rewindable_io->each( array( $this, 'eachCallback' ) );
+		$rewindable_input = new Prack_RewindableInput( $stream );
+		$rewindable_input->each( array( $this, 'eachCallback' ) );
+		$rewindable_input->close();
+		
+		$this->callback_invocation_count = 0;
 		
 		$this->assertTrue( $this->callback_invocation_count == 4 );
-	} // Instance method each_should_invoke_the_specified_callback_for_each_line_in_stream
+	} // Instance method each should invoke the specified callback for each line in stream
 	
+	
+	/**
+	 * Callback used by above test for each instance method of Prack_RewindableInput
+	 */
 	public function eachCallback( $item )
 	{
 		$this->callback_invocation_count += 1;

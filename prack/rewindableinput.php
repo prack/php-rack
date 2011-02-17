@@ -51,6 +51,18 @@ class Prack_RewindableInput
 		rewind( $this->rewindable_io );
 	}
 	
+	# Closes this RewindableInput object without closing the originally
+	# wrapped IO oject. Cleans up any temporary resources that this RewindableInput
+	# has created.
+	#
+	# This method may be called multiple times. It does nothing on subsequent calls.
+	public function close()
+	{
+		if ( isset( $this->rewindable_io ) )
+			@fclose( $this->rewindable_io );
+		$this->rewindable_io = null;
+	}
+	
 	public function getRewindableIO()
 	{
 		return $this->rewindable_io;
