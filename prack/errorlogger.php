@@ -1,5 +1,6 @@
 <?php
 
+
 class Prack_ErrorLogger
 {	
 	const ALL   = 0;

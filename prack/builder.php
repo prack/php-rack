@@ -7,8 +7,8 @@ class Prack_Builder
 	                           //   '/console', this property will be set to '/admin/console'.
 	private $parent;           // Prack_Builder instance which created this one
 	private $middleware_stack; // array of indexed 'specification' arrays containing: 
-	                           //   [0]=>string  (middleware class name)
-	                           //   [1]=>array() (args for the specified middleware's constructor)
+	                           //   [ 0 ]=>string  (middleware class name)
+	                           //   [ 1 ]=>array() (args for the specified middleware's constructor)
 	private $endpoint;         // Prack_IMiddlewareApp OR indexed array of child builders
 	                           //   NOTE: If array, lazily converted to Prack_URLMap in toMiddlewareApp().
 	                           //   (Prack_URLMap is an instance of Prack_IMiddlewareApp, and is thus callable middleware)
@@ -42,8 +42,8 @@ class Prack_Builder
 		if ( empty( $from ) ) // Workaround for array_reduce() $initial arg limitations in PHP5.2
 			return $to;         // First item passed in will likely be null. In that case, return $to.
 		
-		$class = $to[0];
-		$args  = $to[1];
+		$class = $to[ 0 ];
+		$args  = $to[ 1 ];
 		array_unshift( $args, $from );
 		
 		$reflection     = new ReflectionClass( $class );
@@ -134,8 +134,8 @@ class Prack_Builder
 		
 		$host = '';
 		if ( preg_match_all( '/\Ahttps?:\/\/(.*?)(\/.*)/', $location, $matches ) > 0 ) {
-			$host     = $matches[1][0];
-			$location = $matches[2][0];
+			$host     = $matches[ 1 ][0 ];
+			$location = $matches[ 2 ][0 ];
 		}
 		
 		if ( substr( $location, 0, 1 ) != '/' )

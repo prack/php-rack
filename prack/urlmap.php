@@ -18,7 +18,7 @@ class Prack_URLMap implements Prack_IMiddlewareApp
 		foreach ( $builders as $builder )
 			array_push( $this->entries, $builder->toArray() );
 		
-		$comparison_function = create_function('$a,$b', 'return strlen($b[0].$b[1]) - strlen($a[0].$a[1]);');
+		$comparison_function = create_function('$a,$b', 'return strlen($b[ 0 ].$b[ 1 ]) - strlen($a[ 0 ].$a[ 1 ]);');
 		usort( $this->entries, $comparison_function );
 		
 		return $this->entries;
@@ -28,15 +28,15 @@ class Prack_URLMap implements Prack_IMiddlewareApp
 	// This is where requests get routed.
 	public function call( &$env )
 	{
-		$env_server_name = $env['SERVER_NAME'];
-		$env_server_port = $env['SERVER_PORT'];
-		$env_path        = $env['PATH_INFO'];
-		$env_script_name = $env['SCRIPT_NAME'];
-		$env_http_host   = isset( $env['HTTP_HOST'] ) ? $env['HTTP_HOST'] : '';
+		$env_server_name = $env[ 'SERVER_NAME' ];
+		$env_server_port = $env[ 'SERVER_PORT' ];
+		$env_path        = $env[ 'PATH_INFO'   ];
+		$env_script_name = $env[ 'SCRIPT_NAME' ];
+		$env_http_host   = isset( $env[ 'HTTP_HOST' ] ) ? $env[ 'HTTP_HOST' ] : '';
 		
 		try
 		{
-			foreach( $this->entries as $entry )
+			foreach ( $this->entries as $entry )
 			{
 				list( $entry_host, $entry_location, $entry_matcher, $entry_middleware_app ) = $entry;
 				
@@ -53,11 +53,11 @@ class Prack_URLMap implements Prack_IMiddlewareApp
 				
 				// Each entry has a regex pattern to match against. Check if the request URI matches:
 				$matches = array();
-				if ( !( preg_match( $entry_matcher, (string)$env_path, $matches ) && isset( $matches[1] ) ) )
+				if ( !( preg_match( $entry_matcher, (string)$env_path, $matches ) && isset( $matches[ 1 ] ) ) )
 					continue;
 				
-				// If the request URI matches, the remainder (i.e. $match[1]) should start with a '/':
-				if ( !( empty( $matches[1] ) || substr( $matches[1], 0, 1 ) == '/' ) )
+				// If the request URI matches, the remainder (i.e. $match[ 1 ]) should start with a '/':
+				if ( !( empty( $matches[ 1 ] ) || substr( $matches[ 1 ], 0, 1 ) == '/' ) )
 					continue;
 				
 				// If we got here, we found a matching route. Given:
@@ -67,7 +67,7 @@ class Prack_URLMap implements Prack_IMiddlewareApp
 				//   SCRIPT_NAME => '/admin/panel'
 				//   PATH_INFO   => '/foo'
 				// Note that any query string won't make it into PATH_INFO because the web server will put it in QUERY_STRING.
-				$env = array_merge( $env, array( 'SCRIPT_NAME' => $env_script_name.$entry_location, 'PATH_INFO' => $matches[1] ) );
+				$env = array_merge( $env, array( 'SCRIPT_NAME' => $env_script_name.$entry_location, 'PATH_INFO' => $matches[ 1 ] ) );
 				
 				// Call the middleware the entry refers to, providing it the newly modified environment.
 				return $entry_middleware_app->call( $env );
