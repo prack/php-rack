@@ -138,7 +138,8 @@ Done
 
 * Builder
 * URLMap (used by Builder)
-* RewindableInput -- Rack requires a rewindable stream. This provides a wrapper ensuring any stream is bufferable.
+* RewindableInput -- Rack requires a rewindable stream. This provides a wrapper ensuring any stream is bufferable
+* Object-oriented error logging wrapper--defaults to stderror, but can be created with a stream
 
 To Do
 -----
