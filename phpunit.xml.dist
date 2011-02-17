@@ -6,8 +6,11 @@
          syntaxCheck="false">
   <testsuites>
     <testsuite name="Prack_Core">
-      <directory suffix="test.php">test</directory>
+      <directory suffix="test.php">test/unit</directory>
     </testsuite>
+    <testsuite name="Prack_Integration">
+	    <directory suffix="test.php">test/integration</directory>
+	  </testsuite>
   </testsuites>
 
   <php>

@@ -1,6 +1,6 @@
 <?php
 
-require_once join( DIRECTORY_SEPARATOR, array(dirname(__FILE__), 'support', 'samplemiddleware.php') );
+require_once join( DIRECTORY_SEPARATOR, array(dirname(__FILE__), '..', 'support', 'samplemiddleware.php') );
 
 class Prack_BuilderTest extends PHPUnit_Framework_TestCase 
 {

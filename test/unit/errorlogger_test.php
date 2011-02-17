@@ -1,6 +1,6 @@
 <?php
 
-require_once join( DIRECTORY_SEPARATOR, array(dirname(__FILE__), 'support', 'testhelper.php') );
+require_once join( DIRECTORY_SEPARATOR, array(dirname(__FILE__), '..', 'support', 'testhelper.php') );
 
 
 class Loggable
