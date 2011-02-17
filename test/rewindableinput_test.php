@@ -4,17 +4,6 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 {
 	private $callback_invocation_count;
 	
-	
-	public static function gibberish( $length = 128 )
-	{
-		$aZ09 = array_merge( range( 'A', 'Z' ), range( 'a', 'z' ),range( 0, 9 ) );
-		$out  = '';
-		for( $c=0; $c < $length; $c++ )
-			$out .= (string)$aZ09[ mt_rand( 0, count( $aZ09 ) - 1 ) ];
-		return $out;
-	}
-	
-	
 	/**
 	 * New instance should be made rewindable whenever a read operation method is invoked
 	 * @author Joshua Morris
@@ -28,7 +17,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		{
 			$stream = tmpfile();
 			
-			fwrite( $stream, self::gibberish() );
+			fwrite( $stream, TestHelper::gibberish() );
 			rewind( $stream );
 			
 			$rewindable_input = new Prack_RewindableInput( $stream );
@@ -58,11 +47,11 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		fwrite( $stream, "Line 4\n" );
 		rewind( $stream );
 		
+		$this->callback_invocation_count = 0;
+		
 		$rewindable_input = new Prack_RewindableInput( $stream );
 		$rewindable_input->each( array( $this, 'eachCallback' ) );
 		$rewindable_input->close();
-		
-		$this->callback_invocation_count = 0;
 		
 		$this->assertTrue( $this->callback_invocation_count == 4 );
 	} // Instance method each should invoke the specified callback for each line in stream
