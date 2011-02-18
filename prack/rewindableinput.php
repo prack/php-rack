@@ -16,7 +16,7 @@ class Prack_RewindableInput
 		$this->io            = $io;
 		$this->rewindable_io = null;
 		$this->unlinked      = false;
-		$this->size          = 0;
+		$this->length        = 0;
 	}
 	
 	// TODO: Document!

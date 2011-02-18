@@ -55,6 +55,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		$rewindable_input->close();
 		
 		$this->assertTrue( $this->callback_invocation_count == 4 );
+		fclose( $stream );
 	} // instance method each should invoke the specified callback for each line in stream
 	
 	/**
@@ -83,5 +84,6 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( $length, $rewindable_input->getLength() );
 		
 		$rewindable_input->close();
+		fclose( $stream );
 	} // instance method getLength should return the correct size of bytes previously written to rewindable stream
 }

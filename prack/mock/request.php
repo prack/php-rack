@@ -1,24 +1,28 @@
 <?php
 
-
+// TODO: Document!
 class Prack_FatalWarner
 {
+	// TODO: Document!
 	public function puts( $warning )
 	{
 		throw new Prack_Error_Mock_Request_FatalWarning( $warning );
 	}
 	
+	// TODO: Document!
 	public function write( $warning )
 	{
 		throw new Prack_Error_Mock_Request_FatalWarning( $warning );
 	}
 	
+	// TODO: Document!
 	public function flush()
 	{
 		// No-op.
 		return true;
 	}
 	
+	// TODO: Document!
 	public function string()
 	{
 		// Not sure why this is in the Ruby version.
@@ -38,13 +42,12 @@ class Prack_FatalWarner
 # <tt>:input</tt>:: A String or IO-like to be used as rack.input.
 # <tt>:fatal</tt>:: Raise a FatalWarning if the app writes to rack.errors.
 # <tt>:lint</tt>:: If true, wrap the application in a Rack::Lint.
-
 class Prack_Mock_Request
 {
 	private $middleware_app;
 	
-	
-	static function envFor( $uri = '', $options = array() )
+	// TODO: Document!
+	static function &envFor( $uri = '', $options = array() )
 	{
 		$env = 
 			array(
@@ -61,12 +64,18 @@ class Prack_Mock_Request
 		foreach ( $necessary_fields as $field )
 			$uri_components[ $field ] = isset( $uri_components[ $field ] ) ? $uri_components[ $field ] : '';
 		
+		$env[ 'rack.url_scheme' ] = !empty( $uri_components[ 'scheme' ] ) ? $uri_components[ 'scheme' ] : 'http';
 		$env[ 'REQUEST_METHOD'  ] = !empty( $options[ 'method' ] ) ? strtoupper( (string)$options[ 'method' ] ) : 'GET';
 		$env[ 'SERVER_NAME'     ] = !empty( $uri_components[ 'host' ] ) ? $uri_components[ 'host' ] : 'example.org';
-		$env[ 'SERVER_PORT'     ] = !empty( $uri_components[ 'port' ] ) ? (string)$uri_components[ 'port' ] : '80';
+		
+		// Different from Ruby in that PHP does not infer a default port of 443 for https URLs.
+		if ( !empty( $uri_components[ 'port' ] ) )
+			$env[ 'SERVER_PORT' ] = $uri_components[ 'port' ];
+		else
+			$env[ 'SERVER_PORT' ] = ( $env[ 'rack.url_scheme' ] == 'https' ) ? '443' : '80';
+		
 		$env[ 'QUERY_STRING'    ] = $uri_components[ 'query' ];
 		$env[ 'PATH_INFO'       ] = empty( $uri_components[ 'path' ] ) ? '/' : $uri_components[ 'path' ];
-		$env[ 'rack.url_scheme' ] = empty( $uri_components[ 'scheme' ] ) ? 'http' : $uri_components[ 'scheme' ];
 		$env[ 'HTTPS'           ] = $env[ 'rack.url_scheme' ] == 'https' ? 'on' : 'off';
 		$env[ 'SCRIPT_NAME'     ] = isset( $options[ 'script_name' ] ) ? $options[ 'script_name' ] : '';
 		
@@ -121,8 +130,9 @@ class Prack_Mock_Request
 		{
 			$stream = fopen( 'php://memory', 'x+b' );
 			fputs( $stream, $options[ 'input' ] );
+			rewind( $stream );
 			$rack_input = new Prack_RewindableInput( $stream );
-			$rack_input->getLength(); // Trigger rewind before we close original stream.
+			$rack_input->getLength();                            // Trigger rewind before we close original stream.
 			fclose( $stream );
 		}
 		// Unlike Ruby, we have to require Prack_RewindableInput here: since the PHP stream
@@ -148,37 +158,37 @@ class Prack_Mock_Request
 		return $env;
 	}
 	
-	
+	// TODO: Document!
 	function __construct( $middleware_app )
 	{
 		$this->middleware_app = $middleware_app;
 	}
 	
-	
+	// TODO: Document!
 	public function get( $uri, $options = array() )
 	{
 		return $this->request( 'GET', $uri, $options );
 	}
 	
-	
+	// TODO: Document!
 	public function post( $uri, $options = array() )
 	{
 		return $this->request( 'POST', $uri, $options );
 	}
 	
-	
+	// TODO: Document!
 	public function put( $uri, $options = array() )
 	{
 		return $this->request( 'PUT', $uri, $options );
 	}
 	
-	
+	// TODO: Document!
 	public function delete( $uri, $options = array() )
 	{
 		return $this->request( 'DELETE', $uri, $options );
 	}
 	
-	
+	// TODO: Document!
 	public function request( $method = 'GET', $uri = '', $options = array() )
 	{
 		$env = self::envFor( $uri, array_merge( $options, array( 'method' => $method ) ) );
@@ -193,7 +203,7 @@ class Prack_Mock_Request
 		return new Prack_Mock_Response( $status, $header, $body, $env[ 'rack.errors' ] );
 	}
 	
-	
+	// TODO: Document!
 	public function getMiddlewareApp()
 	{
 		return $this->middleware_app;
