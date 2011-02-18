@@ -1,8 +1,10 @@
 <?php
 
+// TODO: Document!
 class Prack
 {
-	static public function version()
+	// TODO: Document!
+	static function version()
 	{
 		static $version = null;
 		

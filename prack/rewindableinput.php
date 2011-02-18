@@ -1,5 +1,6 @@
 <?php
 
+// TODO: Document!
 class Prack_RewindableInput
 {
 	const DEFAULT_READ_SIZE = 1024;
@@ -9,6 +10,7 @@ class Prack_RewindableInput
 	private $unliked;
 	private $length;
 	
+	// TODO: Document!
 	function __construct( $io )
 	{
 		$this->io            = $io;
@@ -17,6 +19,7 @@ class Prack_RewindableInput
 		$this->size          = 0;
 	}
 	
+	// TODO: Document!
 	public function gets()
 	{
 		if ( !$this->rewindable_io )
@@ -25,6 +28,7 @@ class Prack_RewindableInput
 		return fgets( $this->rewindable_io );
 	}
 	
+	// TODO: Document!
 	public function read( $length = self::DEFAULT_READ_SIZE )
 	{
 		if ( !$this->rewindable_io )
@@ -33,6 +37,7 @@ class Prack_RewindableInput
 		return fread( $this->rewindable_io, $length );
 	}
 	
+	// TODO: Document!
 	public function each( $callback = null )
 	{
 		if ( !$this->rewindable_io )
@@ -45,6 +50,7 @@ class Prack_RewindableInput
 		}
 	}
 	
+	// TODO: Document!
 	public function rewind()
 	{
 		if ( !$this->rewindable_io )
@@ -53,6 +59,7 @@ class Prack_RewindableInput
 		rewind( $this->rewindable_io );
 	}
 	
+	// TODO: Document!
 	public function getLength()
 	{
 		if ( !$this->rewindable_io )
@@ -61,6 +68,7 @@ class Prack_RewindableInput
 		return $this->length;
 	}
 	
+	// TODO: Document!
 	# Closes this RewindableInput object without closing the originally
 	# wrapped IO oject. Cleans up any temporary resources that this RewindableInput
 	# has created.
@@ -73,11 +81,13 @@ class Prack_RewindableInput
 		$this->rewindable_io = null;
 	}
 	
+	// TODO: Document!
 	public function getRewindableIO()
 	{
 		return $this->rewindable_io;
 	}
 	
+	// TODO: Document!
 	private function makeRewindable()
 	{
 		# Buffer all data into a tempfile. Since this tempfile is private to this
@@ -111,6 +121,7 @@ class Prack_RewindableInput
 		rewind( $this->rewindable_io );
 	}
 	
+	// TODO: Document!
 	private function filesystemHasPosixSemantics()
 	{
 		// TODO: Add platform check, excluding non-posix systems.

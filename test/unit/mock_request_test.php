@@ -6,7 +6,7 @@ require_once join( DIRECTORY_SEPARATOR, array(dirname(__FILE__), '..', 'support'
 class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 {
 	// TODO: Document!
-	static public function buildMockRequest()
+	static function buildMockRequest()
 	{
 		$middleware = new SampleMiddleware();
 		return new Prack_Mock_Request( $middleware );

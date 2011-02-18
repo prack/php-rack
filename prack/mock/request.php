@@ -26,13 +26,25 @@ class Prack_FatalWarner
 	}
 }
 
+# Rack::MockRequest helps testing your Rack application without
+# actually using HTTP.
+#
+# After performing a request on a URL with get/post/put/delete, it
+# returns a MockResponse with useful helper methods for effective
+# testing.
+#
+# You can pass a hash with additional configuration to the
+# get/post/put/delete.
+# <tt>:input</tt>:: A String or IO-like to be used as rack.input.
+# <tt>:fatal</tt>:: Raise a FatalWarning if the app writes to rack.errors.
+# <tt>:lint</tt>:: If true, wrap the application in a Rack::Lint.
 
 class Prack_Mock_Request
 {
 	private $middleware_app;
 	
 	
-	public static function envFor( $uri = '', $options = array() )
+	static function envFor( $uri = '', $options = array() )
 	{
 		$env = 
 			array(
@@ -187,21 +199,3 @@ class Prack_Mock_Request
 		return $this->middleware_app;
 	}
 }
-
-
-# Rack::MockRequest helps testing your Rack application without
-# actually using HTTP.
-#
-# After performing a request on a URL with get/post/put/delete, it
-# returns a MockResponse with useful helper methods for effective
-# testing.
-#
-# You can pass a hash with additional configuration to the
-# get/post/put/delete.
-# <tt>:input</tt>:: A String or IO-like to be used as rack.input.
-# <tt>:fatal</tt>:: Raise a FatalWarning if the app writes to rack.errors.
-# <tt>:lint</tt>:: If true, wrap the application in a Rack::Lint.
-
-/*
-
-*/

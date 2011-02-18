@@ -1,16 +1,19 @@
 <?php
 
+// TODO: Document!
 class Prack_URLMap implements Prack_IMiddlewareApp
 {
 	const ENTRY_ELEMENT_COUNT = 4;
 	
 	private $entries;
 	
+	// TODO: Document!
 	function __construct( $builders )
 	{
 		$this->remap( $builders );
 	}
 	
+	// TODO: Document!
 	public function remap( $builders )
 	{
 		$this->entries = array();
@@ -24,7 +27,7 @@ class Prack_URLMap implements Prack_IMiddlewareApp
 		return $this->entries;
 	}
 	
-	
+	// TODO: Document!
 	// This is where requests get routed.
 	public function call( &$env )
 	{
@@ -81,7 +84,7 @@ class Prack_URLMap implements Prack_IMiddlewareApp
 		}
 	}
 	
-	
+	// TODO: Document!
 	public function &getEntries()
 	{
 		return $this->entries;

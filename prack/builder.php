@@ -1,5 +1,6 @@
 <?php
 
+// TODO: Document!
 class Prack_Builder
 {
 	private $location;         // string containing fully-qualified mount point:
@@ -14,7 +15,7 @@ class Prack_Builder
 	                           //   (Prack_URLMap is an instance of Prack_IMiddlewareApp, and is thus callable middleware)
 	private $fi_using_class;   // string containing previous value on call to using(): state for fluent interface.
 	
-	
+	// TODO: Document!
 	function __construct( $location = null, $parent = null )
 	{
 		if ( isset( $location ) && isset( $parent ) )
@@ -30,14 +31,14 @@ class Prack_Builder
 		$this->endpoint         = array();
 	}
 	
-	
-	public static function domain()
+	// TODO: Document!
+	static function domain()
 	{
 		return new Prack_Builder();
 	}
 	
-	
-	public static function chain( $from, $to )
+	// TODO: Document!
+	static function chain( $from, $to )
 	{
 		if ( empty( $from ) ) // Workaround for array_reduce() $initial arg limitations in PHP5.2
 			return $to;         // First item passed in will likely be null. In that case, return $to.
@@ -52,14 +53,14 @@ class Prack_Builder
 		return $middleware_app;
 	}
 	
-	
+	// TODO: Document!
 	public function using( $middleware_class )
 	{
 		$this->setFIUsingClass( $middleware_class );
 		return $this;
 	}
 	
-	
+	// TODO: Document!
 	public function withArgs()
 	{
 		$middleware_class = $this->getFIUsingClass();
@@ -73,7 +74,7 @@ class Prack_Builder
 		return $this;
 	}
 	
-	
+	// TODO: Document!
 	public function run( $middleware_app )
 	{
 		if ( $this->isShallow() )
@@ -86,7 +87,7 @@ class Prack_Builder
 		return $this->parent;
 	}
 	
-	
+	// TODO: Document!
 	public function map( $location )
 	{
 		if ( $this->isShallow() )
@@ -104,13 +105,13 @@ class Prack_Builder
 		return $builder_for_location;
 	}
 	
-	
+	// TODO: Document!
 	public function wherein()
 	{
 		return $this;
 	}
 	
-	
+	// TODO: Document!
 	public function toMiddlewareApp()
 	{
 		$middleware_stack = $this->getMiddlewareStack();
@@ -127,6 +128,7 @@ class Prack_Builder
 		return array_reduce( array_reverse( $middleware_stack ), array( 'Prack_Builder', 'chain' ) );
 	}
 	
+	// TODO: Document!
 	public function toArray()
 	{
 		$matches  = array();
@@ -148,62 +150,62 @@ class Prack_Builder
 		return array( $host, $location, $pattern, $this->toMiddlewareApp() );
 	}
 	
-	
+	// TODO: Document!
 	public function getLocation()
 	{
 		return $this->location;
 	}
 	
-	
+	// TODO: Document!
 	public function getParent()
 	{ 
 		return $this->parent;
 	}
 	
-	
+	// TODO: Document!
 	public function getMiddlewareStack()
 	{
 		return $this->middleware_stack;
 	}
 	
-	
+	// TODO: Document!
 	public function &getEndpoint()
 	{ 
 		return $this->endpoint;
 	}
 	
-	
+	// TODO: Document!
 	public function getFIUsingClass()
 	{
 		return $this->fi_using_class;
 	}
 	
-	
+	// TODO: Document!
 	public function isShallow()
 	{
 		return ( $this->endpoint instanceof Prack_IMiddlewareApp );
 	}
 	
-	
+	// TODO: Document!
 	public function isDeep() 
 	{
 		return is_array( $this->endpoint ) && !empty( $this->endpoint );
 	}
 	
-	
+	// TODO: Document!
 	private function specify( $middleware_class, $args )
 	{
 		$specification = array( $middleware_class, $args );
 		array_push( $this->middleware_stack, $specification );
 	}
 	
-	
+	// TODO: Document!
 	private function setEndpoint( $endpoint )
 	{
 		$this->endpoint = $endpoint;
 	}
 	
-	
+	// TODO: Document!
 	private function setFIUsingClass( $fi_using_class )
 	{
 		$this->fi_using_class = $fi_using_class;

@@ -99,7 +99,7 @@ The middleware configuration class might look like this:
 
 	class SomeMiddlewareConfigClass
 	{
-		static public function authenticate( $username, $password )
+		static function authenticate( $username, $password )
 		{
 			return ( $username == 'admin' && $password == 'secret' );
 		}
@@ -142,7 +142,8 @@ By class:
 * Prack_URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
 * Prack_RewindableInput: Wrapper implements rewindability for stdin and other streams
 * Prack_ErrorLog: Wrapper around arbitrary stream for reporting errors
-* Prack_Mock_Request: Useful for testing, simulates a request to the server
+* Prack\_Mock_Request: Useful for testing, simulates a request to the server
+* Prack\_Utils\_Response\_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
 
 To Do
 -----

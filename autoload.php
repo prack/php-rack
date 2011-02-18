@@ -1,5 +1,6 @@
 <?php
 
+// TODO: Document!
 function autoloadPrackClasses( $class_or_interface ) {
 	$path_components = preg_split( '/_/', $class_or_interface );
 	$path_components = array_map( 'strtolower', $path_components );

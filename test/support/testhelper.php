@@ -2,7 +2,7 @@
 
 class TestHelper
 {
-	public static function gibberish( $length = 128 )
+	static function gibberish( $length = 128 )
 	{
 		$aZ09 = array_merge( range( 'A', 'Z' ), range( 'a', 'z' ),range( 0, 9 ) );
 		$out  = '';
