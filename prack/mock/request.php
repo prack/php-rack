@@ -5,12 +5,12 @@ class Prack_FatalWarner
 {
 	public function puts( $warning )
 	{
-		throw new Prack_Error_MockRequest_FatalWarning( $warning );
+		throw new Prack_Error_Mock_Request_FatalWarning( $warning );
 	}
 	
 	public function write( $warning )
 	{
-		throw new Prack_Error_MockRequest_FatalWarning( $warning );
+		throw new Prack_Error_Mock_Request_FatalWarning( $warning );
 	}
 	
 	public function flush()
@@ -27,7 +27,7 @@ class Prack_FatalWarner
 }
 
 
-class Prack_MockRequest
+class Prack_Mock_Request
 {
 	private $middleware_app;
 	
@@ -121,7 +121,7 @@ class Prack_MockRequest
 		else if ( $options[ 'input' ] instanceof Prack_RewindableInput )
 			$rack_input = $options[ 'input' ];
 		else
-			throw new Prack_Error_MockRequest_RackInputMustBeInstanceOfPrackRewindableInput();
+			throw new Prack_Error_Mock_Request_RackInputMustBeInstanceOfPrackRewindableInput();
 		
 		$env[ 'rack.input' ] = $rack_input;
 		if ( !isset( $env[ 'CONTENT_LENGTH' ] ) )
@@ -178,7 +178,7 @@ class Prack_MockRequest
 		
 		list( $status, $header, $body ) = $middleware_app->call( $env );
 		
-		return new Prack_MockResponse( $status, $header, $body, $env[ 'rack.errors' ] );
+		return new Prack_Mock_Response( $status, $header, $body, $env[ 'rack.errors' ] );
 	}
 	
 	

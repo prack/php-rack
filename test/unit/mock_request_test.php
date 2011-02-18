@@ -3,13 +3,13 @@
 require_once join( DIRECTORY_SEPARATOR, array(dirname(__FILE__), '..', 'support', 'samplemiddleware.php') );
 
 // TODO: Document!
-class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
+class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 {
 	// TODO: Document!
 	static public function buildMockRequest()
 	{
 		$middleware = new SampleMiddleware();
-		return new Prack_MockRequest( $middleware );
+		return new Prack_Mock_Request( $middleware );
 	}
 	
 	/**
@@ -20,7 +20,7 @@ class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
 	public function default_environment_should_be_sane()
 	{
 		// Default environment for mock request.
-		$env = Prack_MockRequest::envFor();
+		$env = Prack_Mock_Request::envFor();
 		
 		$this->assertArrayHasKey( 'REQUEST_METHOD' , $env );
 		$this->assertArrayHasKey( 'SERVER_NAME'    , $env );
@@ -42,7 +42,7 @@ class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
 	public function environment_should_have_good_defaults()
 	{
 		// Default environment for mock request.
-		$env = Prack_MockRequest::envFor();
+		$env = Prack_Mock_Request::envFor();
 		
 		$this->assertEquals( 'GET'        , $env[ 'REQUEST_METHOD'  ] );
 		$this->assertEquals( 'example.org', $env[ 'SERVER_NAME'     ] );
@@ -65,7 +65,7 @@ class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
 		$params  = new Prack_RewindableInput( $stream );
 		$options = array( 'params' => $params, 'method' => 'POST' );
 		
-		$env = Prack_MockRequest::envFor( null, $options );
+		$env = Prack_Mock_Request::envFor( null, $options );
 		$this->assertEquals( $params, $env[ 'rack.input' ] );
 	} // static method envFor should set rack.input to be params iff it is an instance of Prack_RewindableInput on non-GET requests
 	
@@ -76,9 +76,9 @@ class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function static_method_envFor_should_throw_an_exception_if_the_environment_variable_rack_input_is_not_a_Prack_RewindableInput()
 	{
-		$this->setExpectedException( 'Prack_Error_MockRequest_RackInputMustBeInstanceOfPrackRewindableInput' );
+		$this->setExpectedException( 'Prack_Error_Mock_Request_RackInputMustBeInstanceOfPrackRewindableInput' );
 		$bad_rack_input = new SampleMiddleware(); // lolwut
-		Prack_MockRequest::envFor( null, array( 'input' => $bad_rack_input ) );
+		Prack_Mock_Request::envFor( null, array( 'input' => $bad_rack_input ) );
 	} // static method envFor should throw an exception if the environment variable rack.input is not a Prack_RewindableInput
 	
 	/**
@@ -88,11 +88,11 @@ class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function static_method_envFor_should_throw_an_exception_if_configured_to_fail_fast()
 	{
-		$this->setExpectedException( 'Prack_Error_MockRequest_FatalWarning' );
+		$this->setExpectedException( 'Prack_Error_Mock_Request_FatalWarning' );
 		
 		// If the errors log is written to, fail immediately:
 		$options = array( 'fatal' => true );
-		$env     = Prack_MockRequest::envFor( null, $options );
+		$env     = Prack_Mock_Request::envFor( null, $options );
 		
 		$error_logger = $env[ 'rack.errors' ];
 		$error_logger->write( 'EPIC FAIL' );
@@ -105,11 +105,11 @@ class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function static_method_envFor_should_throw_an_exception_if_configured_to_fail_fast_part_deux()
 	{
-		$this->setExpectedException( 'Prack_Error_MockRequest_FatalWarning' );
+		$this->setExpectedException( 'Prack_Error_Mock_Request_FatalWarning' );
 		
 		// If the errors log is written to, fail immediately:
 		$options = array( 'fatal' => true );
-		$env     = Prack_MockRequest::envFor( null, $options );
+		$env     = Prack_Mock_Request::envFor( null, $options );
 		
 		$error_logger = $env[ 'rack.errors' ];
 		$error_logger->puts( 'EPIC FAIL' );
@@ -124,7 +124,7 @@ class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
 	{
 		// If the errors log is written to, fail immediately:
 		$options = array( 'fatal' => true );
-		$env     = Prack_MockRequest::envFor( null, $options );
+		$env     = Prack_Mock_Request::envFor( null, $options );
 		
 		$error_logger = $env[ 'rack.errors' ];
 		$error_logger->flush();  // The methods were there in Ruby... not sure why.
@@ -139,7 +139,7 @@ class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
 	public function new_instance_should_own_an_enclosed_middleware_app()
 	{
 		$middleware   = new SampleMiddleware();
-		$mock_request = new Prack_MockRequest( $middleware );
+		$mock_request = new Prack_Mock_Request( $middleware );
 		$this->assertSame( $middleware, $mock_request->getMiddlewareApp() );
 	} // new instance should own an enclosed middleware app
 	
@@ -157,7 +157,7 @@ class Prack_MockRequestTest extends PHPUnit_Framework_TestCase
 		{
 			$request_uri = 'http://example.org/foo/bar?q1=a&q2=b#fragment';
 			$response    = $mock_request->$method( $request_uri, array( 'params' => array( 'id' => 1 ) ) );
-			$this->assertTrue( $response instanceof Prack_MockResponse, 'message' );
+			$this->assertTrue( $response instanceof Prack_Mock_Response, 'message' );
 		}
 	} // request-method-specific request generators should create their respective request methods
 }

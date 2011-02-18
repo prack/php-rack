@@ -142,7 +142,7 @@ By class:
 * Prack_URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
 * Prack_RewindableInput: Wrapper implements rewindability for stdin and other streams
 * Prack_ErrorLog: Wrapper around arbitrary stream for reporting errors
-* Prack_MockRequest: Useful for testing, simulates a request to the server
+* Prack_Mock_Request: Useful for testing, simulates a request to the server
 
 To Do
 -----
