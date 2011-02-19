@@ -199,10 +199,7 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_rewind_input_after_parsing_POST_data()
 	{
 		// Create a rewindable stream:
-		$stream = fopen( 'php://memory', 'x+b' );
-		fputs( $stream, 'foo=bar&quux=bla' );
-		rewind( $stream );
-		$rewindable_input = new Prack_RewindableInput( $stream );
+		$rewindable_input = new Prack_RewindableInput( Prack_Utils_IO::withString( 'foo=bar&quux=bla' ) );
 		
 		$request = new Prack_Request(
 			Prack_Mock_Request::envFor( '/', array(
@@ -213,8 +210,6 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->params() );
 		$this->assertEquals( 'foo=bar&quux=bla', $rewindable_input->read() );
-		
-		fclose( $stream );
 	} // It should rewind input after parsing POST data
 	
 	/**
@@ -343,20 +338,12 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( array( 'bla' => 'foo' ), $request->GET() );
 		$this->assertEquals( array( 'bla' => 'foo' ), $request->GET() );
 		
-		// Create a rewindable stream:
-		$stream = fopen( 'php://memory', 'x+b' );
-		fputs( $stream, 'foo=bla&quux=bar' );
-		rewind( $stream );
-		$rewindable_input = new Prack_RewindableInput( $stream );
-		
 		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->POST() );
 		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->POST() );
 		$env = &$request->getEnv();
-		$env[ 'rack.input' ] = $rewindable_input;
+		$env[ 'rack.input' ] = Prack_Utils_IO::withString( 'foo=bla&quux=bar' );
 		$this->assertEquals( array( 'foo' => 'bla', 'quux' => 'bar' ), $request->POST() );
 		$this->assertEquals( array( 'foo' => 'bla', 'quux' => 'bar' ), $request->POST() );
-		
-		fclose( $stream );
 	} // It should cache, but invalidates the cache
 	
 	/**

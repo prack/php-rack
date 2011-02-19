@@ -138,6 +138,7 @@ Done
 
 By class:
 
+* Prack\_Utils_\_IO_*: A suite of IO wrappers: string, tempfiles, and eventually php://input et. al.
 * Prack_Request: Holy cow, this took forever. The request class. Hamstrung on IP and multipart form data stuff--gonna take some time.
 * Prack_Builder: Fluent interface for building middleware stacks in a domain
 * Prack_URLMap: Used by Builder to map middleware (stacks) to a URL endpoints

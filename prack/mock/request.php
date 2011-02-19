@@ -127,27 +127,18 @@ class Prack_Mock_Request
 			$options[ 'input' ] = '';
 		
 		if ( is_string( $options[ 'input' ] ) )
-		{
-			$stream = fopen( 'php://memory', 'x+b' );
-			fputs( $stream, $options[ 'input' ] );
-			rewind( $stream );
-			$rack_input = new Prack_RewindableInput( $stream );
-			$rack_input->getLength();                            // Trigger rewind before we close original stream.
-			fclose( $stream );
-		}
-		// Unlike Ruby, we have to require Prack_RewindableInput here: since the PHP stream
-		// functions aren't objects with state, we have no StringIO, and hence no 'length'.
-		// Moreover, we have no common interface between PHP stream functions and our
-		// rewindable stream (which is full-fledged object, and not manipulated by functions.)
-		// Consequently, it's just easier to wrap every PHP stream in an a rewindable.
-		else if ( $options[ 'input' ] instanceof Prack_RewindableInput )
-			$rack_input = $options[ 'input' ];
+			$rack_input = Prack_Utils_IO::withString( $options[ 'input' ] );
 		else
-			throw new Prack_Error_Mock_Request_RackInputMustBeInstanceOfPrackRewindableInput();
+			$rack_input = $options[ 'input' ];
 		
 		$env[ 'rack.input' ] = $rack_input;
 		if ( !isset( $env[ 'CONTENT_LENGTH' ] ) )
-			$env[ 'CONTENT_LENGTH' ] = (string)$rack_input->getLength();
+		{
+			if ( !( $rack_input instanceof Prack_Utils_IO_ILengthAware ) )
+				throw new Prack_Error_Mock_Request_RackInputMustRespondToLength();
+			
+			$env[ 'CONTENT_LENGTH' ] = (string)$rack_input->length();
+		}
 		
 		foreach ($options as $field => $value)
 		{

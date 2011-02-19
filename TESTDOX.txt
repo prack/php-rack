@@ -1,0 +1,144 @@
+PHPUnit 3.5.11 by Sebastian Bergmann.
+
+Prack_Builder
+ [x] root instance returned by static method domain should have null parent
+ [x] root instance returned by static method domain should have an empty array of middleware
+ [x] root instance returned by static method domain should have an empty array of children
+ [x] instance method using should return the builder itself
+ [x] instance method using should modify the internal mw class attribute of the builder
+ [x] instance method withArgs should throw an exception if no middleware class has been specified
+ [x] instance method withArgs should return the builder itself for fluent interface
+ [x] instance method withArgs should add an instance of the middleware to the current builders stack
+ [x] instance method run should throw an exception if invoked twice
+ [x] instance method run should throw an exception if any children are specified
+ [x] instance method run should append the provided middleware to the end of the stack and disable mapping of children
+ [x] instance method run should return the builders parent
+ [x] instance method map should return a new builder class to nest middleware within
+ [x] instance method map should throw an exception on apparently duplicate mappings
+ [x] instance method wherein should simply return the builder on which it was called
+ [x] instance method toMiddlewareApp should return an object which confirms to Prack IMiddleware interface
+ [x] instance method toMiddlewareApp should throw an exception if neither map nor run has been called
+ [x] instance method toArray should throw an exception if the resource location starts with a non slash character
+ [x] instance method toArray should extract host and location properly if provided in the location
+
+Prack_ErrorLogger
+ [x] instance method close should always throw an exception
+ [x] instance method puts should write a string representation of first argument to the specified stream
+ [x] instance method puts should throw an exception unless object implements magic method toString
+ [x] instance method write should write its value without coercing to string
+ [x] instance method flush should flush the contained stream
+
+Prack_Mock_Request
+ [x] default environment should be sane
+ [x] environment should have good defaults
+ [x] static method envFor should set rack input to be params iff it provides a length on non GET requests
+ [x] static method envFor should throw an exception if the environment variable rack input does not provide a length
+ [x] static method envFor should throw an exception if configured to fail fast
+ [x] static method envFor should throw an exception if configured to fail fast part deux
+ [x] code coverage hack for two no op methods showing up as red
+ [x] new instance should own an enclosed middleware app
+ [x] request method specific request generators should create their respective request methods
+
+Prack_Mock_Response
+ [x] It should provide access to the HTTP status
+
+Prack_Request
+ [x] It should wrap the rack variables
+ [x] It should figure out the correct host
+ [x] It should parse the query string
+ [x] It should throw an exception if rack input is missing
+ [x] It should parse POST data when method is POST and no Content Type given
+ [x] It should parse POST data with explicit content type regardless of method
+ [x] It should not parse POST data when media type is not form data
+ [x] It should parse POST data on PUT when media type is form data
+ [x] It should rewind input after parsing POST data
+ [x] It should clean up Safari s ajax POST body
+ [x] It should get value by key from params with getParam
+ [x] It should set value to key on params with setParam
+ [x] It should return values for the keys in the order given from valuesAt
+ [x] It should extract referrer correctly
+ [x] It should alias referer to referrer
+ [x] It should extract user agent correctly
+ [x] It should cache  but invalidates the cache
+ [x] It should figure out if called via XHR
+ [x] It should parse cookies
+ [x] It should parse cookies according to RFC 2109
+ [x] It should provide setters
+ [x] It should provide the original env
+ [x] It should restore the URL
+ [x] It should restore the full path
+ [x] It should handle multiple media type parameters
+ [x] It should parse Accept Encoding correctly
+ [x] It should allow subclass request to be instantiated after parent request
+ [x] It should allow parent request to be instantiated after subclass request
+ [x] It should not strip escaped character from parameters when accessed as string
+
+Prack_Response
+ [x] It should have sensible default values
+
+Prack_RewindableInput
+ [x] It should be creatable without a string
+ [x] It should be able to handle read
+ [x] It should be able to handle read with null
+ [x] It should be able to handle read with length
+ [x] It should be able to handle read with length and buffer
+ [x] It should be able to handle read with null and buffer
+ [x] It should rewind to the beginning when rewind is called
+ [x] It should be able to handle gets
+ [x] It should be able to handle each
+ [x] It should handle really big strings
+ [x] It should be possible to call close when no data has been buffered yet
+ [x] It should be possible to call close multiple times
+ [x] It should not buffer into a Prack Utils IO Tempfile if no data has been read yet
+ [x] It should buffer into a Prack Utils IO Tempfile when data has been consumed for the first time
+ [x] It should close the underlying tempfile upon calling close
+
+Prack_URLMap
+ [x] instance method remap should transform an indexed array of builders into a lookup table for primitive routing
+ [x] instance method call should route request appropriately and call the associated middleware
+ [x] instance method call should not route request to middleware if host is different
+ [x] instance method call should route to the site root if it is mounted as a last resort
+ [x] instance method call should revert the environment to the original SCRIPT NAME and PATH INFO even if the middleware throws an exception
+
+Prack_Utils_IO_String
+ [x] It should throw an exception if the string is too big
+
+Prack_Utils_IO_
+ [x] It should be creatable without a string
+ [x] It should be able to handle read
+ [x] It should be able to handle read with null
+ [x] It should be able to handle read with length
+ [x] It should be able to handle read with length and buffer
+ [x] It should be able to handle read with null and buffer
+ [x] It should rewind to the beginning when rewind is called
+ [x] It should be able to handle gets
+ [x] It should be able to handle each
+ [x] It should throw an exception on each if callback is not callable
+ [x] It should handle read on really big strings
+ [x] It should handle write
+ [x] It should be possible to call close when no data has been buffered yet
+ [x] It should be possible to call close multiple times
+
+Prack_Utils_Response_HeaderHash
+ [x] new instance should properly translate raw associative array into headers in object context
+ [x] instance method each should distill entries and then call the provided callback for each
+ [x] instance method toArray should return distilled entries
+ [x] It should retain header case
+ [x] It should check existence of keys case insensitively
+ [x] It should merge case insensitively
+ [x] It should overwrite case insensitively and assume the new key s case
+ [x] It should be converted to real array
+ [x] It should convert array values to strings when converting to array
+ [x] It should replace hashes correctly
+ [x] It should be able to delete the given key case sensitively
+ [x] It should return the deleted value when delete is called on an existing key
+ [x] It should return null when delete is called on a non existant key
+ [x] It should avoid unnecessary object creation if possible
+ [x] It should create an object with an array otherwise
+ [x] It should convert array values to strings when responding to each
+ [x] It should alias hasKey and isMember to contains
+
+
+Writing code coverage data to XML file, this may take a moment.
+
+Generating code coverage report, this may take a moment.

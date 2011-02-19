@@ -55,31 +55,30 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	} // environment should have good defaults
 	
 	/**
-	 * static method envFor should set rack.input to be params iff it is an instance of Prack_RewindableInput on non-GET requests
+	 * static method envFor should set rack.input to be params iff it provides a length on non-GET requests
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function static_method_envFor_should_set_rack_input_to_be_params_iff_it_is_an_instance_of_Prack_RewindableInput_on_non_GET_requests()
+	public function static_method_envFor_should_set_rack_input_to_be_params_iff_it_provides_a_length_on_non_GET_requests()
 	{
-		$stream  = fopen( 'php://memory', 'x+b' );
-		$params  = new Prack_RewindableInput( $stream );
+		$params  = Prack_Utils_IO::withString( '' );
 		$options = array( 'params' => $params, 'method' => 'POST' );
 		
 		$env = Prack_Mock_Request::envFor( null, $options );
 		$this->assertEquals( $params, $env[ 'rack.input' ] );
-	} // static method envFor should set rack.input to be params iff it is an instance of Prack_RewindableInput on non-GET requests
+	} // static method envFor should set rack.input to be params iff it provides a length on non-GET requests
 	
 	/**
-	 * static method envFor should throw an exception if the environment variable rack.input is not a Prack_RewindableInput
+	 * static method envFor should throw an exception if the environment variable rack.input does not provide a length
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function static_method_envFor_should_throw_an_exception_if_the_environment_variable_rack_input_is_not_a_Prack_RewindableInput()
+	public function static_method_envFor_should_throw_an_exception_if_the_environment_variable_rack_input_does_not_provide_a_length()
 	{
-		$this->setExpectedException( 'Prack_Error_Mock_Request_RackInputMustBeInstanceOfPrackRewindableInput' );
+		$this->setExpectedException( 'Prack_Error_Mock_Request_RackInputMustRespondToLength' );
 		$bad_rack_input = new SampleMiddleware(); // lolwut
 		Prack_Mock_Request::envFor( null, array( 'input' => $bad_rack_input ) );
-	} // static method envFor should throw an exception if the environment variable rack.input is not a Prack_RewindableInput
+	} // static method envFor should throw an exception if the environment variable rack.input does not provide a length
 	
 	/**
 	 * static method envFor should throw an exception if configured to fail fast
@@ -157,7 +156,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 		{
 			$request_uri = 'http://example.org/foo/bar?q1=a&q2=b#fragment';
 			$response    = $mock_request->$method( $request_uri, array( 'params' => array( 'id' => 1 ) ) );
-			$this->assertTrue( $response instanceof Prack_Mock_Response, 'message' );
+			$this->assertTrue( $response instanceof Prack_Mock_Response, $method );
 		}
 	} // request-method-specific request generators should create their respective request methods
 }
