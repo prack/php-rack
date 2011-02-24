@@ -21,26 +21,52 @@ Prack_Builder
  [x] instance method toArray should throw an exception if the resource location starts with a non slash character
  [x] instance method toArray should extract host and location properly if provided in the location
 
-Prack_ErrorLogger
- [x] instance method close should always throw an exception
- [x] instance method puts should write a string representation of first argument to the specified stream
- [x] instance method puts should throw an exception unless object implements magic method toString
- [x] instance method write should write its value without coercing to string
- [x] instance method flush should flush the contained stream
+Prack_Lint
+ [x] It should pass valid request
+ [x] It should notice fatal errors
+ [x] It should notice environment errors
+ [x] It should notice input errors
+ [x] It should notice error errors
+ [x] It should notice status errors
+ [x] It should notice header errors
+ [x] It should notice content type errors
+ [x] It should notice content length errors
+ [x] It should notice body errors
+ [x] It should notice input handling errors
+ [x] It should notice error handling errors
+ [x] It should notice HEAD errors
+ [x] It should pass valid read calls
+
+Prack_Lint_InputWrapper
+ [x] It should delegate method rewind to the underlying IO object
 
 Prack_Mock_Request
- [x] default environment should be sane
- [x] environment should have good defaults
- [x] static method envFor should set rack input to be params iff it provides a length on non GET requests
- [x] static method envFor should throw an exception if the environment variable rack input does not provide a length
- [x] static method envFor should throw an exception if configured to fail fast
- [x] static method envFor should throw an exception if configured to fail fast part deux
- [x] code coverage hack for two no op methods showing up as red
- [x] new instance should own an enclosed middleware app
- [x] request method specific request generators should create their respective request methods
+ [x] It should return a Prack Mock Response
+ [x] It should be able to only return the environment
+ [x] It should provide sensible defaults
+ [x] It should allow GET POST PUT DELETE
+ [x] It should set content length
+ [x] It should allow posting
+ [x] It should use all parts of an URL
+ [x] It should set SSL port and HTTPS flag on when using https
+ [x] It should prepend slash to uri path
+ [x] It should properly convert method name to an uppercase string
+ [x] It should accept params and build query string for GET requests
+ [x] It should accept raw input in params for GET requests
+ [x] It should accept params and build url encoded params for POST requests
+ [x] It should accept raw input in params for POST requests
+ [ ] It should accept params and build multipart encoded params for POST requests
+ [x] It should behave valid according to the Rack spec
 
 Prack_Mock_Response
  [x] It should provide access to the HTTP status
+ [x] It should provide access to the HTTP headers
+ [x] It should provide access to the HTTP body
+ [x] It should provide access to the Rack errors
+ [x] It should optionally make Rack errors fatal
+ [x] It should optionally make Rack errors fatal  part 2 
+ [x] It should throw an exception when an unknown method is called  on account of delegation
+ [x] It should throw an exception if body is neither a string or Prack Interface Enumerable
 
 Prack_Request
  [x] It should wrap the rack variables
@@ -69,12 +95,33 @@ Prack_Request
  [x] It should restore the full path
  [x] It should handle multiple media type parameters
  [x] It should parse Accept Encoding correctly
+ [x] It should provide ip information
  [x] It should allow subclass request to be instantiated after parent request
  [x] It should allow parent request to be instantiated after subclass request
  [x] It should not strip escaped character from parameters when accessed as string
 
 Prack_Response
  [x] It should have sensible default values
+ [x] It can be written to
+ [x] It can set and read headers
+ [ ] It can set cookies
+ [ ] It can set cookies with the same name for multiple domains
+ [ ] It formats the Cookie expiration date accordingly to RFC 2109
+ [ ] It can set secure cookies
+ [ ] It can set http only cookies
+ [ ] It can delete cookies
+ [ ] It can delete cookies with the same name from multiple domains
+ [x] It can do redirects
+ [x] It has a useful constructor
+ [x] It has a constructor that can take a callback
+ [x] It doesn t return invalid responses
+ [x] It knows if it s empty
+ [x] It should provide access to the HTTP status
+ [x] It should provide access to the HTTP headers
+ [x] It does not add or change Content Length within finish
+ [x] It updates Content Length when body appended to using write
+ [x] It should throw an exception when an unknown method is called  on account of delegation
+ [x] It should handle a non standard response body 
 
 Prack_RewindableInput
  [x] It should be creatable without a string
@@ -93,15 +140,15 @@ Prack_RewindableInput
  [x] It should buffer into a Prack Utils IO Tempfile when data has been consumed for the first time
  [x] It should close the underlying tempfile upon calling close
 
+Prack_SessionVia_Cookie
+ [x] It should create a new cookie
+
 Prack_URLMap
  [x] instance method remap should transform an indexed array of builders into a lookup table for primitive routing
  [x] instance method call should route request appropriately and call the associated middleware
  [x] instance method call should not route request to middleware if host is different
  [x] instance method call should route to the site root if it is mounted as a last resort
  [x] instance method call should revert the environment to the original SCRIPT NAME and PATH INFO even if the middleware throws an exception
-
-Prack_Utils_IO_String
- [x] It should throw an exception if the string is too big
 
 Prack_Utils_IO_
  [x] It should be creatable without a string
@@ -116,13 +163,22 @@ Prack_Utils_IO_
  [x] It should throw an exception on each if callback is not callable
  [x] It should handle read on really big strings
  [x] It should handle write
- [x] It should be possible to call close when no data has been buffered yet
+ [x] It should be possible to call close immediately
  [x] It should be possible to call close multiple times
 
+Prack_Utils_IO_String
+ [x] It should throw an exception if the string is too big
+
+Prack_Utils_Logger
+ [x] instance method close should always throw an exception
+ [x] instance method puts should write a string representation of first argument to the specified stream
+ [x] instance method puts should throw an exception unless object implements magic method toString
+ [x] instance method write should write its value without coercing to string
+ [x] instance method flush should flush the contained stream
+
 Prack_Utils_Response_HeaderHash
- [x] new instance should properly translate raw associative array into headers in object context
- [x] instance method each should distill entries and then call the provided callback for each
- [x] instance method toArray should return distilled entries
+ [x] It should  distill  headers  packing an array of values in a newline separated string
+ [x] It should return distilled headers on toArray
  [x] It should retain header case
  [x] It should check existence of keys case insensitively
  [x] It should merge case insensitively
@@ -137,6 +193,28 @@ Prack_Utils_Response_HeaderHash
  [x] It should create an object with an array otherwise
  [x] It should convert array values to strings when responding to each
  [x] It should alias hasKey and isMember to contains
+
+Prack_Wrapper_Array
+ [x] It should handle each
+ [x] It should handle set
+ [x] It should handle get
+ [x] It should return null on get with a negative index that is out of bounds
+ [x] It should throw an exception on set with a negative index that is out of bounds
+ [x] It should handle push
+ [x] It should handle pop
+ [x] It should handle unshift
+ [x] It should handle shift
+ [x] It should output useful information on inspect
+ [x] It should know if it s empty
+
+Prack_Wrapper_Hash
+ [x] It should handle each
+ [x] It should handle set
+ [x] It should handle get
+ [x] It should know if it s empty
+
+Prack_Wrapper_Set
+ [x] It should handle each
 
 
 Writing code coverage data to XML file, this may take a moment.

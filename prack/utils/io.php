@@ -1,5 +1,12 @@
 <?php
 
+global $g_prack_last_gets;
+global $g_prack_f_sep;
+global $g_prack_o_sep;
+
+if ( is_null( $g_prack_f_sep ) )
+	$g_prack_f_sep = PHP_EOL;
+
 // TODO: Document!
 abstract class Prack_Utils_IO
 {
@@ -42,7 +49,10 @@ abstract class Prack_Utils_IO
 			$internal  = '';
 			$read_size = min( $remaining, self::CHUNK_SIZE );
 			
-			// Chunked read, as fread() is limited to 8K of pro per call.
+			if ( feof( $this->stream ) && is_null( $length ) )
+				return '';
+			
+			// Chunked read, as fread() is limited to 8K of data per call.
 			while ( !feof( $this->stream ) && $remaining > 0 && $temp = fread( $this->stream, $read_size ) )
 			{
 				$remaining -= strlen( $temp );
@@ -55,25 +65,29 @@ abstract class Prack_Utils_IO
 			return $buffer;
 		}
 		
-		throw new Prack_Error_Runtime_IOError( 'stream is not readable' );
+		throw new Prack_Error_IO( 'stream is not readable' );
 	}
 	
 	// TODO: Document!
-	public function gets( $limit = null )
+	public function gets()
 	{
+		global $g_prack_last_gets;
+		
 		if ( $this->isReadable() )
 		{
-			$result = is_null( $limit) ? fgets( $this->stream ) : fgets( $this->stream, $limit );
+			$result = fgets( $this->stream );
 			
 			if ( is_string( $result ) )
 				$this->line_no += 1;
 			else if ( $result === false )
 				$result = null;
 			
+			$g_prack_last_gets = $result;
+			
 			return $result;
 		}
 		
-		throw new Prack_Error_Runtime_IOError( 'stream is not readable' );
+		throw new Prack_Error_IO( 'stream is not readable' );
 	}
 	
 	// TODO: Document!
@@ -82,7 +96,7 @@ abstract class Prack_Utils_IO
 		if ( $this->isReadable() )
 		{
 			if ( !is_callable( $callback ) )
-				throw new Prack_Error_Runtime_CallbackInvalid();
+				throw new Prack_Error_Callback();
 			
 			$lines = array();
 			while ( $line = $this->gets() )
@@ -93,7 +107,7 @@ abstract class Prack_Utils_IO
 			return;
 		}
 		
-		throw new Prack_Error_Runtime_IOError( 'stream is not readable' );
+		throw new Prack_Error_IO( 'stream is not readable' );
 	}
 	
 	public function write( $buffer )
@@ -101,7 +115,66 @@ abstract class Prack_Utils_IO
 		if ( $this->isWritable() )
 			return fwrite( $this->stream, $buffer );
 		
-		throw new Prack_Error_Runtime_IOError( 'stream is not writable' );
+		throw new Prack_Error_IO( 'stream is not writable' );
+	}
+	
+	// TODO: Document!
+	# Writes the given objects to <em>ios</em> as with
+	# <code>IO#print</code>. Writes a record separator (typically a
+	# newline) after any that do not already end with a newline sequence.
+	# If called with an array argument, writes each element on a new line.
+	# If called without arguments, outputs a single record separator.
+	public function puts()
+	{
+		global $g_prack_f_sep;
+		
+		$args = func_get_args();
+		foreach ( $args as $printable )
+		{
+			if ( is_array( $printable ) )
+				$printable = implode( $g_prack_f_sep, array_map( 'trim', $printable ) );
+			
+			$this->_print( (string)$printable );
+		}
+	}
+	
+	// TODO: Document!
+	# Writes the given object(s) to <em>ios</em>. The stream must be
+	# opened for writing. If the output field separator (<code>$,</code>)
+	# is not <code>nil</code>, it will be inserted between each object.
+	# If the output record separator (<code>$\\</code>)
+	# is not <code>nil</code>, it will be appended to the output. If no
+	# arguments are given, prints <code>$_</code>. Objects that aren't
+	# strings will be converted by calling their <code>to_s</code> method.
+	# With no argument, prints the contents of the variable <code>$_</code>.
+	# Returns <code>nil</code>.
+	public function _print()
+	{
+		global $g_prack_last_gets;
+		global $g_prack_f_sep;
+		global $g_prack_o_sep;
+		
+		$args = func_get_args();
+		
+		if ( count( $args ) == 0 )
+			$args = array( $g_prack_last_gets );
+
+		foreach ( $args as $printable )
+		{
+			$this->write( $printable );
+			
+			if ( isset( $g_prack_f_sep ) )
+				$this->write( $g_prack_f_sep );
+		}
+		
+		if ( isset( $g_prack_o_sep ) )
+			$this->write( $g_prack_o_sep );
+	}
+	
+	// TODO: Document!
+	public function flush()
+	{
+		flush( $this->stream );
 	}
 	
 	// TODO: Document!
@@ -113,7 +186,7 @@ abstract class Prack_Utils_IO
 	// TODO: Document!
 	public function isReadable()
 	{
-		return ( $this instanceof Prack_Utils_IO_IReadable && $this->is_readable );
+		return ( $this instanceof Prack_Interface_ReadableStreamlike && $this->is_readable );
 	}
 	
 	// TODO: Document!
@@ -125,7 +198,7 @@ abstract class Prack_Utils_IO
 	// TODO: Document!
 	public function isWritable()
 	{
-		return ( $this instanceof Prack_Utils_IO_IWritable && $this->is_writable );
+		return ( $this instanceof Prack_Interface_WritableStreamlike && $this->is_writable );
 	}
 	
 	// TODO: Document!
@@ -153,8 +226,15 @@ abstract class Prack_Utils_IO
 		}
 	}
 	
+	// TODO: Document!
 	public function getLineNo()
 	{
 		return $this->line_no;
+	}
+	
+	// TODO: Document!
+	protected function getStream()
+	{
+		return $this->stream;
 	}
 }

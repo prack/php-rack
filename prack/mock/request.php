@@ -25,11 +25,11 @@ class Prack_FatalWarner
 	// TODO: Document!
 	public function string()
 	{
-		// Not sure why this is in the Ruby version.
-		return '';
+		return Prack_Wrapper_String::with( '' );
 	}
 }
 
+// TODO: Document!
 # Rack::MockRequest helps testing your Rack application without
 # actually using HTTP.
 #
@@ -52,14 +52,17 @@ class Prack_Mock_Request
 		$env = 
 			array(
 				'rack.version'      => Prack::version(),
-				'rack.input'        => fopen( "php://memory", "r+b" ),
-				'rack.errors'       => fopen( "php://memory", "w+b" ),
+				'rack.input'        => new Prack_Utils_IO_String(),
+				'rack.errors'       => new Prack_Utils_IO_String(),
 				'rack.multithread'  => false,
 				'rack.multiprocess' => false,
 				'rack.run_once'     => true
 			);
 		
-		$uri_components   = parse_url( $uri );
+		$uri_components = parse_url( $uri );
+		if ( isset( $uri_components[ 'path' ] ) && substr( $uri_components[ 'path' ], 0, 1 ) != '/' )
+			$uri_components[ 'path' ] = "/{$uri_components[ 'path' ]}";
+		
 		$necessary_fields = array( 'scheme', 'host', 'port', 'path', 'query' );
 		foreach ( $necessary_fields as $field )
 			$uri_components[ $field ] = isset( $uri_components[ $field ] ) ? $uri_components[ $field ] : '';
@@ -70,7 +73,7 @@ class Prack_Mock_Request
 		
 		// Different from Ruby in that PHP does not infer a default port of 443 for https URLs.
 		if ( !empty( $uri_components[ 'port' ] ) )
-			$env[ 'SERVER_PORT' ] = $uri_components[ 'port' ];
+			$env[ 'SERVER_PORT' ] = (string)$uri_components[ 'port' ];
 		else
 			$env[ 'SERVER_PORT' ] = ( $env[ 'rack.url_scheme' ] == 'https' ) ? '443' : '80';
 		
@@ -80,11 +83,20 @@ class Prack_Mock_Request
 		$env[ 'SCRIPT_NAME'     ] = isset( $options[ 'script_name' ] ) ? $options[ 'script_name' ] : '';
 		
 		if ( isset( $options[ 'fatal' ] ) )
+		{
 			$env[ 'rack.errors' ] = new Prack_FatalWarner();
+			unset( $options[ 'fatal' ] );
+		}
 		else
-			$env[ 'rack.errors' ] = new Prack_ErrorLogger( fopen( 'php://memory', 'w+b' ) );
+			$env[ 'rack.errors' ] = new Prack_Utils_IO_String();
 		
-		$params = isset( $options[ 'params' ] ) ? $options[ 'params' ] : null;
+		if ( isset( $options[ 'params' ] ) )
+		{
+			$params = $options[ 'params' ];
+			unset( $options[ 'params' ] );
+		} else
+			$params = null;
+		
 		if ( !is_null( $params ) )
 		{
 			if ( $env[ 'REQUEST_METHOD' ] == 'GET' )
@@ -95,14 +107,15 @@ class Prack_Mock_Request
 				parse_str( $env[ 'QUERY_STRING' ], $params_from_query_string );
 				$params = array_merge( $params, $params_from_query_string );
 				
-				$env[ 'QUERY_STRING' ] = http_build_query( $params );
+				$env[ 'QUERY_STRING' ] = urldecode( http_build_query( $params ) );
 			}
 			else if ( !isset( $options[ 'input' ] ) )
 			{
 				$options[ 'CONTENT_TYPE' ] = 'application/x-www-form-urlencoded';
 				if ( is_array( $params ) )
 				{
-					/* TODO: implement multipart form data parsing.
+					// FIXME: Implement multipart form data processing.
+					/*
 					# Ruby code, for reference: 
 					if data = Utils::Multipart.build_multipart(params)
 					  opts[ :input ] = data
@@ -116,7 +129,7 @@ class Prack_Mock_Request
 					if ( $multipart )
 						echo "TODO: Implement multipart.";
 					else
-						$options[ 'input' ] = http_build_query( $params );
+						$options[ 'input' ] = urldecode( http_build_query( $params ) );
 				}
 				else
 					$options[ 'input' ] = $params;
@@ -130,17 +143,14 @@ class Prack_Mock_Request
 			$rack_input = Prack_Utils_IO::withString( $options[ 'input' ] );
 		else
 			$rack_input = $options[ 'input' ];
+			
+		unset( $options[ 'input' ] );
 		
 		$env[ 'rack.input' ] = $rack_input;
 		if ( !isset( $env[ 'CONTENT_LENGTH' ] ) )
-		{
-			if ( !( $rack_input instanceof Prack_Utils_IO_ILengthAware ) )
-				throw new Prack_Error_Mock_Request_RackInputMustRespondToLength();
-			
 			$env[ 'CONTENT_LENGTH' ] = (string)$rack_input->length();
-		}
 		
-		foreach ($options as $field => $value)
+		foreach ( $options as $field => $value )
 		{
 			if ( is_string( $field ) )
 				$env[ $field ] = $value;
@@ -182,21 +192,20 @@ class Prack_Mock_Request
 	// TODO: Document!
 	public function request( $method = 'GET', $uri = '', $options = array() )
 	{
-		$env = self::envFor( $uri, array_merge( $options, array( 'method' => $method ) ) );
-		
 		if ( isset( $options[ 'lint' ] ) )
-			$middleware_app = new SampleMiddleware(); // new Prack_Lint( $middleware_app )
+		{
+			$middleware_app = new Prack_Lint( $this->middleware_app );
+			unset( $options[ 'lint' ] );
+		}
 		else
 			$middleware_app = $this->middleware_app;
 		
-		list( $status, $header, $body ) = $middleware_app->call( $env );
+		$env    = self::envFor( $uri, array_merge( $options, array( 'method' => $method ) ) );
+		$errors = $env[ 'rack.errors' ];
 		
-		return new Prack_Mock_Response( $status, $header, $body, $env[ 'rack.errors' ] );
-	}
-	
-	// TODO: Document!
-	public function getMiddlewareApp()
-	{
-		return $this->middleware_app;
+		list( $status, $headers, $body ) = $middleware_app->call( $env );
+		
+		$reflection = new ReflectionClass( 'Prack_Mock_Response' );
+		return $reflection->newInstanceArgs( array( $status, $headers, $body, $errors ) );
 	}
 }

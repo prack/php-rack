@@ -1,7 +1,8 @@
 <?php
 
 // TODO: Document!
-class Prack_URLMap implements Prack_IMiddlewareApp
+class Prack_URLMap
+  implements Prack_Interface_MiddlewareApp
 {
 	const ENTRY_ELEMENT_COUNT = 4;
 	
@@ -21,7 +22,7 @@ class Prack_URLMap implements Prack_IMiddlewareApp
 		foreach ( $builders as $builder )
 			array_push( $this->entries, $builder->toArray() );
 		
-		$comparison_function = create_function('$a,$b', 'return strlen($b[ 0 ].$b[ 1 ]) - strlen($a[ 0 ].$a[ 1 ]);');
+		$comparison_function = create_function('$a,$b', 'return strlen( $b[ 0 ].$b[ 1 ] ) - strlen( $a[ 0 ].$a[ 1 ] );');
 		usort( $this->entries, $comparison_function );
 		
 		return $this->entries;
@@ -44,9 +45,9 @@ class Prack_URLMap implements Prack_IMiddlewareApp
 				list( $entry_host, $entry_location, $entry_matcher, $entry_middleware_app ) = $entry;
 				
 				// All the conditions for which we'd consider the request host as a 'match':
-				$entry_host_viable  = ($entry_host      == $env_http_host);
-				$server_name_viable = ($env_server_name == $env_http_host);
-				$http_host_viable   = empty( $entry_host) &&
+				$entry_host_viable  = ( $entry_host      == $env_http_host );
+				$server_name_viable = ( $env_server_name == $env_http_host );
+				$http_host_viable   = empty( $entry_host ) &&
 				                      ( $env_http_host == $env_server_name ||
 				                        $env_http_host == $env_server_name.':'.$env_server_port );
 				
@@ -77,9 +78,9 @@ class Prack_URLMap implements Prack_IMiddlewareApp
 			}
 			return array( 404, array( 'Content-Type' => 'text/html', 'X-Cascade' => "pass" ), array( "Not Found: {$env_path}" ) );
 		}
-		catch (Exception $e)
+		catch ( Exception $e )
 		{
-			$env = array_merge( $env, array( 'PATH_INFO' => $env_path, 'SCRIPT_NAME' => $env_script_name) );
+			$env = array_merge( $env, array( 'PATH_INFO' => $env_path, 'SCRIPT_NAME' => $env_script_name ) );
 			throw $e;
 		}
 	}

@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_Utils_IO_Tempfile extends Prack_Utils_IO
-  implements Prack_Utils_IO_IReadable, Prack_Utils_IO_IWritable, Prack_Utils_IO_IRewindable
+  implements Prack_Interface_ReadableStreamlike, Prack_Interface_WritableStreamlike
 {
 	private $tempfile_path;
 	
@@ -19,7 +19,7 @@ class Prack_Utils_IO_Tempfile extends Prack_Utils_IO
 	}
 	
 	// TODO: Document!
-	public function read( $length = null, &$buffer = null)
+	public function read( $length = null, &$buffer = null )
 	{
 		return parent::read( $length, $buffer );
 	}

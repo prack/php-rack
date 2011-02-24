@@ -1,10 +1,12 @@
 <?php
 
+require_once join( DIRECTORY_SEPARATOR, array(dirname(__FILE__), '..', 'support', 'testhelper.php') );
+
 // TODO: Document!
 class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase 
 {
 	private $string_io;
-	private $callback_state;
+	private $items;
 	
 	/**
 	 * Set up a IO instance before each test
@@ -49,7 +51,7 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 		{
 			$this->string_io->read();
 		} 
-		catch ( Prack_Error_Runtime_IOError $e )
+		catch ( Prack_Error_IO $e )
 		{
 			return;
 		}
@@ -129,7 +131,7 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 		{
 			$this->string_io->gets();
 		} 
-		catch ( Prack_Error_Runtime_IOError $e )
+		catch ( Prack_Error_IO $e )
 		{
 			return;
 		}
@@ -144,25 +146,34 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_each()
 	{
-		$callback = array( $this, 'eachCallback' );
+		$callback = array( $this, 'addToItems' );
 		
-		$this->callback_state = array();
+		$this->items = array();
+		
 		$this->string_io->each( $callback );
-		$this->assertEquals( array( 'hello world' ), $this->callback_state );
-		$this->assertEquals( count( $this->callback_state ), $this->string_io->getLineNo() );
+		$this->assertEquals( array( 'hello world' ), $this->items );
+		$this->assertEquals( count( $this->items ), $this->string_io->getLineNo() );
 		
 		$this->string_io->close();
 		try
 		{
 			$this->string_io->each( $callback );
 		} 
-		catch ( Prack_Error_Runtime_IOError $e )
+		catch ( Prack_Error_IO $e )
 		{
 			return;
 		}
 		
-		$this->fail( 'Expected exception from read() on read-closed stream.' );
+		$this->fail( 'Expected exception from each() on read-closed stream.' );
 	} // It should be able to handle each
+	
+	/**
+	 * This function is used by the above test as a callback
+	 */
+	public function addToItems( $item )
+	{
+		array_push( $this->items, $item );
+	}
 	
 	/**
 	 * It should throw an exception on each if callback is not callable
@@ -172,17 +183,9 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	public function It_should_throw_an_exception_on_each_if_callback_is_not_callable()
 	{
 		$callback = array( $this, 'lolnowai' );
-		$this->setExpectedException( 'Prack_Error_Runtime_CallbackInvalid' );
+		$this->setExpectedException( 'Prack_Error_Callback' );
 		$this->string_io->each( $callback );
 	} // It should throw an exception on each if callback is not callable
-	
-	/**
-	 * This function is used by the above test as a callback
-	 */
-	public function eachCallback( $item )
-	{
-		array_push( $this->callback_state, $item );
-	}
 	
 	/**
 	 * It should handle read on really big strings
@@ -212,7 +215,7 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 		{
 			$this->string_io->write( 'denied' );
 		} 
-		catch ( Prack_Error_Runtime_IOError $e )
+		catch ( Prack_Error_IO $e )
 		{
 			return;
 		}
@@ -221,14 +224,14 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	} // It should handle write
 	
 	/**
-	 * It should be possible to call close when no data has been buffered yet
+	 * It should be possible to call close immediately
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function It_should_be_possible_to_call_close_when_no_data_has_been_buffered_yet()
+	public function It_should_be_possible_to_call_close_immediately()
 	{
 		$this->string_io->close();
-	} // It should be possible to call close when no data has been buffered yet
+	} // It should be possible to call close immediately
 	
 	/**
 	 * It should be possible to call close multiple times
@@ -240,4 +243,30 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 		$this->string_io->close();
 		$this->string_io->close();
 	} // It should be possible to call close multiple times
+}
+
+// TODO: Document!
+class Prack_Utils_IO_StringTest extends PHPUnit_Framework_TestCase 
+{
+	/**
+	 * It should throw an exception if the string is too big
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_throw_an_exception_if_the_string_is_too_big()
+	{
+		$max_length = Prack_Utils_IO_String::MAX_STRING_LENGTH;
+		$gibberish  = TestHelper::gibberish( 4096 );
+		$iterations = floor( (float)$max_length / (float)strlen( $gibberish ) ) + 1; // Just a bit over the limit!
+		
+		ob_start();
+			for ( $i = 0; $i < $iterations; $i++ )
+				echo $gibberish;
+		$bigass_string = ob_get_contents();
+		
+		ob_end_clean();
+		
+		$this->setExpectedException( 'Prack_Error_Runtime_StringTooBigForStringIO' );
+		new Prack_Utils_IO_String( $bigass_string );
+	} // It should throw an exception if the string is too big
 }

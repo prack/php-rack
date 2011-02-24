@@ -58,7 +58,7 @@ class Prack_Request
 	{
 		static $parseable_data_media_types = null;
 		
-		if (empty( $parseable_data_media_types ) )
+		if ( empty( $parseable_data_media_types ) )
 		{
 			$parseable_data_media_types = array(
 				'multipart/related',
@@ -454,23 +454,18 @@ class Prack_Request
 	}
 	
 	// TODO: Document!
-	// FIXME: The unit tests for this function require Prack_Lint to be implemented. That'll take a while.
-	/*
-	
 	public function ip()
 	{
-		$address = $this->env[ 'HTTP_X_FORWARDED_FOR' ];
+		$address = isset( $this->env[ 'HTTP_X_FORWARDED_FOR' ] ) ? $this->env[ 'HTTP_X_FORWARDED_FOR' ] : null;
 		if ( isset( $address ) )
 		{
-			$address = preg_split( '/,/', $address );
+			$address = explode( ',', $address );
 			$address = preg_grep( '/\d\./', $address );
-			return isset( $address[ 0 ] ) ? $address[ 0 ] : strip( (string)$this->env[ 'REMOTE_ADDR' ]);
+			return reset( $address ) ? reset( $address ) : trim( (string)$this->env[ 'REMOTE_ADDR' ] );
 		}
 		
 		return isset( $this->env[ 'REMOTE_ADDR' ] ) ? $this->env[ 'REMOTE_ADDR' ] : null;
 	}
-	
-	*/
 	
 	// TODO: Document!
 	public function &getEnv()

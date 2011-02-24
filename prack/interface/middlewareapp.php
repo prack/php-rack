@@ -1,8 +1,7 @@
 <?php
 
 // TODO: Document!
-interface Prack_IMiddlewareApp
+interface Prack_Interface_MiddlewareApp
 {
-	// TODO: Document!
 	public function call( &$env );
 }

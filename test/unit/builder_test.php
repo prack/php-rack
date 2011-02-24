@@ -214,7 +214,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		         ->map( '/secret' )
 		           ->run( $middleware_app );
 		
-		$this->assertTrue( $domain->toMiddlewareApp() instanceof Prack_IMiddlewareApp );
+		$this->assertTrue( $domain->toMiddlewareApp() instanceof Prack_Interface_MiddlewareApp );
 	} // instance method toMiddlewareApp should return an object which confirms to Prack_IMiddleware interface
 	
 	/**

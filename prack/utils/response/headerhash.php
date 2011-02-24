@@ -11,7 +11,7 @@ class Prack_Utils_Response_HeaderHash
 	{
 		$distilled = array();
 		
-		foreach( $headerhash->getEntries() as $key => $value )
+		foreach ( $headerhash->getEntries() as $key => $value )
 		{
 			if ( is_array( $value ) )
 				$distilled[ $key ] = implode( "\n", $value );
@@ -43,10 +43,11 @@ class Prack_Utils_Response_HeaderHash
 	// TODO: Document!
 	public function each( $callback )
 	{
-		$distilled = self::distill( $this );
+		if ( !is_callable( $callback ) )
+			throw new Prack_Error_Callback();
 		
-		if ( is_callable( $callback ) )
-			array_walk( $distilled, $callback );
+		$distilled = self::distill( $this );
+		array_walk( $distilled, $callback );
 	}
 	
 	// TODO: Document!

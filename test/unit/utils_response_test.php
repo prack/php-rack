@@ -5,48 +5,19 @@ class Prack_Utils_Response_HeaderHashTest extends PHPUnit_Framework_TestCase
 {
 	private $invocation_count;
 	
-	
-	static function rawHeaders()
-	{
-		static $headers = null;
-		
-		if ( is_null( $headers ) )
-		{
-			$headers = array(
-				'Content-Type'     => 'text/html',
-				'Content-Length'   => '80',
-				'WWW-Authenticate' => array( 'http basic', 'http digest' )/* derp */
-			);
-		}
-		
-		return $headers;
-	}
-	
 	/**
-	 * new instance should properly translate raw associative array into headers in object context
+	 * It should 'distill' headers, packing an array of values in a newline-separated string
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function new_instance_should_properly_translate_raw_associative_array_into_headers_in_object_context()
+	public function It_should__distill__headers__packing_an_array_of_values_in_a_newline_separated_string()
 	{
-		$headers    = self::rawHeaders();
-		$headerhash = new Prack_Utils_Response_HeaderHash( $headers );
+		$headers = array(
+			'Content-Type'     => 'text/html',
+			'Content-Length'   => '80',
+			'WWW-Authenticate' => array( 'http basic', 'http digest' ) /* derp */
+		);
 		
-		foreach ( $headerhash->getEntries() as $header => $value )
-			$this->assertArrayHasKey( $header, $headers );
-		
-		$translations = $headerhash->getTranslations();
-		$this->assertFalse( empty( $translations ) );
-	} // new instance should properly translate raw associative array into headers in object context
-	
-	/**
-	 * instance method each should distill entries and then call the provided callback for each
-	 * @author Joshua Morris
-	 * @test
-	 */
-	public function instance_method_each_should_distill_entries_and_then_call_the_provided_callback_for_each()
-	{
-		$headers    = self::rawHeaders();
 		$headerhash = new Prack_Utils_Response_HeaderHash( $headers );
 		$callback   = array( $this, 'eachCallback' );
 		
@@ -54,7 +25,8 @@ class Prack_Utils_Response_HeaderHashTest extends PHPUnit_Framework_TestCase
 		$headerhash->each( array( $this, 'eachCallback' ) );
 		
 		$this->assertEquals( count( $headers ), $this->invocation_count );
-	} // instance method each should distill entries and then call the provided callback for each
+	} // It should 'distill' headers, packing an array of values in a newline-separated string
+	
 	
 	/**
 	 * Callback function used by the above test.
@@ -65,13 +37,18 @@ class Prack_Utils_Response_HeaderHashTest extends PHPUnit_Framework_TestCase
 	}
 	
 	/**
-	 * instance method toArray should return distilled entries
+	 * It should return distilled headers on toArray
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function instance_method_toArray_should_return_distilled_entries()
+	public function It_should_return_distilled_headers_on_toArray()
 	{
-		$headers    = self::rawHeaders();
+		$headers = array(
+			'Content-Type'     => 'text/html',
+			'Content-Length'   => '80',
+			'WWW-Authenticate' => array( 'http basic', 'http digest' ) /* derp */
+		);
+		
 		$headerhash = new Prack_Utils_Response_HeaderHash( $headers );
 		
 		$distilled = array(
@@ -81,7 +58,7 @@ class Prack_Utils_Response_HeaderHashTest extends PHPUnit_Framework_TestCase
 		);
 		
 		$this->assertEquals( $distilled, $headerhash->toArray() );
-	} // instance method toArray should return distilled entries
+	} // It should return distilled headers on toArray
 	
 	/**
 	 * It should retain header case
@@ -273,5 +250,4 @@ class Prack_Utils_Response_HeaderHashTest extends PHPUnit_Framework_TestCase
 		$headerhash_mock->hasKey( 'foo' );
 		$headerhash_mock->isMember( 'foo' );
 	} // It should alias hasKey and isMember to contains
-	
 }

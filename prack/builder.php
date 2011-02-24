@@ -10,9 +10,9 @@ class Prack_Builder
 	private $middleware_stack; // array of indexed 'specification' arrays containing: 
 	                           //   [ 0 ]=>string  (middleware class name)
 	                           //   [ 1 ]=>array() (args for the specified middleware's constructor)
-	private $endpoint;         // Prack_IMiddlewareApp OR indexed array of child builders
+	private $endpoint;         // Prack_Interface_MiddlewareApp OR indexed array of child builders
 	                           //   NOTE: If array, lazily converted to Prack_URLMap in toMiddlewareApp().
-	                           //   (Prack_URLMap is an instance of Prack_IMiddlewareApp, and is thus callable middleware)
+	                           //   (Prack_URLMap is an instance of Prack_Interface_MiddlewareApp, and is thus callable middleware)
 	private $fi_using_class;   // string containing previous value on call to using(): state for fluent interface.
 	
 	// TODO: Document!
@@ -183,7 +183,7 @@ class Prack_Builder
 	// TODO: Document!
 	public function isShallow()
 	{
-		return ( $this->endpoint instanceof Prack_IMiddlewareApp );
+		return ( $this->endpoint instanceof Prack_Interface_MiddlewareApp );
 	}
 	
 	// TODO: Document!

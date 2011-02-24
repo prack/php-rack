@@ -1,11 +1,25 @@
 <?php
 
 // TODO: Document!
-class MyRequest extends Prack_Request
+class Prack_RequestTest_MyRequest extends Prack_Request
 {
 	public function params()
 	{
-		return array( 'foo' => 'bar');
+		return array( 'foo' => 'bar' );
+	}
+}
+
+// TODO: Document!
+class Prack_RequestTest_IPInformation
+  implements Prack_Interface_MiddlewareApp
+{
+	// TODO: Document!
+	public function call( &$env )
+	{
+		$request  = new Prack_Request( $env );
+		$response = new Prack_Response();
+		$response->write( $request->ip() );
+		return $response->finish();
 	}
 }
 
@@ -266,7 +280,7 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		$request = new Prack_Request( Prack_Mock_Request::envFor( '?foo=baz&wun=der&bar=ful' ) );
 		$this->assertEquals( array( 'baz' ), $request->valuesAt( 'foo' ) );
 		$this->assertEquals( array( 'baz', 'der' ), $request->valuesAt( 'foo', 'wun' ) );
-		$this->assertEquals( array( 'ful', 'baz', 'der' ), $request->valuesAt( 'bar', 'foo', 'wun') );
+		$this->assertEquals( array( 'ful', 'baz', 'der' ), $request->valuesAt( 'bar', 'foo', 'wun' ) );
 	} // It should return values for the keys in the order given from valuesAt
 	
 	/**
@@ -531,7 +545,36 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		return $request->acceptEncoding();
 	}
 	
-	// should provide ip information
+	/**
+	 * It should provide ip information
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_provide_ip_information()
+	{
+		$mock_request  = new Prack_Mock_Request( new Prack_RequestTest_IPInformation() );
+		
+		$mock_response = $mock_request->get( '/', array( 'REMOTE_ADDR' => '123.123.123.123' ) );
+		$this->assertEquals( '123.123.123.123', $mock_response->getBody() );
+		
+		$mock_response = $mock_request->get( '/', array(
+			'REMOTE_ADDR'          => '123.123.123.123',
+			'HTTP_X_FORWARDED_FOR' => '234.234.234.234'
+		) );
+		$this->assertEquals( '234.234.234.234', $mock_response->getBody() );
+		
+		$mock_response = $mock_request->get( '/', array(
+			'REMOTE_ADDR'          => '123.123.123.123',
+			'HTTP_X_FORWARDED_FOR' => '234.234.234.234,212.212.212.212'
+		) );
+		$this->assertEquals( '234.234.234.234', $mock_response->getBody() );
+		
+		$mock_response = $mock_request->get( '/', array(
+			'REMOTE_ADDR'          => '123.123.123.123',
+			'HTTP_X_FORWARDED_FOR' => 'unknown,234.234.234.234,212.212.212.212'
+		) );
+		$this->assertEquals( '234.234.234.234', $mock_response->getBody() );
+	} // It should provide ip information
 	
 	/**
 	 * It should allow subclass request to be instantiated after parent request
@@ -546,7 +589,7 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( array( 'foo' => 'bar' ), $request1->GET() );
 		$this->assertEquals( array( 'foo' => 'bar' ), $request1->params() );
 		
-		$request2 = new MyRequest( $env );
+		$request2 = new Prack_RequestTest_MyRequest( $env );
 		$this->assertEquals( array( 'foo' => 'bar' ), $request2->GET() );
 		$this->assertEquals( array( 'foo' => 'bar' ), $request2->params() );
 	} // It should allow subclass request to be instantiated after parent request
@@ -560,7 +603,7 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 	{
 		$env = Prack_Mock_Request::envFor( '/?foo=bar' );
 		
-		$request1 = new MyRequest( $env );
+		$request1 = new Prack_RequestTest_MyRequest( $env );
 		$this->assertEquals( array( 'foo' => 'bar' ), $request1->GET() );
 		$this->assertEquals( array( 'foo' => 'bar' ), $request1->params() );
 

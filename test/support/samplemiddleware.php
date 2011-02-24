@@ -1,6 +1,7 @@
 <?php
 
-class SampleMiddleware implements Prack_IMiddlewareApp
+class SampleMiddleware
+  implements Prack_Interface_MiddlewareApp
 {
 	private $app;
 	private $message;

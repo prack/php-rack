@@ -4,7 +4,7 @@
 class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase 
 {
 	private $rewindable_input;
-	private $callback_invocation_count;
+	private $lines;
 	
 	/**
 	 * Set up a IO instance before each test
@@ -49,7 +49,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		{
 			$this->rewindable_input->read();
 		} 
-		catch ( Prack_Error_Runtime_IOError $e )
+		catch ( Prack_Error_IO $e )
 		{
 			return;
 		}
@@ -129,7 +129,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		{
 			$this->rewindable_input->gets();
 		} 
-		catch ( Prack_Error_Runtime_IOError $e )
+		catch ( Prack_Error_IO $e )
 		{
 			return;
 		}
@@ -146,16 +146,16 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'eachCallback' );
 		
-		$this->callback_state = array();
+		$this->lines = array();
 		$this->rewindable_input->each( $callback );
-		$this->assertEquals( array( 'hello world' ), $this->callback_state );
+		$this->assertEquals( array( 'hello world' ), $this->lines );
 		
 		$this->rewindable_input->close();
 		try
 		{
 			$this->rewindable_input->each( $callback );
 		} 
-		catch ( Prack_Error_Runtime_IOError $e )
+		catch ( Prack_Error_IO $e )
 		{
 			return;
 		}
@@ -168,7 +168,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function eachCallback( $item )
 	{
-		array_push( $this->callback_state, $item );
+		array_push( $this->lines, $item );
 	}
 	
 	/**

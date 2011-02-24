@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_RewindableInput 
-  implements Prack_Utils_IO_IReadable, Prack_Utils_IO_IRewindable, Prack_Utils_IO_ILengthAware
+  implements Prack_Interface_ReadableStreamlike, Prack_Interface_LengthAware
 {
 	const CHUNK_SIZE = 4096; // 4KB chunk size for read
 	
@@ -32,7 +32,7 @@ class Prack_RewindableInput
 			return $this->rewindable_io->gets();
 		}
 		
-		throw new Prack_Error_Runtime_IOError( 'stream is not readable' );
+		throw new Prack_Error_IO( 'stream is not readable' );
 	}
 	
 	// TODO: Document!
@@ -46,7 +46,7 @@ class Prack_RewindableInput
 			return $this->rewindable_io->read( $length, $buffer );
 		}
 		
-		throw new Prack_Error_Runtime_IOError( 'stream is not readable' );
+		throw new Prack_Error_IO( 'stream is not readable' );
 	}
 	
 	// TODO: Document!
@@ -60,7 +60,7 @@ class Prack_RewindableInput
 			return $this->rewindable_io->each( $callback );
 		}
 		
-		throw new Prack_Error_Runtime_IOError( 'stream is not readable' );
+		throw new Prack_Error_IO( 'stream is not readable' );
 	}
 	
 	// TODO: Document!

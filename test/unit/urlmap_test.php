@@ -41,7 +41,7 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 		foreach ( $domain_entries as $entry )
 		{
 			$this->assertTrue( is_array( $entry ) );
-			$this->assertTrue( count($entry) == Prack_URLMap::ENTRY_ELEMENT_COUNT );
+			$this->assertTrue( count( $entry ) == Prack_URLMap::ENTRY_ELEMENT_COUNT );
 		}
 	} // instance method remap should transform an indexed array of builders into a lookup table for primitive routing
 	
@@ -160,7 +160,7 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 		{
 			$this->domain_as_middleware_app->call( $env );
 		}
-		catch (Exception $e)
+		catch ( Exception $e )
 		{
 			// Don't need to do anything here.
 		}
