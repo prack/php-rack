@@ -1,4 +1,5 @@
 build
 coverage
+doc
 phpunit.xml
 .DS_Store
