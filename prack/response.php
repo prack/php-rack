@@ -26,41 +26,52 @@ class Prack_Response
 	private $body;
 	
 	// TODO: Document!
-	static function wrap( $item )
+	static function defaultHeaders()
 	{
-		if ( is_string( $item ) || $item instanceof Prack_Interface_Stringable )
-			return Prack_Wrapper_String::with( (string)$item );
+		static $default_headers = null;
 		
-		else if ( is_array( $item ) )
-			return Prack_Wrapper_Array::with( $item );
+		if ( is_null( $default_headers ) )
+			$default_headers = Prack::_Hash( 
+				array( 'Content-Type' => Prack::_String( 'text/html' )
+			) );
 		
-		return $item;
+		return $default_headers;
 	}
 	
 	// TODO: Document!
-	function __construct( $body = array(), $status = 200, $headers = array(), $on_build = null )
+	static function with( $body = null, $status = 200, $headers = null, $on_build = null )
 	{
-		$this->status       = (int)$status;
-		$this->header       = new Prack_Utils_Response_HeaderHash( array_merge( array( 'Content-Type' => 'text/html' ), $headers ) );
+		return new Prack_Response( $body, $status, $headers, $on_build );
+	}
+	
+	// TODO: Document!
+	function __construct( $body = null, $status = 200, $headers = null, $on_build = null )
+	{
+		$body = is_null( $body ) ? Prack::_Array() : $body;
+		if ( !( $body instanceof Prack_Interface_Stringable ) && !( $body instanceof Prack_Interface_Enumerable ) )
+			throw new Prack_Error_Type( 'FAILSAFE: __construct $body must be Stringable or Enumerable' );
 		
+		$status = is_null( $status ) ? 200 : (int)$status;
+		
+		$headers = is_null( $headers ) ? self::defaultHeaders() : $headers;
+		if ( !( $headers instanceof Prack_Wrapper_Hash ) )
+			throw new Prack_Error_Type( 'FAILSAFE: __construct $headers an instance of Hash' );
+		
+		$this->status       = (int)$status;
+		$this->header       = new Prack_Utils_Response_HeaderHash( self::defaultHeaders()->merge( $headers ) );
 		$this->writer       = array( $this, 'onWrite' );
 		$this->callback     = null;
 		$this->after_finish = null;
 		$this->length       = 0;
-		
-		$this->body         = Prack_Wrapper_Array::with( array() );
+		$this->body         = Prack::_Array();
 		
 		// Wrap the body if applicable so it has an interface.
-		$body = self::wrap( $body );
-		
-		if ( $body instanceof Prack_Wrapper_String )
-			$this->write( $body );
+		if ( $body instanceof Prack_Interface_Stringable )
+			$this->write( $body->toS() );
 		else if ( $body instanceof Prack_Interface_Enumerable )
-			$body->each( array( $this, 'onWrite' ) );
-		else
-			throw new Prack_Error_Type();
+			$body->each( $this->writer );
 		
-		if ( isset( $on_build ) && is_callable( $on_build ) )
+		if ( is_callable( $on_build ) )
 			call_user_func( $on_build, $this );
 	}
 	
@@ -73,12 +84,12 @@ class Prack_Response
 			return call_user_func_array( array( self::DELEGATE, $method ), $args );
 		}
 		
-		throw new Prack_Error_Runtime_DelegationFailed( "Cannot delegate {$method} in Prack_Response." );
+		throw new Prack_Error_Runtime_DelegationFailed( "cannot delegate {$method} in Prack_Response" );
 	}
 	
 	public function onWrite( $addition )
 	{
-		return $this->body->push( (string)$addition );
+		return $this->body->push( $addition );
 	}
 	
 	// TODO: Document!
@@ -86,11 +97,9 @@ class Prack_Response
 	# NOTE: Do not mix #write and direct #body access!
 	public function write( $buffer )
 	{
-		$this->length += ( $buffer instanceof Prack_Wrapper_String ) ? $buffer->length()
-		                                                             : strlen( (string)$buffer );
+		$this->length += $buffer->length();
 		call_user_func( $this->writer, $buffer );
-		$this->set( 'Content-Length', (string)$this->length );
-		
+		$this->set( 'Content-Length', Prack::_String( (string)$this->length ) );
 		return $buffer;
 	}
 	
@@ -124,7 +133,10 @@ class Prack_Response
 	// TODO: Document!
 	public function redirect( $target, $status = 302 )
 	{
-		$this->set( 'Location', $target );
+		if ( !( $target instanceof Prack_Interface_Stringable ) )
+			throw new Prack_Error_Type( 'redirect argument must be Stringable' );
+		
+		$this->set( 'Location', $target->toS() );
 		$this->status = $status;
 	}
 	
@@ -136,14 +148,14 @@ class Prack_Response
 		if ( in_array( (int)$this->status, array( 204, 304 ) ) )
 		{
 			$this->header->delete( 'Content-Type' );
-			return array( (int)$this->status, $this->header->toArray(), Prack_Wrapper_Array::with( array() ) );
+			return array( (int)$this->status, $this->header->toHash(), Prack::_Array() );
 		}
 		
-		return array( (int)$this->status, $this->header->toArray(), $this );
+		return array( (int)$this->status, $this->header->toHash(), $this );
 	}
 	
 	// TODO: Document!
-	public function toArray() 
+	public function toA() 
 	{
 		return $this->finish();
 	}
