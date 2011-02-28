@@ -1,62 +1,18 @@
 <?php
 
 // TODO: Document!
-class Prack_LintTest_Echo
-  implements Prack_Interface_MiddlewareApp
-{
-	private $status;
-	private $headers;
-	private $body;
-	private $eval;
-	
-	// TODO: Document!
-	function __construct( $status = 200, $headers = array( 'Content-Type' => 'test/plain' ), $body = array( 'foo' ) )
-	{
-		$this->status  = $status;
-		$this->headers = $headers;
-		$this->body    = $body;
-		$this->eval    = null;
-	}
-	
-	// TODO: Document!
-	public function call( &$env )
-	{
-		if ( $this->eval )
-			eval( $this->eval );
-		
-		return array( $this->status, $this->headers, $this->body );
-	}
-	
-	public function setEval( $eval )
-	{
-		$this->eval = $eval;
-	}
-}
-
-// TODO: Document!
 class Prack_LintTest_WeirdIO
   implements Prack_Interface_ReadableStreamlike
 {
-	// TODO: Document!
-	public function gets()
-	{
-		return 42;
-	}
+	public function gets()                                 { return 42; }
+	public function read( $length = null, $buffer = null ) { return 23; }
 	
-	// TODO: Document!
-	public function read( $length = null, &$buffer = null )
-	{
-		return 23;
-	}
-	
-	// TODO: Document!
 	public function each( $callback )
 	{
 		call_user_func( $callback, 23 );
 		call_user_func( $callback, 42 );
 	}
 	
-	// TODO: Document!
 	public function rewind()
 	{
 		throw new Prack_Error_System_ErrnoESPIPE();
@@ -67,27 +23,10 @@ class Prack_LintTest_WeirdIO
 class Prack_LintTest_EOFWeirdIO
   implements Prack_Interface_ReadableStreamlike
 {
-	// TODO: Document!
-	public function gets()
-	{
-		return null;
-	}
-	
-	// TODO: Document!
-	public function read( $length = null, &$buffer = null )
-	{
-		return null;
-	}
-	
-	// TODO: Document!
-	public function each( $callback )
-	{
-	}
-	
-	// TODO: Document!
-	public function rewind()
-	{
-	}
+	public function gets()                                 { return null; }
+	public function read( $length = null, $buffer = null ) { return null; }
+	public function each( $callback )                      { /* noop, isn't called */ }
+	public function rewind()                               { /* noop, isn't called */ }
 }
 
 // TODO: Document!
@@ -103,7 +42,7 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	static function env()
 	{
 		$args = func_get_args();
-		array_unshift( $args, '/' );
+		array_unshift( $args, Prack::_String( '/' ) );
 		return call_user_func_array( array( 'Prack_Mock_Request', 'envFor' ), $args );
 	}
 	
@@ -114,9 +53,9 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_pass_valid_request()
 	{
-		$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-		$env  = self::env();
-		$lint->call( $env );
+		Prack_Lint::with(
+			new TestEcho()
+		)->call( self::env() );
 	} // It should pass valid request
 	
 	/**
@@ -128,9 +67,9 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	{
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = null;
-			$lint->call( $env );
+			Prack_Lint::with(
+			  new TestEcho()
+			)->call( null );
 		} catch ( Exception $e ) { }
 		
 		if ( isset( $e ) )
@@ -149,15 +88,15 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_notice_environment_errors()
 	{
+		$lint = Prack_Lint::with( new TestEcho() );
+		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = 5;
-			$lint->call( $env );
+			$lint->call( 5 );
 		} catch ( Prack_Error_Lint $e1 ) { }
 		
 		if ( isset( $e1 ) )
-			$this->assertRegExp( '/not an array/', $e1->getMessage() );
+			$this->assertRegExp( '/not a Prack_Wrapper_Hash/', $e1->getMessage() );
 		else
 		{
 			$this->fail( 'Expected exception on non-array $env.' );
@@ -166,9 +105,8 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env();
-			unset( $env[ 'REQUEST_METHOD' ] );
+			$env = self::env();
+			$env->delete( 'REQUEST_METHOD' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e2 ) { }
 		
@@ -182,9 +120,8 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env();
-			unset( $env[ 'SERVER_NAME' ] );
+			$env = self::env();
+			$env->delete( 'SERVER_NAME' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e3 ) { }
 		
@@ -198,8 +135,11 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'HTTP_CONTENT_TYPE' => 'text/plain' ) );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'HTTP_CONTENT_TYPE' => Prack::_String( 'text/plain' )
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e4 ) { }
 		
@@ -213,8 +153,11 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'HTTP_CONTENT_LENGTH' => '42' ) );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'HTTP_CONTENT_LENGTH' => Prack::_String( '42' )
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e5 ) { }
 		
@@ -228,8 +171,11 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'FOO' => array() ) );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'FOO' => 'bar' // Not a wrapped string.
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e6 ) { }
 		
@@ -243,13 +189,16 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'rack.version' => "0.2" ) );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'rack.version' => "0.2"
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e7 ) { }
 		
 		if ( isset( $e7 ) )
-			$this->assertRegExp( '/must be an array/', $e7->getMessage() );
+			$this->assertRegExp( '/must be a Prack_Wrapper_Array/', $e7->getMessage() );
 		else
 		{
 			$this->fail( 'Expected exception on $env where rack.version is not an array.' );
@@ -258,8 +207,11 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'rack.url_scheme' => 'gopher' ) );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'rack.url_scheme' => Prack::_String( 'gopher' )
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e8 ) { }
 		
@@ -275,7 +227,6 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		/*
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
 			$env  = self::env( array( 'rack.session' => new stdClass() ) );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e9 ) { }
@@ -293,7 +244,6 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		/*
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
 			$env  = self::env( array( 'rack.logger' => new stdClass() ) );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e10 ) { }
@@ -309,8 +259,11 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'REQUEST_METHOD' => 'FUBAR?' ) );
+			$env  = self::env(
+			  Prack::_Hash( array(
+			    'REQUEST_METHOD' => Prack::_String( 'FUBAR?' )
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e11 ) { }
 		
@@ -324,8 +277,11 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'SCRIPT_NAME' => 'howdy' ) );
+			$env  = self::env(
+			  Prack::_Hash( array(
+			    'SCRIPT_NAME' => Prack::_String( 'howdy' )
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e12 ) { }
 		
@@ -339,8 +295,11 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'PATH_INFO' => '../foo' ) );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'PATH_INFO' => Prack::_String( '../foo' )
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e13 ) { }
 		
@@ -354,8 +313,11 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'CONTENT_LENGTH' => 'xcii' ) );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'CONTENT_LENGTH' => Prack::_String( 'xcii' )
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e14 ) { }
 		
@@ -369,10 +331,9 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env();
-			unset( $env[ 'PATH_INFO'   ] );
-			unset( $env[ 'SCRIPT_NAME' ] );
+			$env = self::env();
+			$env->delete( 'PATH_INFO'   );
+			$env->delete( 'SCRIPT_NAME' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e15 ) { }
 		
@@ -386,8 +347,11 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'SCRIPT_NAME' => '/' ) );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'SCRIPT_NAME' => Prack::_String( '/' )
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e16 ) { }
 		
@@ -419,9 +383,12 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'rack.input' => '' ) );
-			$lint->call( $env );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'rack.input' => Prack::_Array()
+			  ) )
+			);
+			Prack_Lint::with( new TestEcho() )->call( $env );
 		} catch ( Prack_Error_Lint $e17 ) { }
 		
 		if ( isset( $e17 ) )
@@ -442,9 +409,12 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	{
 		try
 		{
-			$lint = new Prack_Lint( new Prack_LintTest_Echo() );
-			$env  = self::env( array( 'rack.errors' => '' ) );
-			$lint->call( $env );
+			$env = self::env(
+			  Prack::_Hash( array(
+			    'rack.errors' => Prack::_String()
+			  ) )
+			);
+			Prack_Lint::with( new TestEcho() )->call( $env );
 		} catch ( Prack_Error_Lint $e18 ) { }
 		
 		if ( isset( $e18 ) )
@@ -463,12 +433,12 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_notice_status_errors()
 	{
+		$env = self::env();
+		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 'cc' ); // 'cc' as status arg
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho( 'cc' ); // 'cc' as status arg
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e19 ) { }
 		
 		if ( isset( $e19 ) )
@@ -481,10 +451,8 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 42 ); // 'cc' as status arg
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho( 42 ); // 42 as status arg
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e20 ) { }
 		
 		if ( isset( $e20 ) )
@@ -503,12 +471,12 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_notice_header_errors()
 	{
+		$env = self::env();
+		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, new stdClass(), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho( 200, new stdClass(), Prack::_Array() );
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e21 ) { }
 		
 		if ( isset( $e21 ) )
@@ -522,10 +490,8 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, array( 1 => false ), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho( 200, Prack::_Hash( array( 1 => false ) ), Prack::_Array() );
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e22 ) { }
 		
 		if ( isset( $e22 ) )
@@ -539,10 +505,12 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, array( 'Status' => '404' ), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho(
+			  200,
+			  Prack::_Hash( array( 'Status' => Prack::_String( '404' ) ) ),
+			  Prack::_Array()
+			);
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e23 ) { }
 		
 		if ( isset( $e23 ) )
@@ -555,10 +523,12 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, array( 'Content-Type:' => 'text/plain' ), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho(
+			  200,
+			  Prack::_Hash( array( 'Content-Type:' => Prack::_String( 'text/plain' ) ) ),
+			  Prack::_Array()
+			);
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e24 ) { }
 		
 		if ( isset( $e24 ) )
@@ -571,10 +541,12 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, array( 'Content-' => 'text/plain' ), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho(
+			  200,
+			  Prack::_Hash( array( 'Content-' => Prack::_String( 'text/plain' ) ) ),
+			  Prack::_Array()
+			);
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e25 ) { }
 		
 		if ( isset( $e25 ) )
@@ -587,10 +559,12 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, array( '..%%quark%%..' => 'text/plain' ), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho(
+			  200,
+			  Prack::_Hash( array( '..%%quark%%..' => Prack::_String( 'text/plain' ) ) ),
+			  Prack::_Array()
+			);
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e26 ) { }
 		
 		if ( isset( $e26 ) )
@@ -603,14 +577,16 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, array( 'Foo' => new stdClass() ), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho(
+			  200,
+			  Prack::_Hash( array( 'Foo' => new stdClass() ) ),
+			  Prack::_Array()
+			);
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e27 ) { }
 		
 		if ( isset( $e27 ) )
-			$this->assertEquals( "a header value must be a string, but the value of 'Foo' is a stdClass", $e27->getMessage() );
+			$this->assertEquals( "a header value must be a Prack_Wrapper_String, but the value of 'Foo' is a stdClass", $e27->getMessage() );
 		else
 		{
 			$this->fail( 'Expected exception on headers if the value is not a string.' );
@@ -619,14 +595,16 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, array( 'Foo' => array( 1, 2, 3 ) ), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho(
+			  200,
+			  Prack::_Hash( array( 'Foo' => Prack::_Array() ) ),
+			  Prack::_Array()
+			);
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e28 ) { }
 		
 		if ( isset( $e28 ) )
-			$this->assertEquals( "a header value must be a string, but the value of 'Foo' is a array", $e28->getMessage() );
+			$this->assertEquals( "a header value must be a Prack_Wrapper_String, but the value of 'Foo' is a Prack_Wrapper_Array", $e28->getMessage() );
 		else
 		{
 			$this->fail( 'Expected exception on headers if the value is not a string.' );
@@ -635,10 +613,12 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, array( 'Foo' => "text\000plain" ), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho(
+			  200,
+			  Prack::_Hash( array( 'Foo' => Prack::_String( "text\000plain" ) ) ),
+			  Prack::_Array()
+			);
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e29 ) { }
 		
 		if ( isset( $e29 ) )
@@ -649,12 +629,19 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 			return;
 		}
 		
+		// Implicit test:
+		
 		# line ends (010) should be allowed in header values.
-		$ok_headers     = array( 'Foo-Bar' => "one\ntwo\nthree", 'Content-Length' => '0', 'Content-Type' => 'text/plain' );
-		$middleware_app = new Prack_LintTest_Echo( 200, $ok_headers, array() );
-		$lint           = new Prack_Lint( $middleware_app );
-		$env            = self::env( array() );
-		$lint->call( $env );
+		$ok_headers = Prack::_Hash( array(
+		  'Foo-Bar'        => Prack::_String( "one\ntwo\nthree" ),
+		  'Content-Length' => Prack::_String( '0' ),
+		  'Content-Type'   => Prack::_String( 'text/plain' )
+		) );
+		Prack_Lint::with(
+		  new TestEcho( 200, $ok_headers, Prack::_Array() )
+		)->call( $env );
+		
+		// End implicit test.
 	} // It should notice header errors
 	
 	/**
@@ -664,12 +651,16 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_notice_content_type_errors()
 	{
+		$env = self::env();
+		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, array( 'Content-length' => '0' ), array() );
-			$lint           = new Prack_Lint( $middleware_app );
-			$env            = self::env( array() );
-			$lint->call( $env );
+			$middleware_app = new TestEcho(
+			  200,
+			  Prack::_Hash( array( 'Content-length' => Prack::_String( '0' ) ) ),
+			  Prack::_Array()
+			);
+			Prack_Lint::with( $middleware_app )->call( $env );
 		} catch ( Prack_Error_Lint $e30 ) { }
 		
 		if ( isset( $e30 ) )
@@ -684,11 +675,15 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		{
 			try
 			{
-				$middleware_app = new Prack_LintTest_Echo( $no_body_status, 
-				                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-				                                           array() );
+				$middleware_app = new TestEcho(
+				  $no_body_status, 
+				  Prack::_Hash( array(
+				    'Content-type'   => Prack::_String( 'text/plain' ),
+				    'Content-length' => Prack::_String( '0' )
+				  ) ),
+				  Prack::_Array()
+				);
 				$lint = new Prack_Lint( $middleware_app );
-				$env  = self::env( array() );
 				$lint->call( $env );
 			} catch ( Prack_Error_Lint $e31 ) { }
 
@@ -709,14 +704,18 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_notice_content_length_errors()
 	{
+		$env = self::env();
+		
 		foreach( array( 100, 101, 204, 304 ) as $no_body_status )
 		{
 			try
 			{
-				$middleware_app = new Prack_LintTest_Echo( $no_body_status, array( 'Content-length' => '0' ), array() );
-				$lint = new Prack_Lint( $middleware_app );
-				$env  = self::env( array() );
-				$lint->call( $env );
+				$middleware_app = new TestEcho(
+				  $no_body_status,
+				  Prack::_Hash( array( 'Content-length' => Prack::_String( '0' ) ) ),
+				  Prack::_Array()
+				);
+				Prack_Lint::with( $middleware_app )->call( $env );
 			} catch ( Prack_Error_Lint $e32 ) { }
 			
 			if ( isset( $e32 ) )
@@ -729,11 +728,15 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 			
 			try
 			{
-				$middleware_app = new Prack_LintTest_Echo( 200, 
-				                                           array( 'Content-type' => 'text/plain', 'Content-length' => '1' ), 
-				                                           array() );
+				$middleware_app = new TestEcho(
+				  200, 
+				  Prack::_Hash( array(
+				    'Content-type'   => Prack::_String( 'text/plain' ),
+				    'Content-length' => Prack::_String( '1' )
+				  ) ),
+				  Prack::_Array()
+				);
 				$lint = new Prack_Lint( $middleware_app );
-				$env  = self::env( array() );
 				list( $status, $headers, $lint ) = $lint->call( $env );
 				$lint->each( null );
 			} catch ( Prack_Error_Lint $e33 ) { }
@@ -757,12 +760,17 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	{
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 200, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '3' ), 
-			                                           array( 1, 2, 3 ) );
+			$middleware_app = new TestEcho(
+			  200, 
+			  Prack::_Hash( array(
+			    'Content-type'   => Prack::_String( 'text/plain' ),
+			    'Content-length' => Prack::_String( '3' )
+			  ) ),
+			  Prack::_Array( array( 1, 2, 3 ) )
+			);
+			
 			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
-			list( $status, $headers, $lint ) = $lint->call( $env );
+			list( $status, $headers, $lint ) = $lint->call( self::env() );
 			$lint->each( null );
 		} catch ( Prack_Error_Lint $e34 ) { }
 		
@@ -782,15 +790,20 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_notice_input_handling_errors()
 	{
+		$env            = self::env();
+		$middleware_app = new TestEcho(
+		  201, 
+		  Prack::_Hash( array(
+		    'Content-type'   => Prack::_String( 'text/plain' ),
+		    'Content-length' => Prack::_String( '0' )
+		  ) ),
+		  Prack::_Array()
+		);
+		$lint = new Prack_Lint( $middleware_app );
+		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->gets( "\r\n" );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->gets( "\r\n" );' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e35 ) { }
 		
@@ -804,13 +817,7 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->read( 1, 2, 3 );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->read( 1, 2, 3 );' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e36 ) { }
 		
@@ -824,13 +831,7 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->read( "foo" );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->read( "foo" );' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e37 ) { }
 		
@@ -844,13 +845,7 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->read( -1 );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->read( -1 );' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e38 ) { }
 		
@@ -864,13 +859,7 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->read( null, null );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->read( null, null );' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e39 ) { }
 		
@@ -884,13 +873,7 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->read( null, 1 );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->read( null, 1 );' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e40 ) { }
 		
@@ -904,13 +887,7 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->rewind( 0 );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->rewind( 0 );' );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e41 ) { }
 		
@@ -924,73 +901,53 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->gets();' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array( 'rack.input' => new Prack_LintTest_WeirdIO() ) );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->gets();' );
+			$env = self::env( Prack::_Hash( array( 'rack.input' => new Prack_LintTest_WeirdIO() ) ) );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e42 ) { }
 		
 		if ( isset( $e42 ) )
-			$this->assertRegExp( "/rack.input method gets didn't return a string/", $e42->getMessage() );
+			$this->assertRegExp( "/rack.input method gets didn't return a Prack_Wrapper_String/", $e42->getMessage() );
 		else
 		{
-			$this->fail( 'Expected exception when gets called on non-string-returning IO.' );
+			$this->fail( 'Expected exception when gets called on non-Prack_Wrapper_String-returning IO.' );
 			return;
 		}
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->each( array( \'Prack_LintTest\', \'noop\' ) );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array( 'rack.input' => new Prack_LintTest_WeirdIO() ) );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->each( array( \'Prack_LintTest\', \'noop\' ) );' );
+			$env = self::env( Prack::_Hash( array( 'rack.input' => new Prack_LintTest_WeirdIO() ) ) );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e43 ) { }
 			
 		if ( isset( $e43 ) )
-			$this->assertRegExp( "/rack.input method each didn't yield a string/", $e43->getMessage() );
+			$this->assertRegExp( "/rack.input method each didn't yield a Prack_Wrapper_String/", $e43->getMessage() );
 		else
 		{
-			$this->fail( 'Expected exception when gets called on IO which yields non-string values.' );
+			$this->fail( 'Expected exception when gets called on IO which yields non-Prack_Wrapper_String values.' );
 			return;
 		}
 			
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->read();' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array( 'rack.input' => new Prack_LintTest_WeirdIO() ) );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->read();' );
+			$env = self::env( Prack::_Hash( array( 'rack.input' => new Prack_LintTest_WeirdIO() ) ) );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e44 ) { }
 		
 		if ( isset( $e44 ) )
-			$this->assertRegExp( "/read didn't return null or a string/", $e44->getMessage() );
+			$this->assertRegExp( "/read didn't return null or a Prack_Wrapper_String/", $e44->getMessage() );
 		else
 		{
-			$this->fail( 'Expected exception when read returns neither a string or null.' );
+			$this->fail( 'Expected exception when read returns neither a Prack_Wrapper_String or null.' );
 			return;
 		}
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->read( null );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array( 'rack.input' => new Prack_LintTest_EOFWeirdIO() ) );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->read( null );' );
+			$env = self::env( Prack::_Hash( array( 'rack.input' => new Prack_LintTest_EOFWeirdIO() ) ) );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e45 ) { }
 		
@@ -1004,13 +961,8 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->rewind();' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array( 'rack.input' => new Prack_LintTest_WeirdIO() ) );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->rewind();' );
+			$env = self::env( Prack::_Hash( array( 'rack.input' => new Prack_LintTest_WeirdIO() ) ) );
 			$lint->call( $env );
 		} catch ( Prack_Error_Lint $e46 ) { }
 		
@@ -1024,14 +976,8 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.input\' ]->close();' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
-			$lint->call( $env );
+			$middleware_app->setEval( '$env->get( \'rack.input\' )->close();' );
+			$lint->call( self::env() );
 		} catch ( Prack_Error_Lint $e47 ) { }
 		
 		if ( isset( $e47 ) )
@@ -1051,20 +997,24 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_notice_error_handling_errors()
 	{
+		$middleware_app = new TestEcho(
+		  201, 
+		  Prack::_Hash( array(
+		    'Content-type'   => Prack::_String( 'text/plain' ),
+		    'Content-length' => Prack::_String( '0' )
+		  ) ),
+		  Prack::_Array()
+		);
+		$lint = new Prack_Lint( $middleware_app );
+		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.errors\' ]->write( 42 );' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
-			$lint->call( $env );
+			$middleware_app->setEval( '$env->get( \'rack.errors\' )->write( 42 );' );
+			$lint->call( self::env() );
 		} catch ( Prack_Error_Lint $e48 ) { }
 		
 		if ( isset( $e48 ) )
-			$this->assertRegExp( "/write not called with a string/", $e48->getMessage() );
+			$this->assertRegExp( "/write not called with a Prack_Wrapper_String/", $e48->getMessage() );
 		else
 		{
 			$this->fail( 'Expected exception when method write called with no string argument on error stream.' );
@@ -1073,14 +1023,8 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), 
-			                                           array() );
-			$middleware_app->setEval( '$env[ \'rack.errors\' ]->close();' );
-			
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array() );
-			$lint->call( $env );
+			$middleware_app->setEval( '$env->get( \'rack.errors\' )->close();' );
+			$lint->call( self::env() );
 		} catch ( Prack_Error_Lint $e49 ) { }
 		
 		if ( isset( $e49 ) )
@@ -1099,23 +1043,35 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_notice_HEAD_errors()
 	{
-		$middleware_app = new Prack_LintTest_Echo( 200, 
-		                                           array( 'Content-type' => 'text/plain', 'Content-length' => '3' ), 
-		                                           array() );
-		$lint = new Prack_Lint( $middleware_app );
-		$env  = self::env( array( 'REQUEST_METHOD' => 'HEAD' ) );
-		$lint->call( $env );
+		$env = self::env(
+		  Prack::_Hash( array(
+		    'REQUEST_METHOD' => Prack::_String( 'HEAD' )
+		  ) )
+		);
 		
-		// End implicit test ^.
+		// Implicit test
+		
+		$middleware_app = new TestEcho(
+		  200,
+		  Prack::_Hash( array(
+		    'Content-type'   => Prack::_String( 'text/plain' ),
+		    'Content-length' => Prack::_String( '3' )
+		  ) ),
+		  Prack::_Array()
+		);
+		Prack_Lint::with( $middleware_app )->call( $env );
 		
 		try
 		{
-			$middleware_app = new Prack_LintTest_Echo( 201, 
-			                                           array( 'Content-type' => 'text/plain', 'Content-length' => '3' ), 
-			                                           array( 'foo' ) );
-			$lint = new Prack_Lint( $middleware_app );
-			$env  = self::env( array( 'REQUEST_METHOD' => 'HEAD' ) );
-			list( $status, $header, $body ) = $lint->call( $env );
+			$middleware_app = new TestEcho(
+			  201,
+			  Prack::_Hash( array(
+			    'Content-type'   => Prack::_String( 'text/plain' ),
+			    'Content-length' => Prack::_String( '3' )
+			  ) ),
+			  Prack::_Array( array( Prack::_String( 'foo' ) ) )
+			);
+			list( $status, $header, $body ) = Prack_Lint::with( $middleware_app )->call( $env );
 			$body->each( array( 'Prack_LintTest', 'noop' ) );
 		} catch ( Prack_Error_Lint $e50 ) { }
 		
@@ -1135,49 +1091,57 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_pass_valid_read_calls()
 	{
-		$hello_str = "hello world";
+		$hello_str      = Prack::_String( "hello world" );
+		$middleware_app = new TestEcho(
+		  201,
+		  Prack::_Hash( array(
+		    'Content-type'   => Prack::_String( 'text/plain' ),
+		    'Content-length' => Prack::_String( '0' )
+		  ) ),
+		  Prack::_Array()
+		);
 		
 		// Implicit test 1.
-		$middleware_app = new Prack_LintTest_Echo( 201, array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), array() );
-		$middleware_app->setEval( '$env[ \'rack.input\' ]->read();' );
-		$lint = new Prack_Lint( $middleware_app );
-		$env  = self::env( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) );
-		$lint->call( $env );
+		$middleware_app->setEval( '$env->get( \'rack.input\' )->read();' );
+		$env = self::env(
+		  Prack::_Hash( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) )
+		);
+		Prack_Lint::with( $middleware_app )->call( $env );
 		
 		// Implicit test 2.
-		$middleware_app = new Prack_LintTest_Echo( 201, array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), array() );
-		$middleware_app->setEval( '$env[ \'rack.input\' ]->read( 0 );' );
-		$lint = new Prack_Lint( $middleware_app );
-		$env  = self::env( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) );
-		$lint->call( $env );
+		$middleware_app->setEval( '$env->get( \'rack.input\' )->read( 0 );' );
+		$env = self::env(
+		  Prack::_Hash( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) )
+		);
+		Prack_Lint::with( $middleware_app )->call( $env );
 		
 		// Implicit test 3.
-		$middleware_app = new Prack_LintTest_Echo( 201, array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), array() );
-		$middleware_app->setEval( '$env[ \'rack.input\' ]->read( 1 );' );
-		$lint = new Prack_Lint( $middleware_app );
-		$env  = self::env( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) );
-		$lint->call( $env );
+		$middleware_app->setEval( '$env->get( \'rack.input\' )->read( 1 );' );
+		$env = self::env(
+		  Prack::_Hash( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) )
+		);
+		Prack_Lint::with( $middleware_app )->call( $env );
 		
 		// Implicit test 4.
-		$middleware_app = new Prack_LintTest_Echo( 201, array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), array() );
-		$middleware_app->setEval( '$env[ \'rack.input\' ]->read( null );' );
-		$lint = new Prack_Lint( $middleware_app );
-		$env  = self::env( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) );
-		$lint->call( $env );
+		$middleware_app->setEval( '$env->get( \'rack.input\' )->read( null );' );
+		$env = self::env(
+		  Prack::_Hash( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) )
+		);
+		Prack_Lint::with( $middleware_app )->call( $env );
 		
 		// Implicit test 5.
-		$middleware_app = new Prack_LintTest_Echo( 201, array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), array() );
-		$middleware_app->setEval( '$env[ \'rack.input\' ]->read( null, \'\' );' );
-		$lint = new Prack_Lint( $middleware_app );
-		$env  = self::env( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) );
-		$lint->call( $env );
+		$middleware_app->setEval( '$env->get( \'rack.input\' )->read( null, Prack::_String() );' );
+		$env = self::env(
+		  Prack::_Hash( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) )
+		);
+		Prack_Lint::with( $middleware_app )->call( $env );
 		
 		// Implicit test 6.
-		$middleware_app = new Prack_LintTest_Echo( 201, array( 'Content-type' => 'text/plain', 'Content-length' => '0' ), array() );
-		$middleware_app->setEval( '$env[ \'rack.input\' ]->read( 1, \'\' );' );
-		$lint = new Prack_Lint( $middleware_app );
-		$env  = self::env( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) );
-		$lint->call( $env );
+		$middleware_app->setEval( '$env->get( \'rack.input\' )->read( 1, Prack::_String() );' );
+		$env = self::env(
+		  Prack::_Hash( array( 'rack.input' => Prack_Utils_IO::withString( $hello_str ) ) )
+		);
+		Prack_Lint::with( $middleware_app )->call( $env );
 	} // It should pass valid read calls
 }
 
@@ -1190,12 +1154,12 @@ class Prack_Lint_InputWrapperTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_delegate_method_rewind_to_the_underlying_IO_object()
 	{
-		$io      = Prack_Utils_IO::withString( '123' );
+		$io      = Prack_Utils_IO::withString( Prack_Utils_IO::withString( '123' ) );
 		$wrapper = new Prack_Lint_InputWrapper( $io );
 		
-		$this->assertEquals( '123', $wrapper->read() );
-		$this->assertEquals( '',    $wrapper->read() );
+		$this->assertEquals( '123', $wrapper->read()->toN() );
+		$this->assertEquals( '',    $wrapper->read()->toN() );
 		$wrapper->rewind();
-		$this->assertEquals( '123', $wrapper->read() );
+		$this->assertEquals( '123', $wrapper->read()->toN() );
 	} // It should delegate method rewind to the underlying IO object
 }
