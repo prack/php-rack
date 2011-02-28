@@ -2,9 +2,10 @@
 
 // TODO: Document!
 class Prack_FatalWarner
+  implements Prack_Interface_WritableStreamlike
 {
 	// TODO: Document!
-	public function puts( $warning )
+	public function puts()
 	{
 		throw new Prack_Error_Mock_Request_FatalWarning( $warning );
 	}
@@ -25,7 +26,7 @@ class Prack_FatalWarner
 	// TODO: Document!
 	public function string()
 	{
-		return Prack_Wrapper_String::with( '' );
+		return Prack::_String();
 	}
 }
 
@@ -47,75 +48,89 @@ class Prack_Mock_Request
 	private $middleware_app;
 	
 	// TODO: Document!
-	static function &envFor( $uri = '', $options = array() )
+	static function envFor( $url = null, $options = null )
 	{
-		$env = 
-			array(
-				'rack.version'      => Prack::version(),
-				'rack.input'        => new Prack_Utils_IO_String(),
-				'rack.errors'       => new Prack_Utils_IO_String(),
-				'rack.multithread'  => false,
-				'rack.multiprocess' => false,
-				'rack.run_once'     => true
-			);
+		$url = is_null( $url ) ? Prack::_String() : $url;
+		if ( !( $url instanceof Prack_Interface_Stringable ) )
+			throw new Prack_Error_Type( 'FAILSAFE: envFor $url must be Stringable' );
 		
-		$uri_components = parse_url( $uri );
-		if ( isset( $uri_components[ 'path' ] ) && substr( $uri_components[ 'path' ], 0, 1 ) != '/' )
-			$uri_components[ 'path' ] = "/{$uri_components[ 'path' ]}";
+		$options = is_null( $options ) ? Prack::_Hash() : $options;
+		if ( !( $options instanceof Prack_Wrapper_Hash ) )
+			throw new Prack_Error_Type( 'FAILSAFE: envFor $options must be Hash' );
 		
-		$necessary_fields = array( 'scheme', 'host', 'port', 'path', 'query' );
-		foreach ( $necessary_fields as $field )
-			$uri_components[ $field ] = isset( $uri_components[ $field ] ) ? $uri_components[ $field ] : '';
+		$env = array(
+			'rack.version'      => Prack::version(),
+			'rack.input'        => new Prack_Utils_IO_String(),
+			'rack.errors'       => new Prack_Utils_IO_String(),
+			'rack.multithread'  => false,
+			'rack.multiprocess' => false,
+			'rack.run_once'     => true
+		);
 		
-		$env[ 'rack.url_scheme' ] = !empty( $uri_components[ 'scheme' ] ) ? $uri_components[ 'scheme' ] : 'http';
-		$env[ 'REQUEST_METHOD'  ] = !empty( $options[ 'method' ] ) ? strtoupper( (string)$options[ 'method' ] ) : 'GET';
-		$env[ 'SERVER_NAME'     ] = !empty( $uri_components[ 'host' ] ) ? $uri_components[ 'host' ] : 'example.org';
+		$components = parse_url( $url->toN() );
+		if ( $components === false )
+			throw new RuntimeException( "unable to parse uri while creating mock environment: {$uri}" );
 		
-		// Different from Ruby in that PHP does not infer a default port of 443 for https URLs.
-		if ( !empty( $uri_components[ 'port' ] ) )
-			$env[ 'SERVER_PORT' ] = (string)$uri_components[ 'port' ];
-		else
-			$env[ 'SERVER_PORT' ] = ( $env[ 'rack.url_scheme' ] == 'https' ) ? '443' : '80';
+		$components = Prack::_Hash( $components );
+		if ( ( $path = $components->get( 'path' ) ) && substr( $path, 0, 1 ) != '/' )
+			$components->set( 'path', "/{$path}" );
 		
-		$env[ 'QUERY_STRING'    ] = $uri_components[ 'query' ];
-		$env[ 'PATH_INFO'       ] = empty( $uri_components[ 'path' ] ) ? '/' : $uri_components[ 'path' ];
-		$env[ 'HTTPS'           ] = $env[ 'rack.url_scheme' ] == 'https' ? 'on' : 'off';
-		$env[ 'SCRIPT_NAME'     ] = isset( $options[ 'script_name' ] ) ? $options[ 'script_name' ] : '';
+		// Request method, uppercased ('GET' by default):
+		$env[ 'REQUEST_METHOD' ] =
+		  $options->contains( 'method' ) ? $options->delete( 'method' )->upcase()
+		                                 : Prack::_String( 'GET' );
 		
-		if ( isset( $options[ 'fatal' ] ) )
+		$env[ 'rack.url_scheme' ] =
+		  $components->contains( 'scheme' ) ? Prack::_String( $components->get( 'scheme' ) )
+		                                    : Prack::_String( 'http' );
+		$env[ 'HTTPS' ] =
+		  $env[ 'rack.url_scheme' ]->toN() == 'https' ? Prack::_String( 'on' )
+		                                                   : Prack::_String( 'off' );
+		$default_port =
+		  $env[ 'rack.url_scheme' ]->toN() == 'https' ? Prack::_String( '443' )
+		                                                   : Prack::_String( '80'  );
+		
+		$env[ 'SERVER_NAME' ] = $components->contains( 'host' ) ? Prack::_String( $components->get( 'host' ) )
+		                                                        : Prack::_String( 'example.org' );
+		$env[ 'SERVER_PORT' ] = $components->contains( 'port' ) ? Prack::_String( $components->get( 'port' ) )
+		                                                        : $default_port;
+		
+		// Script name, path info, query string:
+		$path_info        = Prack::_String( $components->get( 'path' ) );
+		$path_info_viable = !$path_info->isEmpty();
+		
+		$env[ 'SCRIPT_NAME'  ] = $options->contains( 'script_name' ) ? $options->delete( 'script_name' )
+		                                                             : Prack::_String();
+		$env[ 'PATH_INFO'    ] = $path_info_viable                   ? $path_info
+		                                                             : Prack::_String( '/' );
+		$env[ 'QUERY_STRING' ] = Prack::_String( (string)$components->get( 'query' ) );
+		$env[ 'rack.errors'  ] = $options->delete( 'fatal' ) == true ? new Prack_FatalWarner()
+		                                                             : new Prack_Utils_IO_String();
+		
+		// FIXME: Implement query building and multipart form data processing.
+		/*
+		if ( $params = $options->delete( 'params' ) )
 		{
-			$env[ 'rack.errors' ] = new Prack_FatalWarner();
-			unset( $options[ 'fatal' ] );
-		}
-		else
-			$env[ 'rack.errors' ] = new Prack_Utils_IO_String();
-		
-		if ( isset( $options[ 'params' ] ) )
-		{
-			$params = $options[ 'params' ];
-			unset( $options[ 'params' ] );
-		} else
-			$params = null;
-		
-		if ( !is_null( $params ) )
-		{
-			if ( $env[ 'REQUEST_METHOD' ] == 'GET' )
+			if ( $env[ 'REQUEST_METHOD' ]->toN() == 'GET' )
 			{
-				if ( is_string( $params ) )
-					parse_str( $params, $params );
-					
-				parse_str( $env[ 'QUERY_STRING' ], $params_from_query_string );
-				$params = array_merge( $params, $params_from_query_string );
+				if ( $params instanceof Prack_Interface_Stringable )
+				{
+					parse_str( $params->toN(), $params );
+					$params = Prack::_Hash( $params );
+				}
 				
-				$env[ 'QUERY_STRING' ] = urldecode( http_build_query( $params ) );
+				parse_str( $env[ 'QUERY_STRING' ]->toN(), $params_from_query_string );
+				$params = $params->merge( Prack::_Hash( $params_from_query_string ) );
+				
+				$env[ 'QUERY_STRING' ] = Prack::_String( http_build_query( $params->toN() ) );
 			}
-			else if ( !isset( $options[ 'input' ] ) )
+			else if ( !$options->contains( 'input' ) )
 			{
-				$options[ 'CONTENT_TYPE' ] = 'application/x-www-form-urlencoded';
-				if ( is_array( $params ) )
+				$options->set( 'CONTENT_TYPE', Prack::_String( 'application/x-www-form-urlencoded' ) );
+				if ( $params instanceof Prack_Interface_Enumerable )
 				{
 					// FIXME: Implement multipart form data processing.
-					/*
+					// START FIXME
 					# Ruby code, for reference: 
 					if data = Utils::Multipart.build_multipart(params)
 					  opts[ :input ] = data
@@ -124,39 +139,44 @@ class Prack_Mock_Request
 					else
 					  opts[ :input ] = Utils.build_nested_query(params)
 					end
-					*/
-					$multipart = false; // Band-aid.
-					if ( $multipart )
+					// END FIXME
+					if ( $multipart = false )
 						echo "TODO: Implement multipart.";
 					else
-						$options[ 'input' ] = urldecode( http_build_query( $params ) );
+					{
+						$query = urldecode( http_build_query( $params->toN() ) );
+						$options->set( 'input', Prack::_String( $query ) );
+					}
 				}
 				else
-					$options[ 'input' ] = $params;
+					$options->set( 'input', $params );
 			}
 		}
+		*/
 		
-		if ( !isset( $options[ 'input' ] ) )
-			$options[ 'input' ] = '';
+		if ( !$options->contains( 'input' ) )
+			$options->set( 'input', Prack::_String() );
 		
-		if ( is_string( $options[ 'input' ] ) )
-			$rack_input = Prack_Utils_IO::withString( $options[ 'input' ] );
+		$input = $options->delete( 'input' );
+		if ( $input instanceof Prack_Wrapper_String )
+			$rack_input = Prack_Utils_IO::withString( $input );
+		else if ( $input instanceof Prack_Interface_ReadableStreamlike )
+			$rack_input = $input;
 		else
-			$rack_input = $options[ 'input' ];
-			
-		unset( $options[ 'input' ] );
-		
-		$env[ 'rack.input' ] = $rack_input;
-		if ( !isset( $env[ 'CONTENT_LENGTH' ] ) )
-			$env[ 'CONTENT_LENGTH' ] = (string)$rack_input->length();
-		
-		foreach ( $options as $field => $value )
 		{
-			if ( is_string( $field ) )
-				$env[ $field ] = $value;
+			$input_type = is_object( $input ) ? get_class( $input ) : gettype( $input );
+			throw new Prack_Error_Type( "Provided rack input of type {$input} is neither String nor ReadableStreamlike" );
 		}
 		
-		return $env;
+		$env[ 'rack.input' ] = $rack_input;
+		
+		if ( !isset( $env[ 'CONTENT_LENGTH' ] ) )
+			$env[ 'CONTENT_LENGTH' ] = Prack::_String( (string)$rack_input->length() );
+		
+		foreach ( $options->toN() as $field => $value )
+			$env[ $field ] = $value;
+		
+		return Prack::_Hash( $env );
 	}
 	
 	// TODO: Document!
@@ -166,42 +186,51 @@ class Prack_Mock_Request
 	}
 	
 	// TODO: Document!
-	public function get( $uri, $options = array() )
+	public function get( $uri, $options = null )
 	{
-		return $this->request( 'GET', $uri, $options );
+		return $this->request( Prack::_String( 'GET' ), $uri, $options );
 	}
 	
 	// TODO: Document!
-	public function post( $uri, $options = array() )
+	public function post( $uri, $options = null )
 	{
-		return $this->request( 'POST', $uri, $options );
+		return $this->request( Prack::_String( 'POST' ), $uri, $options );
 	}
 	
 	// TODO: Document!
-	public function put( $uri, $options = array() )
+	public function put( $uri, $options = null )
 	{
-		return $this->request( 'PUT', $uri, $options );
+		return $this->request( Prack::_String( 'PUT' ), $uri, $options );
 	}
 	
 	// TODO: Document!
-	public function delete( $uri, $options = array() )
+	public function delete( $uri, $options = null )
 	{
-		return $this->request( 'DELETE', $uri, $options );
+		return $this->request( Prack::_String( 'DELETE' ), $uri, $options );
 	}
 	
 	// TODO: Document!
-	public function request( $method = 'GET', $uri = '', $options = array() )
+	public function request( $method, $uri = null, $options = null )
 	{
-		if ( isset( $options[ 'lint' ] ) )
-		{
+		if ( is_null( $uri ) )
+			$uri = Prack::_String();
+		if ( is_null( $options ) )
+			$options = Prack::_Hash();
+		
+		if ( !( $options instanceof Prack_Wrapper_Hash ) )
+			throw new Prack_Error_Type( 'FAILSAFE: request $options must be Prack_Wrapper_Hash' );
+		
+		if ( $lint = $options->delete( 'lint' ) )
 			$middleware_app = new Prack_Lint( $this->middleware_app );
-			unset( $options[ 'lint' ] );
-		}
 		else
 			$middleware_app = $this->middleware_app;
 		
-		$env    = self::envFor( $uri, array_merge( $options, array( 'method' => $method ) ) );
-		$errors = $env[ 'rack.errors' ];
+		$options = $options->merge(
+			Prack::_Hash( array( 'method' => $method ) )
+		);
+		
+		$env    = self::envFor( $uri, $options );
+		$errors = $env->get( 'rack.errors' );
 		
 		list( $status, $headers, $body ) = $middleware_app->call( $env );
 		
