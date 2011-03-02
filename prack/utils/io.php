@@ -1,12 +1,5 @@
 <?php
 
-global $g_prack_last_gets;
-global $g_prack_f_sep;
-global $g_prack_o_sep;
-
-if ( is_null( $g_prack_f_sep ) )
-	$g_prack_f_sep = PHP_EOL;
-
 // TODO: Document!
 abstract class Prack_Utils_IO
 {
@@ -25,9 +18,16 @@ abstract class Prack_Utils_IO
 	}
 	
 	// TODO: Document!
-	static public function withString( $string = null )
+	static function withString( $string = null )
 	{
 		return new Prack_Utils_IO_String( $string );
+	}
+	
+	// TODO: Document!
+	static function readlines( $filename )
+	{
+		$buffer = file_get_contents( $filename );
+		return Prack::_Array( preg_split( "/((\r(?!\n))|((?<!\r)\n)|(\r\n))/", $buffer ) );
 	}
 	
 	// TODO: Document!
@@ -41,28 +41,30 @@ abstract class Prack_Utils_IO
 	}
 	
 	// TODO: Document!
-	public function read( $length = null, &$buffer = null )
+	public function read( $length = null, $buffer = null )
 	{
 		if ( $this->isReadable() )
 		{
 			$remaining = is_null( $length ) ? PHP_INT_MAX : $length;
-			$internal  = '';
+			$internal  = Prack::_String();
 			$read_size = min( $remaining, self::CHUNK_SIZE );
 			
-			if ( feof( $this->stream ) && is_null( $length ) )
-				return '';
+			if ( feof( $this->stream ) )
+			{
+				if ( is_null( $length ) )
+					return Prack::_String();
+				return null;
+			}
 			
 			// Chunked read, as fread() is limited to 8K of data per call.
 			while ( !feof( $this->stream ) && $remaining > 0 && $temp = fread( $this->stream, $read_size ) )
 			{
 				$remaining -= strlen( $temp );
-				$internal  .= $temp;
 				$read_size  = min( $remaining, self::CHUNK_SIZE );
+				$internal->concat( Prack::_String( $temp ) );
 			}
 			
-			$buffer = isset( $buffer ) ? $buffer.$internal : $internal;
-			
-			return $buffer;
+			return is_null( $buffer ) ? $internal : $buffer->concat( $internal );
 		}
 		
 		throw new Prack_Error_IO( 'stream is not readable' );
@@ -113,7 +115,7 @@ abstract class Prack_Utils_IO
 	public function write( $buffer )
 	{
 		if ( $this->isWritable() )
-			return fwrite( $this->stream, $buffer );
+			return fwrite( $this->stream, $buffer->toN() );
 		
 		throw new Prack_Error_IO( 'stream is not writable' );
 	}
@@ -131,10 +133,13 @@ abstract class Prack_Utils_IO
 		$args = func_get_args();
 		foreach ( $args as $printable )
 		{
-			if ( is_array( $printable ) )
-				$printable = implode( $g_prack_f_sep, array_map( 'trim', $printable ) );
+			if ( $printable instanceof Prack_Wrapper_Array )
+			{
+				$callback  = create_function( '$i', 'return $i->strip();' );
+				$printable = $printable->each( $callback )->join( $g_prack_f_sep );
+			}
 			
-			$this->_print( (string)$printable );
+			$this->_print( $printable );
 		}
 	}
 	

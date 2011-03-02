@@ -91,7 +91,7 @@ class Prack_DelegateFor_Response
 	static function contentLength( $response )
 	{
 		$content_length = $response->get( 'Content-Length' );
-		return is_null( $content_length ) ? null : (int)$content_length;
+		return is_null( $content_length ) ? null : (int)$content_length->toN();
 	}
 	
 	// TODO: Document!

@@ -1,9 +1,39 @@
 <?php
 
+// TODO: Document!
+class Prack_Mock_FatalWarner
+  implements Prack_Interface_WritableStreamlike
+{
+	// TODO: Document!
+	public function puts()
+	{
+		$args = func_get_args();
+		throw new Prack_Error_Mock_Response_FatalWarning( $args[ 0 ]->toN() );
+	}
+	
+	// TODO: Document!
+	public function write( $warning )
+	{
+		throw new Prack_Error_Mock_Response_FatalWarning( $warning->toN() );
+	}
+	
+	// TODO: Document!
+	public function flush()
+	{
+		// No-op.
+		return true;
+	}
+	
+	// TODO: Document!
+	public function string()
+	{
+		return Prack::_String();
+	}
+}
+
 # Rack::MockResponse provides useful helpers for testing your apps.
 # Usually, you don't create the MockResponse on your own, but use
 # MockRequest.
-
 class Prack_Mock_Response
 {
 	const DELEGATE = 'Prack_DelegateFor_Response';
@@ -17,35 +47,43 @@ class Prack_Mock_Response
 	// TODO: Document!
 	function __construct( $status, $headers, $body, $errors = null )
 	{
-		$this->status           = (int)$status;
-		$this->original_headers = $headers;
+		$headers = is_null( $headers ) ? Prack::_Hash() : $headers;
+		if ( !( $headers instanceof Prack_Wrapper_Hash ) )
+			throw new Prack_Error_Type( 'FAILSAFE: mock request $headers must be Prack_Wrapper_Hash' );
+		$body = is_null( $body ) ? Prack::_String() : $body;
+		if ( !( $body instanceof Prack_Interface_Stringable ) && !( $body instanceof Prack_Interface_Enumerable ) )
+			throw new Prack_Error_Type( 'FAILSAFE: mock request $body must be Prack_Interface_Stringable or Prack_Interface_Enumerable' );
+		$errors = is_null( $errors ) ? Prack_Utils_IO::withString() : $errors;
+		if ( !( $errors instanceof Prack_Interface_WritableStreamlike ) )
+			throw new Prack_Error_Type( 'FAILSAFE: mock request $errors must be Prack_Writable_Streamlike' );
 		
-		$this->headers = new Prack_Utils_Response_HeaderHash();
-		foreach ( $headers as $key => $values )
+		$this->status = (int)$status;
+		
+		$this->original_headers = $headers;
+		$this->headers          = Prack_Utils_Response_HeaderHash::using( Prack::_Hash() );
+		
+		foreach ( $headers->toN() as $key => $values )
 		{
 			$this->headers->set( $key, $values );
-			if ( empty( $values ) )
-				$this->headers->set( $key, '' );
+			if ( $values->isEmpty() )
+				$this->headers->set( $key, Prack::_String() );
 		}
 		
-		$this->body = '';
+		$this->body = Prack::_String();
 		
-		if ( is_string( $body ) )
-			$this->body = $body;
+		if ( $body instanceof Prack_Wrapper_Stringable )
+			$this->body = $body->toS();
 		else if ( $body instanceof Prack_Interface_Enumerable )
 			$body->each( array( $this, 'onWrite' ) );
-		else
-			throw new Prack_Error_Type();
 		
-		if ( is_null( $errors ) )
-			$errors = Prack_Utils_IO::withString( '' );
 		if ( method_exists( $errors, 'string' ) )
 			$this->errors = $errors->string();
 	}
 	
+	// TODO: Document!
 	public function onWrite( $addition )
 	{
-		$this->body .= $addition;
+		$this->body->concat( $addition );
 	}
 	  
 	// TODO: Document!
@@ -67,9 +105,9 @@ class Prack_Mock_Response
 	}
 	
 	// TODO: Document!
-	public function matches( $pattern, &$matches = null )
+	public function match( $pattern, &$matches = null )
 	{
-		return preg_match_all( $pattern, $this->body, $matches );
+		return ( preg_match_all( $pattern, $this->body->toN(), $matches ) > 0 );
 	}
 	
 	// TODO: Document!

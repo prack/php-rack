@@ -441,22 +441,22 @@ class Prack_Lint
 		
 		## * The <tt>REQUEST_METHOD</tt> must be a valid token.
 		$rm_pattern = "/\A[0-9A-Za-z!\#$%&'*+.^_`|~-]+\z/";
-		prack_lint_assert( $env->get( 'REQUEST_METHOD' )->matches( $rm_pattern ),
+		prack_lint_assert( $env->get( 'REQUEST_METHOD' )->match( $rm_pattern ),
 		                   "REQUEST_METHOD unknown: {$env->get( 'REQUEST_METHOD' )->toN()}" );
 		
 		## * The <tt>SCRIPT_NAME</tt>, if non-empty, must start with <tt>/</tt>
 		$sn_pattern = '/\A\//';
-		prack_lint_assert( !$env->contains( 'SCRIPT_NAME' ) || $env->get( 'SCRIPT_NAME' )->isEmpty() || $env->get( 'SCRIPT_NAME' )->matches( $sn_pattern ),
+		prack_lint_assert( !$env->contains( 'SCRIPT_NAME' ) || $env->get( 'SCRIPT_NAME' )->isEmpty() || $env->get( 'SCRIPT_NAME' )->match( $sn_pattern ),
 		                   'SCRIPT_NAME must start with /' );
 		
 		## * The <tt>PATH_INFO</tt>, if non-empty, must start with <tt>/</tt>
 		$pi_pattern = '/\A\//';
-		prack_lint_assert( !$env->contains( 'PATH_INFO' ) || $env->get( 'PATH_INFO' )->isEmpty() || $env->get( 'PATH_INFO' )->matches( $pi_pattern ),
+		prack_lint_assert( !$env->contains( 'PATH_INFO' ) || $env->get( 'PATH_INFO' )->isEmpty() || $env->get( 'PATH_INFO' )->match( $pi_pattern ),
 		                   'PATH_INFO must start with /' );
 		
 		## * The <tt>CONTENT_LENGTH</tt>, if given, must consist of digits only.
 		$cl_pattern = '/\A\d+\z/';
-		prack_lint_assert( !$env->contains( 'CONTENT_LENGTH' ) || $env->get( 'CONTENT_LENGTH' )->matches( $cl_pattern ),
+		prack_lint_assert( !$env->contains( 'CONTENT_LENGTH' ) || $env->get( 'CONTENT_LENGTH' )->match( $cl_pattern ),
 		                   "Invalid CONTENT_LENGTH: {$env->get( 'CONTENT_LENGTH' )->toN()}" );
 		
 		## * One of <tt>SCRIPT_NAME</tt> or <tt>PATH_INFO</tt> must be
@@ -559,7 +559,7 @@ class Prack_Lint
 		## <tt>Set-Cookie</tt> values) seperated by "\n".
 		$exploded = $value->split( "/\n/" );
 		foreach ( $exploded->toN() as $key => $value )
-			prack_lint_assert( preg_match( '/[\000-\037]/', $value ) === 0,
+			prack_lint_assert( preg_match( '/[\000-\037]/', $value->toN() ) === 0,
 		                     "invalid header value {$key}: {$value_type}" );
 	}
 	
@@ -574,13 +574,13 @@ class Prack_Lint
 			## given.
 			if ( strtolower( $key ) == 'content-type' )
 			{
-				prack_lint_assert( !in_array( (int)$status, Prack_Utils::statusWithNoEntityBody() ),
+				prack_lint_assert( !Prack_Utils::i()->statusWithNoEntityBody()->contains( (int)$status ),
 				                   "Content-Type header found in {$status} response, not allowed" );
 				return;
 			}
 		}
 		
-		prack_lint_assert( in_array( (int)$status, Prack_Utils::statusWithNoEntityBody() ),
+		prack_lint_assert( Prack_Utils::i()->statusWithNoEntityBody()->contains( (int)$status ),
 		                   "No Content-Type header found" );
 	}
 	
@@ -594,7 +594,7 @@ class Prack_Lint
 			## +Status+ is 1xx, 204 or 304.
 			if ( strtolower( $key ) == 'content-length' )
 			{
-				prack_lint_assert( !in_array( (int)$status, Prack_Utils::statusWithNoEntityBody() ),
+				prack_lint_assert( !Prack_Utils::i()->statusWithNoEntityBody()->contains( (int)$status ),
 				                   "Content-Length header found in {$status} response, not allowed" );
 				$this->content_length = $value;
 			}

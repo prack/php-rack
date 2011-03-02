@@ -218,8 +218,6 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_accept_params_and_build_query_string_for_GET_requests()
 	{
-		// FIXME: Implement query building.
-		/*
 		$mock_request  = self::app();
 		$mock_response = $mock_request->get(
 		  Prack::_String( '/foo?baz=2' ),
@@ -232,15 +230,13 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 		  ) )
 		);
 		
-		$env = unserialize( $mock_response->getBody() );
+		$env = unserialize( $mock_response->getBody()->toN() );
 		
-		$this->assertEquals( 'GET',  $env->get( 'REQUEST_METHOD'  ) );
-		$this->assertEquals( '/foo', $env->get( 'PATH_INFO'       ) );
-		$this->assertEquals( '',     $env->get( 'mock.postdata'   ) );
-		$this->assertTrue( strpos( $env->get( 'QUERY_STRING' ), 'baz=2'      ) !== false );
-		$this->assertTrue( strpos( $env->get( 'QUERY_STRING' ), 'foo[bar]=1' ) !== false );
-		*/
-		$this->markTestSkipped( 'pending query parsing' );
+		$this->assertEquals( 'GET',  $env->get( 'REQUEST_METHOD'  )->toN() );
+		$this->assertEquals( '/foo', $env->get( 'PATH_INFO'       )->toN() );
+		$this->assertEquals( '',     $env->get( 'mock.postdata'   )->toN() );
+		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prack::_String( 'baz=2'      ) ) );
+		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prack::_String( 'foo[bar]=1' ) ) );
 	} // It should accept params and build query string for GET requests
 	
 	/**
@@ -250,8 +246,6 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_accept_raw_input_in_params_for_GET_requests()
 	{
-		// FIXME: Implement query parsing
-		/*
 		$mock_request  = self::app();
 		$mock_response = $mock_request->get(
 		  Prack::_String( '/foo?baz=2' ),
@@ -265,10 +259,8 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( 'GET',  $env->get( 'REQUEST_METHOD'  )->toN() );
 		$this->assertEquals( '/foo', $env->get( 'PATH_INFO'       )->toN() );
 		$this->assertEquals( '',     $env->get( 'mock.postdata'   )->toN() );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( 'baz=2'      ) );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( 'foo[bar]=1' ) );
-		*/
-		$this->markTestSkipped( 'pending query parsing' );
+		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prack::_String( 'baz=2'      ) ) );
+		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prack::_String( 'foo[bar]=1' ) ) );
 	} // It should accept raw input in params for GET requests
 	
 	/**
@@ -278,8 +270,6 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_accept_params_and_build_url_encoded_params_for_POST_requests()
 	{
-		// FIXME: Implement query parsing
-		/*
 		$mock_request  = self::app();
 		$mock_response = $mock_request->post(
 		  Prack::_String( '/foo' ),
@@ -299,8 +289,6 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( '/foo',                              $env->get( 'PATH_INFO'      )->toN() );
 		$this->assertEquals( 'application/x-www-form-urlencoded', $env->get( 'CONTENT_TYPE'   )->toN() );
 		$this->assertEquals( 'foo[bar]=1',                        $env->get( 'mock.postdata'  )->toN() );
-		*/
-		$this->markTestSkipped( 'pending query parsing' );
 	} // It should accept params and build url encoded params for POST requests
 	
 	/**
@@ -310,20 +298,16 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_accept_raw_input_in_params_for_POST_requests()
 	{
-		// FIXME: Implement query processing:
-		/*
 		$mock_request  = self::app();
-		$mock_response = $mock_request->post( Prack::_String( '/foo' ), array( 'params' => 'foo[bar]=1' ) );
+		$mock_response = $mock_request->post( Prack::_String( '/foo' ), Prack::_Hash( array( 'params' => Prack::_String( 'foo[bar]=1' ) ) ) );
 		
-		$env = unserialize( $mock_response->getBody() );
+		$env = unserialize( $mock_response->getBody()->toN() );
 		
-		$this->assertEquals( 'POST',                              $env->get( 'REQUEST_METHOD' ) );
-		$this->assertEquals( '',                                  $env->get( 'QUERY_STRING'   ) );
-		$this->assertEquals( '/foo',                              $env->get( 'PATH_INFO'      ) );
-		$this->assertEquals( 'application/x-www-form-urlencoded', $env->get( 'CONTENT_TYPE'   ) );
-		$this->assertEquals( 'foo[bar]=1',                        $env->get( 'mock.postdata'  ) );
-		*/
-		$this->markTestSkipped( 'pending query parsing' );
+		$this->assertEquals( 'POST',                              $env->get( 'REQUEST_METHOD' )->toN() );
+		$this->assertEquals( '',                                  $env->get( 'QUERY_STRING'   )->toN() );
+		$this->assertEquals( '/foo',                              $env->get( 'PATH_INFO'      )->toN() );
+		$this->assertEquals( 'application/x-www-form-urlencoded', $env->get( 'CONTENT_TYPE'   )->toN() );
+		$this->assertEquals( 'foo[bar]=1',                        $env->get( 'mock.postdata'  )->toN() );
 	} // It should accept raw input in params for POST requests
 	
 	/**
@@ -360,4 +344,50 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 		  Prack::_Hash( array( 'lint' => true ) )
 		);
 	} // It should behave valid according to the Rack spec
+	
+		/**
+	 * It should throw an exception if uri is not a Prack_Wrapper_String
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_throw_an_exception_if_uri_is_not_a_Prack_Wrapper_String()
+	{
+		$this->setExpectedException( 'Prack_Error_Type' );
+		$mock_request  = self::app();
+		$mock_response = $mock_request->get(
+		  'https://bla.example.org:9292/meh/foo?bar',
+		  Prack::_Hash( array( 'lint' => true ) )
+		);
+	} // It should throw an exception if uri is not a Prack_Wrapper_String
+	
+	/**
+	 * It should throw an exception if options is not a Prack_Wrapper_Hash
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_throw_an_exception_if_options_is_not_a_Prack_Wrapper_Hash()
+	{
+		$this->setExpectedException( 'Prack_Error_Type' );
+		$mock_request  = self::app();
+		$mock_response = $mock_request->get(
+		  Prack::_String( 'https://bla.example.org:9292/meh/foo?bar' ),
+		  array()
+		);
+	} // It should throw an exception if headers is not a Prack_Wrapper_Hash
+	
+		/**
+	 * It should throw an exception if rack.input is neither Prack_Interface_Stringable nor Prack_Interface_ReadableStreamlike
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_throw_an_exception_if_rack_input_is_neither_Prack_Interface_Stringable_nor_Prack_Interface_ReadableStreamlike()
+	{
+		$this->setExpectedException( 'Prack_Error_Type' );
+		
+		$mock_request  = new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		$mock_response = $mock_request->get(
+			Prack::_String(),
+			Prack::_Hash( array( 'input' => Prack::_Array() ) )
+		);
+	} // It should throw an exception if rack.input is neither Prack_Interface_Stringable nor Prack_Interface_ReadableStreamlike
 }

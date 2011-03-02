@@ -1,36 +1,6 @@
 <?php
 
 // TODO: Document!
-class Prack_FatalWarner
-  implements Prack_Interface_WritableStreamlike
-{
-	// TODO: Document!
-	public function puts()
-	{
-		throw new Prack_Error_Mock_Request_FatalWarning( $warning );
-	}
-	
-	// TODO: Document!
-	public function write( $warning )
-	{
-		throw new Prack_Error_Mock_Request_FatalWarning( $warning );
-	}
-	
-	// TODO: Document!
-	public function flush()
-	{
-		// No-op.
-		return true;
-	}
-	
-	// TODO: Document!
-	public function string()
-	{
-		return Prack::_String();
-	}
-}
-
-// TODO: Document!
 # Rack::MockRequest helps testing your Rack application without
 # actually using HTTP.
 #
@@ -51,12 +21,11 @@ class Prack_Mock_Request
 	static function envFor( $url = null, $options = null )
 	{
 		$url = is_null( $url ) ? Prack::_String() : $url;
-		if ( !( $url instanceof Prack_Interface_Stringable ) )
-			throw new Prack_Error_Type( 'FAILSAFE: envFor $url must be Stringable' );
-		
+		if ( !( $url instanceof Prack_Wrapper_String ) )
+			throw new Prack_Error_Type( 'FAILSAFE: envFor $url must be Prack_Wrapper_String' );
 		$options = is_null( $options ) ? Prack::_Hash() : $options;
 		if ( !( $options instanceof Prack_Wrapper_Hash ) )
-			throw new Prack_Error_Type( 'FAILSAFE: envFor $options must be Hash' );
+			throw new Prack_Error_Type( 'FAILSAFE: envFor $options must be Prack_Wrapper_Hash' );
 		
 		$env = array(
 			'rack.version'      => Prack::version(),
@@ -104,68 +73,50 @@ class Prack_Mock_Request
 		$env[ 'PATH_INFO'    ] = $path_info_viable                   ? $path_info
 		                                                             : Prack::_String( '/' );
 		$env[ 'QUERY_STRING' ] = Prack::_String( (string)$components->get( 'query' ) );
-		$env[ 'rack.errors'  ] = $options->delete( 'fatal' ) == true ? new Prack_FatalWarner()
+		$env[ 'rack.errors'  ] = $options->delete( 'fatal' ) == true ? new Prack_Mock_FatalWarner()
 		                                                             : new Prack_Utils_IO_String();
 		
 		// FIXME: Implement query building and multipart form data processing.
-		/*
 		if ( $params = $options->delete( 'params' ) )
 		{
 			if ( $env[ 'REQUEST_METHOD' ]->toN() == 'GET' )
 			{
-				if ( $params instanceof Prack_Interface_Stringable )
-				{
-					parse_str( $params->toN(), $params );
-					$params = Prack::_Hash( $params );
-				}
+				if ( $params instanceof Prack_Wrapper_String )
+					$params = Prack_Utils::i()->parseNestedQuery( $params );
 				
-				parse_str( $env[ 'QUERY_STRING' ]->toN(), $params_from_query_string );
-				$params = $params->merge( Prack::_Hash( $params_from_query_string ) );
+				// FIXME: Implement update on Prack_Wrapper_Hash, also mergeInPlace.
+				$params = $params->merge( Prack_Utils::i()->parseNestedQuery( $env[ 'QUERY_STRING' ] ) );
 				
-				$env[ 'QUERY_STRING' ] = Prack::_String( http_build_query( $params->toN() ) );
+				$env[ 'QUERY_STRING' ] = Prack_Utils::i()->buildNestedQuery( $params );
 			}
 			else if ( !$options->contains( 'input' ) )
 			{
 				$options->set( 'CONTENT_TYPE', Prack::_String( 'application/x-www-form-urlencoded' ) );
-				if ( $params instanceof Prack_Interface_Enumerable )
+				if ( $params instanceof Prack_Wrapper_Hash )
 				{
 					// FIXME: Implement multipart form data processing.
-					// START FIXME
-					# Ruby code, for reference: 
-					if data = Utils::Multipart.build_multipart(params)
-					  opts[ :input ] = data
-					  opts[ "CONTENT_LENGTH" ] ||= data.length.to_s
-					  opts[ "CONTENT_TYPE" ] = "multipart/form-data; boundary=#{Utils::Multipart::MULTIPART_BOUNDARY}"
-					else
-					  opts[ :input ] = Utils.build_nested_query(params)
-					end
-					// END FIXME
 					if ( $multipart = false )
-						echo "TODO: Implement multipart.";
+						die("FIXME: Implement multipart.");
 					else
-					{
-						$query = urldecode( http_build_query( $params->toN() ) );
-						$options->set( 'input', Prack::_String( $query ) );
-					}
+						$options->set( 'input', Prack_Utils::i()->buildNestedQuery( $params ) );
 				}
 				else
 					$options->set( 'input', $params );
 			}
 		}
-		*/
 		
 		if ( !$options->contains( 'input' ) )
 			$options->set( 'input', Prack::_String() );
 		
 		$input = $options->delete( 'input' );
-		if ( $input instanceof Prack_Wrapper_String )
-			$rack_input = Prack_Utils_IO::withString( $input );
+		if ( $input instanceof Prack_Interface_Stringable )
+			$rack_input = Prack_Utils_IO::withString( $input->toS() );
 		else if ( $input instanceof Prack_Interface_ReadableStreamlike )
 			$rack_input = $input;
 		else
 		{
 			$input_type = is_object( $input ) ? get_class( $input ) : gettype( $input );
-			throw new Prack_Error_Type( "Provided rack input of type {$input} is neither String nor ReadableStreamlike" );
+			throw new Prack_Error_Type( "Provided rack input of type {$input_type} is neither String nor ReadableStreamlike" );
 		}
 		
 		$env[ 'rack.input' ] = $rack_input;
@@ -212,13 +163,13 @@ class Prack_Mock_Request
 	// TODO: Document!
 	public function request( $method, $uri = null, $options = null )
 	{
-		if ( is_null( $uri ) )
-			$uri = Prack::_String();
-		if ( is_null( $options ) )
-			$options = Prack::_Hash();
+		$uri = is_null( $uri ) ? Prack::_String() : $uri;
+		if ( !( $uri instanceof Prack_Wrapper_String ) )
+			throw new Prack_Error_Type( 'FAILSAFE: mock request $uri must be Prack_Wrapper_String' );
 		
+		$options = is_null( $options ) ? Prack::_Hash() : $options;
 		if ( !( $options instanceof Prack_Wrapper_Hash ) )
-			throw new Prack_Error_Type( 'FAILSAFE: request $options must be Prack_Wrapper_Hash' );
+			throw new Prack_Error_Type( 'FAILSAFE: mock request $options must be Prack_Wrapper_Hash' );
 		
 		if ( $lint = $options->delete( 'lint' ) )
 			$middleware_app = new Prack_Lint( $this->middleware_app );
@@ -234,7 +185,6 @@ class Prack_Mock_Request
 		
 		list( $status, $headers, $body ) = $middleware_app->call( $env );
 		
-		$reflection = new ReflectionClass( 'Prack_Mock_Response' );
-		return $reflection->newInstanceArgs( array( $status, $headers, $body, $errors ) );
+		return new Prack_Mock_Response( $status, $headers, $body, $errors );
 	}
 }
