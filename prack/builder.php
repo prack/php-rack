@@ -15,6 +15,46 @@ class Prack_Builder
 	                           //   (Prack_URLMap is an instance of Prack_Interface_MiddlewareApp, and is thus callable middleware)
 	private $fi_using_class;   // string containing previous value on call to using(): state for fluent interface.
 	
+	/*
+  class Builder
+    def initialize(&block)
+      @ins = []
+      instance_eval(&block) if block_given?
+    end
+
+    def self.app(&block)
+      self.new(&block).to_app
+    end
+
+    def use(middleware, *args, &block)
+      @ins << lambda { |app| middleware.new(app, *args, &block) }
+    end
+
+    def run(app)
+      @ins << app #lambda { |nothing| app }
+    end
+
+    def map(path, &block)
+      if @ins.last.kind_of? Hash
+        @ins.last[path] = self.class.new(&block).to_app
+      else
+        @ins << {}
+        map(path, &block)
+      end
+    end
+
+    def to_app
+      @ins[-1] = Rack::URLMap.new(@ins.last)  if Hash === @ins.last
+      inner_app = @ins.last
+      @ins[0...-1].reverse.inject(inner_app) { |a, e| e.call(a) }
+    end
+
+    def call(env)
+      to_app.call(env)
+    end
+  end
+end
+	*/
 	// TODO: Document!
 	function __construct( $location = null, $parent = null )
 	{
@@ -128,27 +168,6 @@ class Prack_Builder
 		return array_reduce( array_reverse( $middleware_stack ), array( 'Prack_Builder', 'chain' ) );
 	}
 	
-	// TODO: Document!
-	public function toArray()
-	{
-		$matches  = array();
-		$location = $this->getLocation();
-		
-		$host = '';
-		if ( preg_match_all( '/\Ahttps?:\/\/(.*?)(\/.*)/', $location, $matches ) > 0 ) {
-			$host     = $matches[ 1 ][0 ];
-			$location = $matches[ 2 ][0 ];
-		}
-		
-		if ( substr( $location, 0, 1 ) != '/' )
-			throw new Prack_Error_Builder_ResourceLocationInvalid();
-		
-		$location            = chop( $location, '/' );
-		$normalized_location = preg_replace( '/\//', '\/+', preg_quote( $location ) );
-		$pattern             = "/\A{$normalized_location}(.*)/";
-		
-		return array( $host, $location, $pattern, $this->toMiddlewareApp() );
-	}
 	
 	// TODO: Document!
 	public function getLocation()
