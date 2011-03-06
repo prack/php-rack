@@ -60,7 +60,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Response::with();
 		
-		list( $status, $headers, $body ) = $response->toA();
+		list( $status, $headers, $body ) = $response->toN();
 		
 		$this->assertEquals( 200, $status );
 		$this->assertEquals( array( 'Content-Type' => Prack::_String( 'text/html' ) ),
@@ -88,7 +88,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$response->write( Prack::_String( 'baz' ) );
 		$response->finish();
 		
-		list( $status, $headers, $body ) = $response->toA();
+		list( $status, $headers, $body ) = $response->toN();
 		
 		$this->parts = Prack::_Array();
 		$body->each( array( $this, 'addToParts' ) );
@@ -255,14 +255,14 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$response = new Prack_Response();
 		$response->redirect( Prack::_String( '/foo' ) );
-		list( $status, $headers, $body ) = $response->toA();
+		list( $status, $headers, $body ) = $response->toN();
 		
 		$this->assertEquals( 302, $status );
 		$this->assertEquals( '/foo', $response->get( 'Location' )->toN() );
 		
 		$response = new Prack_Response();
 		$response->redirect( Prack::_String( '/foo' ), 307 );
-		list( $status, $headers, $body ) = $response->toA();
+		list( $status, $headers, $body ) = $response->toN();
 		
 		$this->assertEquals( 307, $status );
 	} // It can do redirects
@@ -277,7 +277,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$callback = array( $this, 'addToBuffer' );
 		
 		$response = new Prack_Response( Prack::_String( 'foo' ) );
-		list( $status, $headers, $body ) = $response->toA();
+		list( $status, $headers, $body ) = $response->toN();
 		$this->buffer = Prack::_String();
 		$body->each( $callback );
 		$this->assertEquals( Prack::_String( 'foo' ), $this->buffer );
@@ -289,7 +289,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 			)
 		) );
 		
-		list( $status, $headers, $body ) = $response->toA();
+		list( $status, $headers, $body ) = $response->toN();
 		$this->buffer = Prack::_String();
 		$body->each( $callback );
 		$this->assertEquals( 'foobar', $this->buffer->toN() );
@@ -302,7 +302,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		 		) )
 		) );
 		
-		list( $status, $headers, $body ) = $response->toA();
+		list( $status, $headers, $body ) = $response->toN();
 		$this->buffer = Prack::_String();
 		$body->each( $callback );
 		$this->assertEquals( 'foobar', $this->buffer->toN() );
@@ -326,7 +326,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 			Prack::_String(), 200, Prack::_Hash(), $callback
 		);
 		
-		list( $status, $headers, $body ) = $response->toA();
+		list( $status, $headers, $body ) = $response->toN();
 		
 		$callback = array( $this, 'addToBuffer' );
 		$this->buffer = Prack::_String();
@@ -360,7 +360,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 			204
 		);
 		
-		list( $status, $headers, $body ) = $response->toA();
+		list( $status, $headers, $body ) = $response->toN();
 		
 		$callback = array( $this, 'addToBuffer' );
 		$this->buffer = Prack::_String();

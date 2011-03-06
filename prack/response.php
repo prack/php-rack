@@ -49,13 +49,13 @@ class Prack_Response
 	{
 		$body = is_null( $body ) ? Prack::_Array() : $body;
 		if ( !( $body instanceof Prack_Interface_Stringable ) && !( $body instanceof Prack_Interface_Enumerable ) )
-			throw new Prack_Error_Type( 'FAILSAFE: __construct $body must be Stringable or Enumerable' );
+			throw new Prack_Error_Type( 'FAILSAFE: __construct $body must be Prack_Interface_Stringable or Prack_Interface_Enumerable' );
 		
 		$status = is_null( $status ) ? 200 : (int)$status;
 		
 		$headers = is_null( $headers ) ? self::defaultHeaders() : $headers;
 		if ( !( $headers instanceof Prack_Wrapper_Hash ) )
-			throw new Prack_Error_Type( 'FAILSAFE: __construct $headers an instance of Hash' );
+			throw new Prack_Error_Type( 'FAILSAFE: __construct $headers an instance of Prack_Wrapper_Hash' );
 		
 		$this->status       = (int)$status;
 		$this->header       = new Prack_Utils_Response_HeaderHash( self::defaultHeaders()->merge( $headers ) );
@@ -155,7 +155,7 @@ class Prack_Response
 	}
 	
 	// TODO: Document!
-	public function toA() 
+	public function toN() 
 	{
 		return $this->finish();
 	}
