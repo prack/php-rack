@@ -13,19 +13,14 @@
  * @package Prack_Wrapper
  */
 class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
-  implements Prack_Interface_Enumerable
+  implements Prack_Interface_Enumerable, Prack_Interface_Comparable
 {
-	// TODO: Document!
-	static function with( $array )
-	{
-		return new Prack_Wrapper_Array( $array );
-	}
-	
 	// TODO: Document!
 	public function get( $key )
 	{
-		$key = (int)$key;
-		if ( !array_key_exists( $key, $this->array ) )
+		$key = $this->translate( (int)$key );
+		
+		if ( is_null( $key ) || !array_key_exists( $key, $this->array ) )
 			return null;
 		
 		return $this->array[ $key ];
@@ -45,12 +40,132 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 	}
 	
 	// TODO: Document!
+	public function last()
+	{
+		return $this->get( -1 );
+	}
+	
+	// TODO: Document!
+	public function concat()
+	{
+		$args = func_get_args();
+		
+		foreach( $args as $arg )
+			array_push( $this->array, $arg );
+		
+		return $this;
+	}
+	
+	// TODO: Document!
 	public function each( $callback )
 	{
-		parent::each( $callback );
+		if ( !is_callable( $callback ) )
+			throw new Prack_Error_Callback();
 		
-		foreach ( $this->array as $key => $item )
-			call_user_func( $callback, $item );
+		foreach ( $this->array as $item )
+		{
+			// If the item is an array, yield its contents to the callback.
+			// TODO: Assess if yielding all values in array is universally a good idea.
+			if ( $item instanceof Prack_Wrapper_Array )
+				call_user_func_array( $callback, $item->toN() );
+			else
+				call_user_func( $callback, $item );
+		}
+	}
+	
+	// TODO: Document!
+	public function eachIndex( $callback )
+	{
+		if ( !is_callable( $callback ) )
+			throw new Prack_Error_Callback();
+		
+		foreach( $this->array as $index => $item )
+			call_user_func( $callback, $index );
+	}
+	
+	// TODO: Document!
+	public function collect( $callback )
+	{
+		if ( !is_callable( $callback ) )
+			throw new Prack_Error_Callback( 'provided collect callback not callable' );
+		
+		$map = array();
+		
+		foreach ( $this->array as $item )
+		{
+			// If the item is an array, yield its contents to the callback.
+			// TODO: Assess if yielding all values in array is universally a good idea.
+			if ( $item instanceof Prack_Wrapper_Array )
+				array_push( $map, call_user_func_array( $callback, $item->toN() ) );
+			else
+				array_push( $map, call_user_func( $callback, $item ) );
+		}
+		
+		return Prack::_Array( $map );
+	}
+	
+	public function map( $callback ) { return $this->collect( $callback ); }
+
+	// TODO: Document!
+	public function sort( $callback = null )
+	{
+		static $default_callback = null;
+		
+		if ( is_null( $default_callback ) )
+			$default_callback = create_function( '$l,$r', 'return $l->compare( $r );' );
+		
+		$callback = isset( $callback ) ?  $callback : $default_callback;
+		if ( !is_callable( $callback ) )
+			throw new Prack_Error_Callback( 'provided sort callback not callable' );
+		
+		$sorted = $this->array;
+		usort( $sorted, $callback );
+		
+		return Prack::_Array( $sorted );
+	}
+	
+	// TODO: Document!
+	public function slice()
+	{
+		$args = func_get_args();
+		
+		if ( count( $args ) == 1 )
+			return $this->get( $args[ 0 ] );
+		else if ( count( $args ) == 2 )
+		{
+			$translated_start = $this->translate( $args[ 0 ] );
+			$translated_end   = $this->translate( $args[ 1 ] );
+			
+			if ( is_null( $translated_start ) || is_null( $translated_end ) )
+				return Prack::_Array();
+			
+			return call_user_func_array( array( $this, 'valuesAt' ),
+			                             range( $translated_start, $translated_end ) );
+		}
+	}
+	
+		// TODO: Document!
+	public function sortBy( $callback )
+	{
+		if ( !is_callable( $callback ) )
+			throw new Prack_Error_Callback( 'provided sortBy callback not callable' );
+		
+		$proxies = $this->map( $callback );
+		$links   = array();
+		foreach ( $proxies->toN() as $index => $proxy )
+			$links[ spl_object_hash( $proxy ) ] = $this->array[ $index ];
+		
+		$sorted = Prack::_Array();
+		foreach ( $proxies->sort()->toN() as $item )
+			$sorted->push( $links[ spl_object_hash( $item ) ] );
+		
+		return $sorted;
+	}
+	
+	// TODO: Document!
+	public function compact()
+	{
+		return Prack::_Array( array_map( $this->array, 'strlen' ) ) ;
 	}
 	
 	// TODO: Document!
@@ -75,5 +190,99 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 	public function shift()
 	{
 		return array_shift( $this->array );
+	}
+	
+	// TODO: Document!
+	public function join( $separator = null )
+	{
+		if ( is_null( $separator ) )
+			$separator = Prack::_String( ' ' );
+		
+		$as_strings = Prack::_Array();
+		foreach ( $this->array as $item )
+			$as_strings->push( $item->toN() );
+		
+		return Prack::_String( implode( $separator->toN(), $as_strings->toN() ) );
+	}
+	
+	// TODO: Document!
+	public function contains( $item )
+	{
+		return in_array( $item, $this->array );
+	}
+	
+	// TODO: Document!
+	public function toA()
+	{
+		return $this;
+	}
+	
+	// TODO: Document!
+	public function toAry() { return $this->toA(); }
+	
+	/**
+	 * Object-level comparison of this instance to another.
+	 * 
+	 * Compare this instance to another comparable instance, which must
+	 * respond to toA(), lest this function return null (meaning 'incomparable' ).
+	 * 
+	 * Returns a negative integer, zero, or a positive integer if this instance
+	 * is less than, equal to, or greater than $other_ary, respectively. Each
+	 * object in each array is compared using the item's compare function. If 
+	 * the result isn't equal, then that inequality is returned by this function.
+	 * 
+	 * If all the values found are equal, then the return is based on comparison
+	 * of the array lengths. Thus, two arrays are 'equal' according to compare
+	 * if and only if they have the same length and the value of each element is
+	 * equal to the value of the corresponding element in the other array.
+	 *
+	 * Note: This function doesn't require Prack objects, but each object
+	 * MUST conform to Prack_Interface_Comparable. Primitives like php strings,
+	 * arrays, and numerics anywhere in the array will result in being
+	 * incomparable. This is by design, since PHP type comparison is a world
+	 * unto itself.
+	 *
+	 * @author Joshua Morris
+	 * @access public
+	 * @param $other_ary mixed Prack_Interface_Comparable responding to toA
+	 * @return mixed see function description
+	 */
+	// This function is an example of PHP's ad-hoc inferiority.
+	public function compare( $other_ary )
+	{
+		if ( !( $other_ary instanceof Prack_Interface_Comparable ) && !( method_exists( $other_ary, 'toA' ) ) )
+			return null;
+		
+		$comparison = 0; // equal
+		$this_ary   = clone $this;
+		$other_ary  = $other_ary->toA();
+		
+		// We may need to expand this array.
+		if ( $other_ary->length() > $this_ary->length() )
+			$this_ary->set( $other_ary->length() - 1, null );
+		
+		foreach( $this_ary->toN() as $index => $item )
+		{
+			$other_item = $other_ary->get( $index );
+			
+			// Two nulls are 'equal'.
+			if ( is_null( $item ) && is_null( $other_item ) )
+				continue;
+			
+			// Compare two objects via compare method:
+			else if ( $item       instanceof Prack_Interface_Comparable &&
+				        $other_item instanceof Prack_Interface_Comparable    )
+			{
+				$comparison = $item->compare( $other_item );
+				if ( $comparison != 0 )
+					return $comparison;
+			}
+			
+			// Everything else returns null.
+			else
+				return null;
+		}
+		
+		return $this->length() - $other_ary->length();
 	}
 }
