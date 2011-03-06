@@ -5,7 +5,7 @@ class Prack_RequestTest_MyRequest extends Prack_Request
 {
 	public function params()
 	{
-		return Prack::_Hash( array( 'foo' => 'bar' ) );
+		return Prack::_Hash( array( 'foo' => Prack::_String( 'bar' ) ) );
 	}
 }
 
@@ -14,7 +14,7 @@ class Prack_RequestTest_IPInformation
   implements Prack_Interface_MiddlewareApp
 {
 	// TODO: Document!
-	public function call( &$env )
+	public function call( $env )
 	{
 		$request  = Prack_Request::with( $env );
 		$response = new Prack_Response();
@@ -120,9 +120,9 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		) );
 		
 		$this->assertEquals( 'foo=bar&quux=bla', $request->queryString()->toN() );
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->GET()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ), 'quux' => Prack::_String( 'bla' ) ), $request->GET()->toN() );
 		$this->assertTrue( $request->POST()->isEmpty() );
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->params()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ), 'quux' => Prack::_String( 'bla' ) ), $request->params()->toN() );
 	} // It should parse the query string
 	
 	/**
@@ -156,9 +156,9 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		$this->assertNull( $request->mediaType()   );
 		
 		$this->assertEquals( 'foo=quux', $request->queryString()->toN() );
-		$this->assertEquals( array( 'foo' => 'quux' ),                 $request->GET()->toN()    );
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->POST()->toN()   );
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->params()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'quux' ) ), $request->GET()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ), 'quux' => Prack::_String( 'bla' ) ), $request->POST()->toN()   );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ), 'quux' => Prack::_String( 'bla' ) ), $request->params()->toN() );
 	} // It should parse POST data when method is POST and no Content-Type given
 	
 	/**
@@ -182,8 +182,8 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		                     $request->mediaType()->toN() );
 		$this->assertEquals( 'bar',
 		                     $request->mediaTypeParams()->get( 'foo' )->toN() );
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->POST()->toN() );
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->params()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ), 'quux' => Prack::_String( 'bla' ) ), $request->POST()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ), 'quux' => Prack::_String( 'bla' ) ), $request->params()->toN() );
 	} // It should parse POST data with explicit content type regardless of method
 	
 	/**
@@ -212,8 +212,8 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		                     $request->mediaTypeParams()->get( 'charset' )->toN() );
 		
 		$this->assertTrue( $request->POST()->isEmpty() );
-		$this->assertEquals( array( 'foo' => 'quux' ), $request->params()->toN() );
-		$this->assertEquals(       'foo=bar&quux=bla', $request->body()->read()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'quux' ) ), $request->params()->toN() );
+		$this->assertEquals( Prack::_String( 'foo=bar&quux=bla' ), $request->body()->read() );
 	} // It should not parse POST data when media type is not form-data
 	
 	/**
@@ -232,9 +232,9 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 			) )
 		) );
 		
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ),
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ), 'quux' => Prack::_String( 'bla' ) ),
 		                     $request->POST()->toN() );
-		$this->assertEquals( 'foo=bar&quux=bla', $request->body()->read()->toN() );
+		$this->assertEquals( Prack::_String( 'foo=bar&quux=bla' ), $request->body()->read() );
 	} // It should parse POST data on PUT when media type is form-data
 	
 	/**
@@ -254,10 +254,10 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 			) )
 		) );
 		
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ),
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ), 'quux' => Prack::_String( 'bla' ) ),
 		                     $request->params()->toN() );
-		$this->assertEquals( 'foo=bar&quux=bla',
-		                     $input->read()->toN() );
+		$this->assertEquals( Prack::_String( 'foo=bar&quux=bla' ),
+		                     $input->read() );
 	} // It should rewind input after parsing POST data
 	
 	/**
@@ -275,7 +275,8 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 			) )
 		) );
 		
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->POST()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ), 'quux' => Prack::_String( 'bla' ) ),
+		                     $request->POST()->toN() );
 	} // It should clean up Safari's ajax POST body
 	
 	/**
@@ -289,7 +290,7 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 			Prack_Mock_Request::envFor( Prack::_String( '?foo=quux' ) )
 		);
 		
-		$this->assertEquals( 'quux', $request->getParam( 'foo' ) );
+		$this->assertEquals( Prack::_String( 'quux' ), $request->getParam( 'foo' ) );
 	} // It should get value by key from params with getParam
 	
 	/**
@@ -303,11 +304,11 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 			Prack::_String( '?foo=duh' )
 		) );
 		
-		$this->assertEquals( 'duh', $request->getParam( 'foo' ) );
-		$this->assertEquals( array( 'foo' => 'duh' ), $request->params()->toN() );
-		$request->setParam( 'foo', 'bar' );
-		$this->assertEquals( array( 'foo' => 'bar' ), $request->params()->toN() );
-		$this->assertEquals( 'bar', $request->getParam( 'foo' ) );
+		$this->assertEquals( Prack::_String( 'duh' ), $request->getParam( 'foo' ) );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'duh' ) ), $request->params()->toN() );
+		$request->setParam( 'foo', Prack::_String( 'bar' ) );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ) ), $request->params()->toN() );
+		$this->assertEquals( Prack::_String( 'bar' ), $request->getParam( 'foo' ) );
 	} // It should set value to key on params with setParam
 	
 	/**
@@ -321,9 +322,11 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 			Prack::_String( '?foo=baz&wun=der&bar=ful' )
 		) );
 		
-		$this->assertEquals( array( 'baz' ), $request->valuesAt( 'foo' )->toN() );
-		$this->assertEquals( array( 'baz', 'der' ), $request->valuesAt( 'foo', 'wun' )->toN() );
-		$this->assertEquals( array( 'ful', 'baz', 'der' ), $request->valuesAt( 'bar', 'foo', 'wun' )->toN() );
+		$this->assertEquals( array( Prack::_String( 'baz' ) ), $request->valuesAt( 'foo' )->toN() );
+		$this->assertEquals( array( Prack::_String( 'baz' ), Prack::_String( 'der' ) ),
+		                     $request->valuesAt( 'foo', 'wun' )->toN() );
+		$this->assertEquals( array( Prack::_String( 'ful' ), Prack::_String( 'baz' ), Prack::_String( 'der' ) ),
+		                     $request->valuesAt( 'bar', 'foo', 'wun' )->toN() );
 	} // It should return values for the keys in the order given from valuesAt
 	
 	/**
@@ -389,19 +392,18 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 			) )
 		) );
 		
-		$this->assertEquals( array( 'foo' => 'quux' ), $request->GET()->toN() );
-		$this->assertEquals( array( 'foo' => 'quux' ), $request->GET()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'quux' ) ), $request->GET()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'quux' ) ), $request->GET()->toN() );
 		$env = &$request->getEnv();
 		$env->set( 'QUERY_STRING', Prack::_String( 'bla=foo' ) );
-		$this->assertEquals( array( 'bla' => 'foo' ), $request->GET()->toN() );
-		$this->assertEquals( array( 'bla' => 'foo' ), $request->GET()->toN() );
-		
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->POST()->toN() );
-		$this->assertEquals( array( 'foo' => 'bar', 'quux' => 'bla' ), $request->POST()->toN() );
+		$this->assertEquals( array( 'bla' => Prack::_String('foo' ) ), $request->GET()->toN() );
+		$this->assertEquals( array( 'bla' => Prack::_String('foo' ) ), $request->GET()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String('bar' ), 'quux' => Prack::_String( 'bla' ) ), $request->POST()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String('bar' ), 'quux' => Prack::_String( 'bla' ) ), $request->POST()->toN() );
 		$env = &$request->getEnv();
 		$env->set( 'rack.input', Prack_Utils_IO::withString( Prack::_String( 'foo=bla&quux=bar' ) ) );
-		$this->assertEquals( array( 'foo' => 'bla', 'quux' => 'bar' ), $request->POST()->toN() );
-		$this->assertEquals( array( 'foo' => 'bla', 'quux' => 'bar' ), $request->POST()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bla' ), 'quux' => Prack::_String( 'bar' ) ), $request->POST()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bla' ), 'quux' => Prack::_String( 'bar' ) ), $request->POST()->toN() );
 	} // It should cache, but invalidates the cache
 	
 	/**
@@ -698,12 +700,12 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		$env = Prack_Mock_Request::envFor( Prack::_String( '/?foo=bar' ) );
 		
 		$request1 = Prack_Request::with( $env );
-		$this->assertEquals( array( 'foo' => 'bar' ), $request1->GET()->toN() );
-		$this->assertEquals( array( 'foo' => 'bar' ), $request1->params()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ) ), $request1->GET()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ) ), $request1->params()->toN() );
 		
 		$request2 = new Prack_RequestTest_MyRequest( $env );
-		$this->assertEquals( array( 'foo' => 'bar' ), $request2->GET()->toN() );
-		$this->assertEquals( array( 'foo' => 'bar' ), $request2->params()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ) ), $request2->GET()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ) ), $request2->params()->toN() );
 	} // It should allow subclass request to be instantiated after parent request
 	
 	/**
@@ -716,12 +718,12 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		$env = Prack_Mock_Request::envFor( Prack::_String( '/?foo=bar' ) );
 		
 		$request1 = new Prack_RequestTest_MyRequest( $env );
-		$this->assertEquals( array( 'foo' => 'bar' ), $request1->GET()->toN() );
-		$this->assertEquals( array( 'foo' => 'bar' ), $request1->params()->toN() );
-
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ) ), $request1->GET()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ) ), $request1->params()->toN() );
+		
 		$request2 = Prack_Request::with( $env );
-		$this->assertEquals( array( 'foo' => 'bar' ), $request2->GET()->toN() );
-		$this->assertEquals( array( 'foo' => 'bar' ), $request2->params()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ) ), $request2->GET()->toN() );
+		$this->assertEquals( array( 'foo' => Prack::_String( 'bar' ) ), $request2->params()->toN() );
 	} // It should allow parent request to be instantiated after subclass request
 	
 	/**
@@ -739,7 +741,7 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 			$c       = urlencode( $b );
 			$url     = Prack::_String( "/?foo={$c}bar{$c}" );
 			$request = Prack_Request::with( Prack_Mock_Request::envFor( $url ) );
-			$this->assertEquals( array( 'foo' => "{$b}bar{$b}" ), $request->GET()->toN(), "Error on {$b}; {$c}" );
+			$this->assertEquals( array( 'foo' => Prack::_string( "{$b}bar{$b}" ) ), $request->GET()->toN(), "Error on {$b}; {$c}" );
 		}
 	} // It should not strip escaped character from parameters when accessed as string
 }

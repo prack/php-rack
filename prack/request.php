@@ -266,15 +266,10 @@ class Prack_Request
 		if ( $this->env->get( 'rack.request.query_string' ) == $this->queryString() )
 			return $this->env->get( 'rack.request.query_hash' );
 		
-		// FIXME: Implement query parsing.
-		$query_string = $this->queryString();
-		parse_str( $query_string->toN(), $vars );
-		$vars = Prack::_Hash( $vars );
+		$this->env->set( 'rack.request.query_string', $this->queryString() );
+		$this->env->set( 'rack.request.query_hash'  , $this->parseQuery( $this->queryString() ) );
 		
-		$this->env->set( 'rack.request.query_string', $query_string );
-		$this->env->set( 'rack.request.query_hash'  , $vars );
-		
-		return $vars;
+		return $this->env->get( 'rack.request.query_hash' );
 	}
 	
 	// TODO: Document!
@@ -297,57 +292,38 @@ class Prack_Request
 			// FIXME: Implement multipart processing
 			// if ( ! ( $this->env->get( 'rack.request.form_hash' ) = $this->parseMultipart() ) )
 			$multipart = false;
-			if ( !$multipart )
+			if ( $multipart )
+				die("FIXME: Implement multipart.");
+			else
 			{
 				// FIXME: Implement preg_replace on Prack_Wrapper_String
-				// FIXME: Implement query parsing
 				$form_vars = $this->env->get( 'rack.input' )->read();
-				$form_vars = preg_replace( '/\0\z/', '', $form_vars->toN() );
+				$form_vars = Prack::_String( preg_replace( '/\0\z/', '', $form_vars->toN() ) );
 				
-				parse_str( $form_vars, $form_hash );
-				
-				$this->env->set( 'rack.request.form_vars', Prack::_String( $form_vars ) );
-				$this->env->set( 'rack.request.form_hash', Prack::_Hash( $form_hash ) );
+				$this->env->set( 'rack.request.form_vars', $form_vars );
+				$this->env->set( 'rack.request.form_hash', $this->parseQuery( $form_vars ) );
 				$this->env->get( 'rack.input' )->rewind();
 			}
 			return $this->env->get( 'rack.request.form_hash' );
 		}
+		
 		return Prack::_Hash();
 	}
 	
-	/*
-  def POST
-    if @env["rack.input"].nil?
-      raise "Missing rack.input"
-    elsif @env["rack.request.form_input"].eql? @env["rack.input"]
-      @env["rack.request.form_hash"]
-    elsif form_data? || parseable_data?
-      @env["rack.request.form_input"] = @env["rack.input"]
-      unless @env["rack.request.form_hash"] = parse_multipart(env)
-        form_vars = @env["rack.input"].read
-
-        # Fix for Safari Ajax postings that always append \0
-        form_vars.sub!(/\0\z/, '')
-
-        @env["rack.request.form_vars"] = form_vars
-        @env["rack.request.form_hash"] = parse_query(form_vars)
-
-        @env["rack.input"].rewind
-      end
-      @env["rack.request.form_hash"]
-    else
-      {}
-    end
-  end
-	
-	*/
 	// TODO: Document!
 	# The union of GET and POST data.
 	public function params()
 	{
-		if ( is_null( $this->params ) )
-			$this->params = $this->GET()->merge( $this->POST() );
-		return $this->params;
+		try
+		{
+			$get  = $this->GET();
+			$post = $this->POST();
+			return $get->update( $post );;
+		}
+		catch ( Prack_Error_EOF $e1 )
+		{
+			return $this->GET();
+		}
 	}
 	
 	// TODO: Document!
@@ -365,14 +341,8 @@ class Prack_Request
 	// TODO: Document!
 	public function valuesAt()
 	{
-		$result = array();
-		$keys   = func_get_args();
-		
-		// FIXME: Implement valuesAt in Hash
-		foreach ( $keys as $key )
-			$result[] = $this->params()->get( $key );
-		
-		return Prack::_Array( $result );
+		$keys = func_get_args();
+		return call_user_func_array( array( $this->params(), 'valuesAt' ), $keys );
 	}
 	
 	// TODO: Document!
@@ -492,5 +462,11 @@ class Prack_Request
 	public function &getEnv()
 	{
 		return $this->env;
+	}
+	
+	// TODO: Document!
+	public function parseQuery( $query_string )
+	{
+		return Prack_Utils::singleton()->parseNestedQuery( $query_string );
 	}
 }
