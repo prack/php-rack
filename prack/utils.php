@@ -7,7 +7,7 @@ class Prack_Utils
 	private $obnq_p;
 	
 	// TODO: Document!
-	static function i()
+	static function singleton()
 	{
 		static $instance = null;
 		
@@ -15,6 +15,61 @@ class Prack_Utils
 			$instance = new Prack_Utils();
 		
 		return $instance;
+	}
+	
+	// TODO: Document!
+	public function HTMLEscapes()
+	{
+		static $html_escapes = null;
+		
+		if ( is_null( $html_escapes ) )
+		{
+			$html_escapes = Prack::_Hash( array(
+				'&'  => Prack::_String( "&amp;"  ),
+				'<'  => Prack::_String( "&lt;"   ),
+				'>'  => Prack::_String( "&gt;"   ),
+				'\'' => Prack::_String( "&#39;"  ),
+				'"'  => Prack::_String( "&quot;" )
+			) );
+		}
+		
+		return $html_escapes;
+	}
+	
+	// TODO: Document!
+	public function HTMLEscapesPattern()
+	{
+		static $html_escapes_pattern = null;
+		
+		if ( is_null( $html_escapes_pattern ) )
+		{
+			$callback = create_function(
+			  '$i', 'return Prack::_String( preg_quote( $i->toN() ) );'
+			);
+			
+			$html_escapes_pattern =
+			  $this->HTMLEscapes()
+			       ->keys()->map( $callback )
+			       ->join( Prack::_String( '|' ) );
+			$html_escapes_pattern =
+			  "/{$html_escapes_pattern->toN()}/";
+		}
+		
+		return $html_escapes_pattern;
+	}
+	
+	// TODO: Document!
+	public function escapeHTML( $string )
+	{
+		static $callback = null;
+		
+		if ( is_null( $callback ) )
+			$callback = create_function(
+			  '$i', 'return Prack_Utils::singleton()->HTMLEscapes()->get( $i );'
+			);
+		
+		// Returning value as primitive for easier HTML output.
+		return $string->toS()->gsub( $this->HTMLEscapesPattern(), $callback )->toN();
 	}
 	
 	// TODO: Document!
@@ -95,7 +150,7 @@ class Prack_Utils
 		static $callback = null;
 		
 		if ( is_null( $callback ) )
-		  $callback = create_function( '$x', 'return Prack_Utils::i()->unescape( $x );' );
+		  $callback = create_function( '$x', 'return Prack_Utils::singleton()->unescape( $x );' );
 		
 		list( $key, $value ) = $param->split( '/=/', 2 )
 		                             ->map( $callback )->toN();
