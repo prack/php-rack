@@ -1,25 +1,7 @@
 PHPUnit 3.5.11 by Sebastian Bergmann.
 
 Prack_Builder
- [x] root instance returned by static method domain should have null parent
- [x] root instance returned by static method domain should have an empty array of middleware
- [x] root instance returned by static method domain should have an empty array of children
- [x] instance method using should return the builder itself
- [x] instance method using should modify the internal mw class attribute of the builder
- [x] instance method withArgs should throw an exception if no middleware class has been specified
- [x] instance method withArgs should return the builder itself for fluent interface
- [x] instance method withArgs should add an instance of the middleware to the current builders stack
- [x] instance method run should throw an exception if invoked twice
- [x] instance method run should throw an exception if any children are specified
- [x] instance method run should append the provided middleware to the end of the stack and disable mapping of children
- [x] instance method run should return the builders parent
- [x] instance method map should return a new builder class to nest middleware within
- [x] instance method map should throw an exception on apparently duplicate mappings
- [x] instance method wherein should simply return the builder on which it was called
- [x] instance method toMiddlewareApp should return an object which confirms to Prack IMiddleware interface
- [x] instance method toMiddlewareApp should throw an exception if neither map nor run has been called
- [x] instance method toArray should throw an exception if the resource location starts with a non slash character
- [x] instance method toArray should extract host and location properly if provided in the location
+ [x] It chains apps by default
 
 Prack_Lint
  [x] It should pass valid request
@@ -57,6 +39,9 @@ Prack_Mock_Request
  [x] It should accept raw input in params for POST requests
  [ ] It should accept params and build multipart encoded params for POST requests
  [x] It should behave valid according to the Rack spec
+ [x] It should throw an exception if uri is not a Prack Wrapper String
+ [x] It should throw an exception if options is not a Prack Wrapper Hash
+ [x] It should throw an exception if rack input is neither Prack Interface Stringable nor Prack Interface ReadableStreamlike
 
 Prack_Mock_Response
  [x] It should provide access to the HTTP status
@@ -66,7 +51,8 @@ Prack_Mock_Response
  [x] It should optionally make Rack errors fatal
  [x] It should optionally make Rack errors fatal  part 2 
  [x] It should throw an exception when an unknown method is called  on account of delegation
- [x] It should throw an exception if body is neither a string or Prack Interface Enumerable
+ [x] It should throw an exception if body is neither a Prack Interface Stringable or Prack Interface Enumerable
+ [x] It should throw an exception if headers is not a Prack Wrapper Hash
 
 Prack_Request
  [x] It should wrap the rack variables
@@ -140,17 +126,18 @@ Prack_RewindableInput
  [x] It should buffer into a Prack Utils IO Tempfile when data has been consumed for the first time
  [x] It should close the underlying tempfile upon calling close
 
-Prack_SessionVia_Cookie
- [x] It should create a new cookie
+Prack_ShowExceptions
+ [x] It catches exceptions
 
 Prack_URLMap
- [x] instance method remap should transform an indexed array of builders into a lookup table for primitive routing
- [x] instance method call should route request appropriately and call the associated middleware
- [x] instance method call should not route request to middleware if host is different
- [x] instance method call should route to the site root if it is mounted as a last resort
- [x] instance method call should revert the environment to the original SCRIPT NAME and PATH INFO even if the middleware throws an exception
+ [x] It dispatches paths correctly
+ [x] It dispatches hosts correctly
+ [x] It should be nestable
+ [x] It should route root apps correctly
+ [x] It should not squeeze slashes
 
-Prack_Utils_IO_
+Prack_Utils_IO_String
+ [x] It should throw an exception if the string is too big
  [x] It should be creatable without a string
  [x] It should be able to handle read
  [x] It should be able to handle read with null
@@ -166,33 +153,30 @@ Prack_Utils_IO_
  [x] It should be possible to call close immediately
  [x] It should be possible to call close multiple times
 
-Prack_Utils_IO_String
- [x] It should throw an exception if the string is too big
-
-Prack_Utils_Logger
- [x] instance method close should always throw an exception
- [x] instance method puts should write a string representation of first argument to the specified stream
- [x] instance method puts should throw an exception unless object implements magic method toString
- [x] instance method write should write its value without coercing to string
- [x] instance method flush should flush the contained stream
-
 Prack_Utils_Response_HeaderHash
- [x] It should  distill  headers  packing an array of values in a newline separated string
- [x] It should return distilled headers on toArray
  [x] It should retain header case
  [x] It should check existence of keys case insensitively
  [x] It should merge case insensitively
  [x] It should overwrite case insensitively and assume the new key s case
- [x] It should be converted to real array
- [x] It should convert array values to strings when converting to array
- [x] It should replace hashes correctly
+ [x] It should be converted to real Prack Wrapper Hash
+ [x] It should convert values to Prack Wrapper String when converting to Prack Wrapper Hash
+ [x] It should replace correctly
  [x] It should be able to delete the given key case sensitively
  [x] It should return the deleted value when delete is called on an existing key
  [x] It should return null when delete is called on a non existant key
  [x] It should avoid unnecessary object creation if possible
  [x] It should create an object with an array otherwise
- [x] It should convert array values to strings when responding to each
+ [ ] It should distill values when responding to each
  [x] It should alias hasKey and isMember to contains
+
+Prack_Utils
+ [x] It should escape correctly
+ [x] It should escape correctly for multibyte characters
+ [x] It should unescape correctly
+ [x] It should parse query strings correctly
+ [x] It should parse nested query strings correctly
+ [x] It should build query strings correctly
+ [x] It should build nested query strings correctly
 
 Prack_Wrapper_Array
  [x] It should handle each
