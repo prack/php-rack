@@ -574,13 +574,13 @@ class Prack_Lint
 			## given.
 			if ( strtolower( $key ) == 'content-type' )
 			{
-				prack_lint_assert( !Prack_Utils::i()->statusWithNoEntityBody()->contains( (int)$status ),
+				prack_lint_assert( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( (int)$status ),
 				                   "Content-Type header found in {$status} response, not allowed" );
 				return;
 			}
 		}
 		
-		prack_lint_assert( Prack_Utils::i()->statusWithNoEntityBody()->contains( (int)$status ),
+		prack_lint_assert( Prack_Utils::singleton()->statusWithNoEntityBody()->contains( (int)$status ),
 		                   "No Content-Type header found" );
 	}
 	
@@ -594,7 +594,7 @@ class Prack_Lint
 			## +Status+ is 1xx, 204 or 304.
 			if ( strtolower( $key ) == 'content-length' )
 			{
-				prack_lint_assert( !Prack_Utils::i()->statusWithNoEntityBody()->contains( (int)$status ),
+				prack_lint_assert( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( (int)$status ),
 				                   "Content-Length header found in {$status} response, not allowed" );
 				$this->content_length = $value;
 			}
