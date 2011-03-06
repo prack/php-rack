@@ -71,7 +71,7 @@ This example assumes the existence of several classes:
 			$this->callback = $callback;
 		}
 		
-		public function call( &$env )
+		public function call( $env )
 		{
 			$auth_header = $env[ 'HTTP_AUTHORIZATION' ]; // This would, in actuality, take more work.
 			
@@ -107,7 +107,7 @@ straight-forward:
 
 	interface Prack_Interface_MiddlewareApp
 	{
-		public function call( &$env );
+		public function call( $env );
 	}
 
 I put this interface in place for 5.2-compatibility, but when 5.3 is implemented,
