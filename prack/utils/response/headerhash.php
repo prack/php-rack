@@ -1,42 +1,32 @@
 <?php
 
 // TODO: Document!
-class Prack_Utils_Response_HeaderHash
+class Prack_Utils_Response_HeaderHash extends Prack_Wrapper_Hash
+  implements Prack_Interface_Enumerable
 {
-	private $entries;
-	private $translations;
+	private $names;
+	private $on_each;
 	
 	// TODO: Document!
-	static function distill( $headerhash )
+	static function using( $headers )
 	{
-		$distilled = array();
-		
-		foreach ( $headerhash->getEntries() as $key => $value )
-		{
-			if ( is_array( $value ) )
-				$distilled[ $key ] = implode( "\n", $value );
-			else
-				$distilled[ $key ] = $value;
-		}
-		
-		return $distilled;
+		$headers = is_null( $headers ) ? Prack::_Hash() : $headers;
+		if ( !( $headers instanceof Prack_Wrapper_Hash ) )
+			throw new Prack_Error_Type( 'FAILSAFE: $headers is not a Prack_Wrapper_Hash or any subclass in method using ' );
+			
+		if ( $headers instanceof Prack_Utils_Response_HeaderHash )
+			return $headers;
+		return new Prack_Utils_Response_HeaderHash( $headers );
 	}
 	
 	// TODO: Document!
-	static function build( $with )
+	function __construct( $headers )
 	{
-		if ( $with instanceof Prack_Utils_Response_HeaderHash )
-			return $with;
+		parent::__construct( $headers->toN() );
 		
-		return new Prack_Utils_Response_HeaderHash( $with );
-	}
-	
-	// TODO: Document!
-	function __construct( $raw = array() )
-	{
-		$this->entries      = $raw;
-		$this->translations = array();
-		foreach ( $raw as $key => $value )
+		$this->names = Prack::_Hash();
+		
+		foreach ( $headers->toN() as $key => $value )
 			$this->set( $key, $value );
 	}
 	
@@ -46,122 +36,118 @@ class Prack_Utils_Response_HeaderHash
 		if ( !is_callable( $callback ) )
 			throw new Prack_Error_Callback();
 		
-		$distilled = self::distill( $this );
-		array_walk( $distilled, $callback );
+		$this->on_each = $callback;
+		$callback      = array( $this, 'onEach' );
+		
+		parent::each( $callback );
+		
+		$this->on_each = null;
 	}
 	
 	// TODO: Document!
-	// Note: Associative array.
-	public function toArray()
+	public function onEach( $key, $value )
 	{
-		return self::distill( $this );
+		call_user_func( $this->on_each, $key, $this->distill( $value ) );
+	}
+	
+	// TODO: Document!
+	public function toHash()
+	{
+		$distilled = Prack::_Hash();
+		
+		foreach ( $this->array as $key => $value )
+			$distilled->set( $key, $this->distill( $value ) );
+			
+		return $distilled;
 	}
 	
 	// Note: Ruby method is confusing in its implementation.
 	public function get( $key )
 	{
-		if ( array_key_exists( $key, $this->translations ) )
-			$translated_key = $this->translations[ $key ];
-		else
-		{
-			$downcased_key  = strtolower( $key );
-			$translated_key = isset( $this->translations[ $downcased_key ] ) ? $this->translations[ $downcased_key ] : null;
-		}
-		
-		// If translated_key has a value, then it's guaranteed to have a value in entries.
-		return is_null( $translated_key ) ? null : $this->entries[ $translated_key ];
+		return parent::get( $this->names->get( strtolower( $key ) ) );
 	}
 	
 	// TODO: Document!
 	public function set( $key, $value )
 	{
 		$this->delete( $key );
-		$this->translations[ $key ] = $this->translations[ strtolower( $key ) ] = $key;
-		$this->entries[ $key ]      = $value;
+		$this->names->set( strtolower( $key ), $key );
+		$this->names->set( $key, $key );
+		
+		parent::set( $key, $value );
 	}
 	
 	// TODO: Document!
 	public function delete( $key )
 	{
-		$canonical   = strtolower( $key );
-		$translation = isset ( $this->translations[ $canonical ] ) ? $this->translations[ $canonical ] : null;
-		$entry       = isset ( $this->entries[ $translation ] ) ? $this->entries[ $translation ] : null;
+		$canonical = strtolower( $key );
+		$result    = parent::delete( $this->names->delete( $canonical ) );
 		
-		unset( $this->translations[ $canonical ] );
-		unset( $this->entries[ $translation ] );
-		
-		foreach ( $this->translations as $key => $value )
+		foreach ( $this->names->toN() as $key => $value )
 		{
 			if ( strtolower( $key ) == $canonical )
-				unset( $this->translations[ $key ] );
+				$this->names->delete( $key );
 		}
 		
-		return $entry;
+		return $result;
 	}
 	
 	// TODO: Document!
 	public function contains( $key )
 	{
-		return ( array_key_exists( $key, $this->translations ) || array_key_exists( strtolower( $key ), $this->translations ) );
-	}
-	
-	// TODO: Document!
-	public function hasKey  ( $key ) { return $this->contains( $key ); }
-	
-	// TODO: Document!
-	public function isMember( $key ) { return $this->contains( $key ); }
-	
-	// TODO: Document!
-	public function merge( $other )
-	{
-		$headerhash = clone $this;
-		$merged     = $headerhash->mergeInPlace( $other );
-		return $merged;
+		return ( $this->names->contains( $key ) || $this->names->contains( strtolower( $key ) ) );
 	}
 	
 	// TODO: Document!
 	public function mergeInPlace( $other )
 	{
-		if ( $other instanceof Prack_Utils_Response_HeaderHash )
-			$other = self::distill( $other );
-		
-		// Without closures, we have to do this a bit differently than Ruby.
-		foreach ( $other as $key => $value )
-			$this->set( $key, $value );
-		
+		$callback = array( $this, 'onMergeInPlace' );
+		$other->each( $callback );
 		return $this;
+	}
+	
+	// TODO: Document!
+	public function onMergeInPlace( $key, $value )
+	{
+		$this->set( $key, $value );
+	}
+	
+	// TODO: Document!
+	public function merge( $other )
+	{
+		$headerhash = clone $this;
+		$headerhash->mergeInPlace( $other );
+		return $headerhash;
 	}
 	
 	// TODO: Document!
 	public function replace( $other )
 	{
-		if ( $other instanceof Prack_Utils_Response_HeaderHash )
-			$other = self::distill( $other );
-		
-		$this->entries = array();
-		
-		// Without closures, we have to do this a bit differently than Ruby.
-		foreach ( $other as $key => $value )
+		$this->clear();
+		foreach ( $other->toN() as $key => $value )
 			$this->set( $key, $value );
-			
 		return $this;
 	}
 	
 	// TODO: Document!
-	public function length()
+	public function getNames()
 	{
-		return count( $this->entries );
-	}
-	
-	// TODO: Document!
-	public function getTranslations()
-	{
-		return $this->translations;
+		return $this->names;
 	}
 	
 	// TODO: Document!
 	public function getEntries()
 	{
 		return $this->entries;
+	}
+	
+		// TODO: Document!
+	private function distill( $value )
+	{
+		if ( is_object( $value ) && method_exists( $value, 'toAry' ) )
+			return $value->toAry()->join( Prack::_String( "\n" ) );
+		else if ( $value instanceof Prack_Wrapper_String )
+			return $value;
+		throw new Prack_Error_Type( 'FAILSAFE: distill argument must be an object and respond to toAry' );
 	}
 }

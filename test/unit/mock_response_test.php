@@ -9,7 +9,7 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_provide_access_to_the_HTTP_status()
 	{
-		$mock_request  = new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 		$mock_response = $mock_request->get( Prack::_String() );
 		$this->assertTrue( $mock_response->isSuccessful() );
 		$this->assertTrue( $mock_response->isOK() );
@@ -50,21 +50,10 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_provide_access_to_the_HTTP_headers()
 	{
-		$mock_request  = new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 		$mock_response = $mock_request->get( Prack::_String() );
 		
 		$original_headers = $mock_response->getOriginalHeaders();
-
-/*
-    res = Rack::MockRequest.new(app).get("")
-    res.should.include "Content-Type"
-    res.headers["Content-Type"].should.equal "text/yaml"
-    res.original_headers["Content-Type"].should.equal "text/yaml"
-    res["Content-Type"].should.equal "text/yaml"
-    res.content_type.should.equal "text/yaml"
-    res.content_length.should.be > 0
-    res.location.should.be.nil
-*/
 
 		$this->assertTrue( $mock_response->contains( 'Content-Type' ) );
 		$this->assertEquals( 'text/yaml', $mock_response->getHeaders()->get( 'Content-Type' )->toN() );
@@ -82,7 +71,7 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_provide_access_to_the_HTTP_body()
 	{
-		$mock_request  = new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 		$mock_response = $mock_request->get( Prack::_String() );
 		
 		$this->assertTrue( $mock_response->getBody()->match( '/rack/' ) );
@@ -96,7 +85,7 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_provide_access_to_the_Rack_errors()
 	{
-		$mock_request  = new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 		$mock_response = $mock_request->get(
 		  Prack::_String( '/?error=foo' ),
 		  Prack::_Hash( array( 'lint' => true ) )
@@ -116,7 +105,7 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_optionally_make_Rack_errors_fatal()
 	{
-		$mock_request  = new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 		$mock_response = $mock_request->get(
 			Prack::_String(),
 			Prack::_Hash( array( 'fatal' => true ) )
@@ -140,7 +129,7 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_optionally_make_Rack_errors_fatal__part_2_()
 	{
-		$mock_request  = new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 		$mock_response = $mock_request->get(
 			Prack::_String(),
 			Prack::_Hash( array( 'fatal' => true ) )
@@ -160,7 +149,7 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 	public function It_should_throw_an_exception_when_an_unknown_method_is_called__on_account_of_delegation()
 	{
 		$this->setExpectedException( 'Prack_Error_Runtime_DelegationFailed' );
-		$mock_request  = new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 		$mock_response = $mock_request->get( Prack::_String( '/?error=foo' ), Prack::_Hash( array( 'lint' => true ) ) );
 		$mock_response->foobar();
 	} // It should throw an exception when an unknown method is called, on account of delegation

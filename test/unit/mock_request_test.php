@@ -6,7 +6,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	// TODO: Document!
 	static function app()
 	{
-		return new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		return new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 	}
 	
 	/**
@@ -182,8 +182,8 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_prepend_slash_to_uri_path()
 	{
 		$mock_request  = self::app();
-		
 		$mock_response = $mock_request->get( Prack::_String( 'foo' ) );
+		
 		$this->assertTrue( $mock_response instanceof Prack_Mock_Response );
 		
 		$env = unserialize( $mock_response->getBody()->toN() );
@@ -384,7 +384,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	{
 		$this->setExpectedException( 'Prack_Error_Type' );
 		
-		$mock_request  = new Prack_Mock_Request( new Prack_MockTest_MiddlewareApp() );
+		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 		$mock_response = $mock_request->get(
 			Prack::_String(),
 			Prack::_Hash( array( 'input' => Prack::_Array() ) )

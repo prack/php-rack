@@ -57,15 +57,14 @@ class Prack_Mock_Response
 		if ( !( $errors instanceof Prack_Interface_WritableStreamlike ) )
 			throw new Prack_Error_Type( 'FAILSAFE: mock request $errors must be Prack_Writable_Streamlike' );
 		
-		$this->status = (int)$status;
-		
+		$this->status           = (int)$status;
 		$this->original_headers = $headers;
 		$this->headers          = Prack_Utils_Response_HeaderHash::using( Prack::_Hash() );
 		
 		foreach ( $headers->toN() as $key => $values )
 		{
 			$this->headers->set( $key, $values );
-			if ( $values->isEmpty() )
+			if ( is_null( $values ) || $values->isEmpty() )
 				$this->headers->set( $key, Prack::_String() );
 		}
 		

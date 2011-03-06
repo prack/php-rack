@@ -1,7 +1,7 @@
 <?php
 
 // TODO: Document!
-class Prack_MockTest_MiddlewareApp
+class Prack_Test_EnvSerializer
   implements Prack_Interface_MiddlewareApp
 {
 	// TODO: Document!
@@ -32,7 +32,7 @@ class Prack_MockTest_MiddlewareApp
 }
 
 // TODO: Document!
-class TestEcho
+class Prack_Test_Echo
   implements Prack_Interface_MiddlewareApp
 {
 	private $status;
@@ -41,17 +41,34 @@ class TestEcho
 	private $eval;
 	
 	// TODO: Document!
-	function __construct( $status = 200, $headers = null, $body = null )
+	function __construct( $status = 200, $headers = null, $body = null, $eval = null )
 	{
-		if ( is_null( $headers ) )
-			$headers = Prack::_Hash( array(
-			  'Content-Type' => Prack::_String( 'test/plain' )
-			) );
+		$status = is_null( $status ) ? 200 : (int)$status;
+		if ( !is_integer( $status ) )
+			throw new Prack_Error_Type( 'FAILSAFE: __construct $status is not an integer' );
+		
+		$headers = is_null( $headers )
+		  ? Prack::_Hash( array(
+		      'Content-Type' => Prack::_String( 'test/plain' )
+		    ) )
+		  : $headers;
+		if ( !( $headers instanceof Prack_Wrapper_Hash ) )
+			throw new Prack_Error_Type( 'FAILSAFE: __construct $headers is not a Prack_Wrapper_Hash' );
+		
+		$body = is_null( $body )
+		  ? Prack::_Array( array( Prack::_String() ) )
+		  : $body;
+		if ( !( $body instanceof Prack_Interface_Stringable ) && !( $body instanceof Prack_Interface_Enumerable ) )
+			throw new Prack_Error_Type( 'FAILSAFE: __construct $body is neither Prack_Interface_Stringable nor Prack_Interface_Enumerable' );
+		
+		$eval = is_null( $eval ) ? '' : $eval;
+		if ( !is_string( $eval ) )
+			throw new Prack_Error_Type( 'FAILSAFE: __construct $eval must be php-native string' );
 		
 		$this->status  = $status;
-		$this->headers = $headers;
-		$this->body    = $body instanceof Prack_Interface_Enumerable ? $body : Prack::_Array( $body );
-		$this->eval    = null;
+		$this->headers = Prack_Utils_Response_HeaderHash::using( $headers );
+		$this->body    = $body;
+		$this->eval    = $eval;
 	}
 	
 	// TODO: Document!
@@ -79,6 +96,6 @@ class TestHelper
 		$out  = '';
 		for( $c = 0; $c < $length; $c++ )
 			$out .= (string)$aZ09[ mt_rand( 0, count( $aZ09 ) - 1 ) ];
-		return $out;
+		return Prack::_String( $out );
 	}
 }
