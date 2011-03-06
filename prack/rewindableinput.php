@@ -13,6 +13,12 @@ class Prack_RewindableInput
 	private $is_closed;
 	
 	// TODO: Document!
+	static function with( $io )
+	{
+		return new Prack_RewindableInput( $io );
+	}
+	
+	// TODO: Document!
 	function __construct( $io )
 	{
 		$this->io            = $io;
@@ -36,7 +42,7 @@ class Prack_RewindableInput
 	}
 	
 	// TODO: Document!
-	public function read( $length = null, &$buffer = null )
+	public function read( $length = null, $buffer = null )
 	{
 		if ( $this->isReadable() )
 		{
@@ -128,11 +134,11 @@ class Prack_RewindableInput
 			while ( $entire_buffer_written_out == false )
 			{
 				$written = $this->rewindable_io->write( $buffer );
-				$entire_buffer_written_out = ( $written == strlen( $buffer ) );
+				$entire_buffer_written_out = ( $written == $buffer->length() );
 				if ( $entire_buffer_written_out == false )
-					$buffer = substr( $written - 1, strlen( $buffer ) - $written );
+					$buffer = $written->slice( $written - 1, $buffer->length() - $written );
 			}
-			$this->length += strlen( $buffer );
+			$this->length += $buffer->length();
 		}
 		$this->rewindable_io->rewind();
 	}

@@ -11,13 +11,9 @@ class Prack_Utils_IO_String extends Prack_Utils_IO
 	// TODO: Document!
 	function __construct( $string = null )
 	{
-		if ( is_null( $string ) )
-			$string = Prack::_String();
-		else if ( !( $string instanceof Prack_Interface_Stringable ) )
-		{
-			$string_type = is_object( $string ) ? get_class( $string) : gettype( $string );
-			throw new Prack_Error_Type( "cannot create string io stream with provided {$string_type}" );
-		}
+		$string = is_null( $string ) ? Prack::_String() : $string;
+		if ( !( $string instanceof Prack_Interface_Stringable ) )
+			throw new Prack_Error_Type( 'FAILSAFE: __construct $string is not a Prack_Interface_Stringable' );
 		
 		if ( $string->length() > self::MAX_STRING_LENGTH )
 			throw new Prack_Error_Runtime_StringTooBigForStringIO();
@@ -37,8 +33,13 @@ class Prack_Utils_IO_String extends Prack_Utils_IO
 	public function read( $length = null, $buffer = null )
 	{
 		if ( is_null( $length ) )
-			$length = isset( $buffer ) ? self::MAX_STRING_LENGTH - $buffer->length() : self::MAX_STRING_LENGTH;
-		return parent::read( $length, $buffer );
+			$adjusted_length = isset( $buffer ) ? self::MAX_STRING_LENGTH - $buffer->length() : self::MAX_STRING_LENGTH;
+		else
+			$adjusted_length = $length;
+		
+		$result = parent::read( $adjusted_length, $buffer );
+		
+		return ( is_null( $length ) && is_null( $result ) ) ? Prack::_String() : $result;
 	}
 	
 	// TODO: Document!

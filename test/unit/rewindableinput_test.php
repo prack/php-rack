@@ -12,7 +12,9 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	function setUp()
 	{
-		$this->rewindable_input = new Prack_RewindableInput( Prack_Utils_IO::withString( 'hello world' ) );
+		$this->rewindable_input = new Prack_RewindableInput(
+			Prack_Utils_IO::withString( Prack::_String( 'hello world' ) )
+		);
 	}
 	
 	/**
@@ -31,8 +33,8 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_creatable_without_a_string()
 	{
-		$this->rewindable_input = Prack_Utils_IO::withString( '' );
-		$this->assertEquals( '', $this->rewindable_input->read() );
+		$this->rewindable_input = Prack_Utils_IO::withString( Prack::_String() );
+		$this->assertEquals( '', $this->rewindable_input->read()->toN() );
 	} // It should be creatable without a string
 	
 	/**
@@ -42,7 +44,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read()
 	{
-		$this->assertEquals( 'hello world', $this->rewindable_input->read() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->read()->toN() );
 		
 		$this->rewindable_input->close();
 		try
@@ -64,7 +66,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_null()
 	{
-		$this->assertEquals( 'hello world', $this->rewindable_input->read( null ) );
+		$this->assertEquals( 'hello world', $this->rewindable_input->read( null )->toN() );
 	} // It should be able to handle read( null )
 	
 	/**
@@ -74,7 +76,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_length()
 	{
-		$this->assertEquals( 'h', $this->rewindable_input->read( 1 ) );
+		$this->assertEquals( 'h', $this->rewindable_input->read( 1 )->toN() );
 	} // It should be able to handle read( length )
 	
 	/**
@@ -84,9 +86,9 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_length_and_buffer()
 	{
-		$buffer = '';
+		$buffer = Prack::_String();
 		$result = $this->rewindable_input->read( 1, $buffer );
-		$this->assertEquals( 'h', $result );
+		$this->assertEquals( 'h', $result->toN() );
 		$this->assertSame( $buffer, $result );
 	} // It should be able to handle read( length, buffer )
 	
@@ -97,9 +99,9 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_null_and_buffer()
 	{
-		$buffer = '';
+		$buffer = Prack::_String();
 		$result = $this->rewindable_input->read( null, $buffer );
-		$this->assertEquals( 'hello world', $result );
+		$this->assertEquals( 'hello world', $result->toN() );
 		$this->assertSame( $buffer, $result );
 	} // It should be able to handle read( null, buffer )
 	
@@ -112,7 +114,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$this->rewindable_input->read( 1 );
 		$this->rewindable_input->rewind();
-		$this->assertEquals( 'hello world', $this->rewindable_input->read() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->read()->toN() );
 	} // It should rewind to the beginning when rewind is called
 	
 	/**
@@ -122,7 +124,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_gets()
 	{
-		$this->assertEquals( 'hello world', $this->rewindable_input->gets() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->gets()->toN() );
 		
 		$this->rewindable_input->close();
 		try
@@ -146,9 +148,9 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'eachCallback' );
 		
-		$this->lines = array();
+		$this->lines = Prack::_Array();
 		$this->rewindable_input->each( $callback );
-		$this->assertEquals( array( 'hello world' ), $this->lines );
+		$this->assertEquals( array( Prack::_String( 'hello world' ) ), $this->lines->toN() );
 		
 		$this->rewindable_input->close();
 		try
@@ -168,7 +170,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function eachCallback( $item )
 	{
-		array_push( $this->lines, $item );
+		$this->lines->concat( $item );
 	}
 	
 	/**

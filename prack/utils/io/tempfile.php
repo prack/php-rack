@@ -19,7 +19,7 @@ class Prack_Utils_IO_Tempfile extends Prack_Utils_IO
 	}
 	
 	// TODO: Document!
-	public function read( $length = null, &$buffer = null )
+	public function read( $length = null, $buffer = null )
 	{
 		return parent::read( $length, $buffer );
 	}

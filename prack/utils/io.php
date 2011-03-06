@@ -46,25 +46,24 @@ abstract class Prack_Utils_IO
 		if ( $this->isReadable() )
 		{
 			$remaining = is_null( $length ) ? PHP_INT_MAX : $length;
-			$internal  = Prack::_String();
 			$read_size = min( $remaining, self::CHUNK_SIZE );
 			
+			$buffer = is_null( $buffer ) ? Prack::_String() : $buffer;
+			if ( !( $buffer instanceof Prack_Wrapper_String ) )
+				throw new Prack_Error_Lint( 'read $buffer not a string' );
+			
 			if ( feof( $this->stream ) )
-			{
-				if ( is_null( $length ) )
-					return Prack::_String();
-				return null;
-			}
+				return is_null( $length ) ? Prack::_String() : null;
 			
 			// Chunked read, as fread() is limited to 8K of data per call.
 			while ( !feof( $this->stream ) && $remaining > 0 && $temp = fread( $this->stream, $read_size ) )
 			{
 				$remaining -= strlen( $temp );
 				$read_size  = min( $remaining, self::CHUNK_SIZE );
-				$internal->concat( Prack::_String( $temp ) );
+				$buffer->concat( Prack::_String( $temp ) );
 			}
 			
-			return is_null( $buffer ) ? $internal : $buffer->concat( $internal );
+			return $buffer;
 		}
 		
 		throw new Prack_Error_IO( 'stream is not readable' );
@@ -80,7 +79,10 @@ abstract class Prack_Utils_IO
 			$result = fgets( $this->stream );
 			
 			if ( is_string( $result ) )
+			{
+				$result = Prack::_String( $result );
 				$this->line_no += 1;
+			}
 			else if ( $result === false )
 				$result = null;
 			

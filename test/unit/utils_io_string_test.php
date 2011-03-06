@@ -1,9 +1,7 @@
 <?php
 
-require_once join( DIRECTORY_SEPARATOR, array(dirname(__FILE__), '..', 'support', 'testhelper.php') );
-
 // TODO: Document!
-class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase 
+class Prack_Utils_IO_StringTest extends PHPUnit_Framework_TestCase 
 {
 	private $string_io;
 	private $items;
@@ -14,11 +12,12 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	function setUp()
 	{
-		$this->string_io = Prack_Utils_IO::withString( 'hello world' );
+		$this->string_io = Prack_Utils_IO::withString( Prack::_String( 'hello world' ) );
 	}
 	
 	/**
 	 * Destroy the previously created IO instance after each test
+	 * @author Joshua Morris
 	 */
 	function tearDown()
 	{
@@ -27,14 +26,36 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	}
 	
 	/**
+	 * It should throw an exception if the string is too big
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_throw_an_exception_if_the_string_is_too_big()
+	{
+		$max_length = Prack_Utils_IO_String::MAX_STRING_LENGTH;
+		$gibberish  = TestHelper::gibberish( 4096 );
+		$iterations = floor( (float)$max_length / (float)( $gibberish->length() ) + 1 ); // Just a bit over the limit!
+		
+		ob_start();
+			for ( $i = 0; $i < $iterations; $i++ )
+				echo $gibberish->toN();
+		$bigass_string = Prack::_String( ob_get_contents() );
+		
+		ob_end_clean();
+		
+		$this->setExpectedException( 'Prack_Error_Runtime_StringTooBigForStringIO' );
+		new Prack_Utils_IO_String( $bigass_string );
+	} // It should throw an exception if the string is too big
+	
+	/**
 	 * It should be creatable without a string
 	 * @author Joshua Morris
 	 * @test
 	 */
 	public function It_should_be_creatable_without_a_string()
 	{
-		$this->string_io = Prack_Utils_IO::withString( '' );
-		$this->assertEquals( '', $this->string_io->read() );
+		$this->string_io = Prack_Utils_IO::withString();
+		$this->assertEquals( '', $this->string_io->read()->toN() );
 	} // It should be creatable without a string
 	
 	/**
@@ -44,7 +65,7 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read()
 	{
-		$this->assertEquals( 'hello world', $this->string_io->read() );
+		$this->assertEquals( 'hello world', $this->string_io->read()->toN() );
 		
 		$this->string_io->close();
 		try
@@ -66,7 +87,7 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_null()
 	{
-		$this->assertEquals( 'hello world', $this->string_io->read( null ) );
+		$this->assertEquals( 'hello world', $this->string_io->read( null )->toN() );
 	} // It should be able to handle read( null )
 	
 	/**
@@ -76,7 +97,7 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_length()
 	{
-		$this->assertEquals( 'h', $this->string_io->read( 1 ) );
+		$this->assertEquals( 'h', $this->string_io->read( 1 )->toN() );
 	} // It should be able to handle read( length )
 	
 	/**
@@ -86,9 +107,9 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_length_and_buffer()
 	{
-		$buffer = '';
+		$buffer = Prack::_String();
 		$result = $this->string_io->read( 1, $buffer );
-		$this->assertEquals( 'h', $result );
+		$this->assertEquals( 'h', $result->toN() );
 		$this->assertSame( $buffer, $result );
 	} // It should be able to handle read( length, buffer )
 	
@@ -99,9 +120,9 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_null_and_buffer()
 	{
-		$buffer = '';
+		$buffer = Prack::_String();
 		$result = $this->string_io->read( null, $buffer );
-		$this->assertEquals( 'hello world', $result );
+		$this->assertEquals( 'hello world', $result->toN() );
 		$this->assertSame( $buffer, $result );
 	} // It should be able to handle read( null, buffer )
 	
@@ -114,7 +135,7 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	{
 		$this->string_io->read( 1 );
 		$this->string_io->rewind();
-		$this->assertEquals( 'hello world', $this->string_io->read() );
+		$this->assertEquals( 'hello world', $this->string_io->read()->toN() );
 	} // It should rewind to the beginning when rewind is called
 	
 	/**
@@ -124,7 +145,7 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_gets()
 	{
-		$this->assertEquals( 'hello world', $this->string_io->gets() );
+		$this->assertEquals( 'hello world', $this->string_io->gets()->toN() );
 		
 		$this->string_io->close();
 		try
@@ -148,10 +169,10 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'addToItems' );
 		
-		$this->items = array();
+		$this->items = Prack::_Array();
 		
 		$this->string_io->each( $callback );
-		$this->assertEquals( array( 'hello world' ), $this->items );
+		$this->assertEquals( array( Prack::_String( 'hello world' ) ), $this->items->toN() );
 		$this->assertEquals( count( $this->items ), $this->string_io->getLineNo() );
 		
 		$this->string_io->close();
@@ -172,7 +193,7 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function addToItems( $item )
 	{
-		array_push( $this->items, $item );
+		$this->items->concat( $item );
 	}
 	
 	/**
@@ -194,8 +215,8 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_handle_read_on_really_big_strings()
 	{
-		$string = TestHelper::gibberish( Prack_Utils_IO::CHUNK_SIZE * 2 );
-		$string_io    = Prack_Utils_IO::withString( $string );
+		$string    = TestHelper::gibberish( Prack_Utils_IO::CHUNK_SIZE * 2 );
+		$string_io = Prack_Utils_IO::withString( $string );
 		$this->assertEquals( $string, $string_io->read() );
 	} // It should handle read on really big strings
 	
@@ -206,14 +227,15 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_handle_write()
 	{
-		$this->string_io->write( 'EASTER EGG FOR JASON' );
+		$this->string_io->write( Prack::_String( 'EASTER EGG FOR JASON' ) );
 		$this->string_io->rewind();
-		$this->assertEquals( 'EASTER EGG FOR JASON', $this->string_io->read() );
+		
+		$this->assertEquals( 'EASTER EGG FOR JASON', $this->string_io->read()->toN() );
 		
 		$this->string_io->close();
 		try
 		{
-			$this->string_io->write( 'denied' );
+			$this->string_io->write( Prack::_String( 'denied' ) );
 		} 
 		catch ( Prack_Error_IO $e )
 		{
@@ -243,30 +265,4 @@ class Prack_Utils_IO_Test extends PHPUnit_Framework_TestCase
 		$this->string_io->close();
 		$this->string_io->close();
 	} // It should be possible to call close multiple times
-}
-
-// TODO: Document!
-class Prack_Utils_IO_StringTest extends PHPUnit_Framework_TestCase 
-{
-	/**
-	 * It should throw an exception if the string is too big
-	 * @author Joshua Morris
-	 * @test
-	 */
-	public function It_should_throw_an_exception_if_the_string_is_too_big()
-	{
-		$max_length = Prack_Utils_IO_String::MAX_STRING_LENGTH;
-		$gibberish  = TestHelper::gibberish( 4096 );
-		$iterations = floor( (float)$max_length / (float)strlen( $gibberish ) ) + 1; // Just a bit over the limit!
-		
-		ob_start();
-			for ( $i = 0; $i < $iterations; $i++ )
-				echo $gibberish;
-		$bigass_string = ob_get_contents();
-		
-		ob_end_clean();
-		
-		$this->setExpectedException( 'Prack_Error_Runtime_StringTooBigForStringIO' );
-		new Prack_Utils_IO_String( $bigass_string );
-	} // It should throw an exception if the string is too big
 }
