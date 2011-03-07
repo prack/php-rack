@@ -2,231 +2,157 @@
 
 // TODO: Document!
 class Prack_Builder
+  implements Prack_Interface_MiddlewareApp
 {
-	private $location;         // string containing fully-qualified mount point:
-	                           //   If parent is mounted at '/admin' and this object is constructed with a location of
-	                           //   '/console', this property will be set to '/admin/console'.
-	private $parent;           // Prack_Builder instance which created this one
-	private $middleware_stack; // array of indexed 'specification' arrays containing: 
-	                           //   [ 0 ]=>string  (middleware class name)
-	                           //   [ 1 ]=>array() (args for the specified middleware's constructor)
-	private $endpoint;         // Prack_Interface_MiddlewareApp OR indexed array of child builders
-	                           //   NOTE: If array, lazily converted to Prack_URLMap in toMiddlewareApp().
-	                           //   (Prack_URLMap is an instance of Prack_Interface_MiddlewareApp, and is thus callable middleware)
-	private $fi_using_class;   // string containing previous value on call to using(): state for fluent interface.
+	private $path;
+	private $parent;
+	private $stack;
 	
-	/*
-  class Builder
-    def initialize(&block)
-      @ins = []
-      instance_eval(&block) if block_given?
-    end
-
-    def self.app(&block)
-      self.new(&block).to_app
-    end
-
-    def use(middleware, *args, &block)
-      @ins << lambda { |app| middleware.new(app, *args, &block) }
-    end
-
-    def run(app)
-      @ins << app #lambda { |nothing| app }
-    end
-
-    def map(path, &block)
-      if @ins.last.kind_of? Hash
-        @ins.last[path] = self.class.new(&block).to_app
-      else
-        @ins << {}
-        map(path, &block)
-      end
-    end
-
-    def to_app
-      @ins[-1] = Rack::URLMap.new(@ins.last)  if Hash === @ins.last
-      inner_app = @ins.last
-      @ins[0...-1].reverse.inject(inner_app) { |a, e| e.call(a) }
-    end
-
-    def call(env)
-      to_app.call(env)
-    end
-  end
-end
-	*/
+	private $fi_class;
+	private $fi_args;
+	private $fi_callback;
+	
 	// TODO: Document!
-	function __construct( $location = null, $parent = null )
+	static function domain( $callback = null )
 	{
-		if ( isset( $location ) && isset( $parent ) )
+		return new Prack_Builder( null, null, $callback );
+	}
+	
+	// TODO: Document!
+	function __construct( $path = null, $parent = null, $callback = null )
+	{
+		$this->path   = $path;
+		$this->parent = $parent;
+		$this->stack  = Prack::_Array();
+		
+		$this->fi_class    = null;
+		$this->fi_args     = null;
+		$this->fi_callback = null;
+		
+		if ( isset( $callback ) )
 		{
-			$components     = array_filter( array( $parent->getLocation(), $location ), 'strlen' );
-			$this->location = implode( '', $components );
+			if ( !is_callable( $callback ) )
+				throw new Prack_Error_Callback( '__construct $callback is not actually callable' );
+			else
+				call_user_func( $callback, $this );
+		}
+	}
+	
+	// TODO: Document!
+	public function map( $path, $callback = null )
+	{
+		if ( $this->stack->last() instanceof Prack_Wrapper_Hash )
+		{
+			$child = new Prack_Builder( $path, $this, $callback );
+			$this->stack->last()->set( $path, $child );
 		}
 		else
-			$this->location = $location;
+		{
+			$this->stack->concat( Prack::_Hash() );
+			return $this->map( $path, $callback );
+		}
 		
-		$this->parent           = $parent;
-		$this->middleware_stack = array();
-		$this->endpoint         = array();
-	}
-	
-	// TODO: Document!
-	static function domain()
-	{
-		return new Prack_Builder();
-	}
-	
-	// TODO: Document!
-	static function chain( $from, $to )
-	{
-		if ( empty( $from ) ) // Workaround for array_reduce() $initial arg limitations in PHP5.2
-			return $to;         // First item passed in will likely be null. In that case, return $to.
-		
-		$class = $to[ 0 ];
-		$args  = $to[ 1 ];
-		array_unshift( $args, $from );
-		
-		$reflection     = new ReflectionClass( $class );
-		$middleware_app = $reflection->newInstanceArgs( $args );
-		
-		return $middleware_app;
-	}
-	
-	// TODO: Document!
-	public function using( $middleware_class )
-	{
-		$this->setFIUsingClass( $middleware_class );
-		return $this;
-	}
-	
-	// TODO: Document!
-	public function withArgs()
-	{
-		$middleware_class = $this->getFIUsingClass();
-		
-		if ( empty( $middleware_class ) )
-			throw new Prack_Error_Builder_FluentInterfacePreconditionNotMet( 'withArgs() called without prior using() call' );
-		
-		$args = func_get_args();
-		$this->specify( $middleware_class, $args );
-		
-		return $this;
+		return $child;
 	}
 	
 	// TODO: Document!
 	public function run( $middleware_app )
 	{
-		if ( $this->isShallow() )
-			throw new Prack_Error_Builder_ShallowEndpointRedeclared();
-		else if ( $this->isDeep() )
-			throw new Prack_Error_Builder_BothMapAndRunDeclaredAtSameLevel();
-		
-		$this->setEndpoint( $middleware_app );
-		
-		return $this->parent;
-	}
-	
-	// TODO: Document!
-	public function map( $location )
-	{
-		if ( $this->isShallow() )
-			throw new Prack_Error_Builder_BothMapAndRunDeclaredAtSameLevel();
-		
-		$children = &$this->getEndpoint();
-		foreach ( $children as $child )
-		{
-			if ( $location == $child->getLocation() )
-				throw new Prack_Error_Builder_DuplicateMapping();
-		}
-		
-		$builder_for_location = new Prack_Builder( $location, $this );
-		array_push( $children, $builder_for_location );
-		return $builder_for_location;
-	}
-	
-	// TODO: Document!
-	public function wherein()
-	{
-		return $this;
+		$this->stack->concat( $middleware_app );
+		return is_null( $this->parent ) ? $this : $this->parent;
 	}
 	
 	// TODO: Document!
 	public function toMiddlewareApp()
 	{
-		$middleware_stack = $this->getMiddlewareStack();
+		if ( $this->stack->last() instanceof Prack_Wrapper_Hash )
+			$this->stack->set( -1, Prack_URLMap::with( $this->stack->last() ) );
 		
-		if ( $this->isShallow() )
-			$inner_app = $this->getEndpoint();
-		else if ( $this->isDeep() )
-			$inner_app = new Prack_URLMap( $this->getEndpoint() );
-		else
-			throw new Prack_Error_Builder_NoMiddlewareSpecified();
+		static $callback = null;
 		
-		array_push( $middleware_stack, $inner_app );
+		if ( is_null( $callback ) )
+			$callback = create_function(
+			  '$calling_middleware_app, $class, $args, $callback',
+			  '$reflection = new ReflectionClass( $class );
+			   $args       = $args->toN();
+			   array_unshift( $args, $calling_middleware_app );
+			   if ( isset( $callback ) )
+			     array_push( $args, $callback );
+			   return $reflection->newInstanceArgs( $args );'
+			);
+		$inner_middleware_app = $this->stack->last();
+		return $this->stack->slice( 0, -1, true )->reverse()->inject( $inner_middleware_app, $callback );
+	}
+	
+	// TODO: Document!
+	public function using( $class )
+	{
+		if ( $this->fi_class || $this->fi_args || $this->fi_callback )
+			throw new Prack_Error_Argument( 'cannot specify middleware app until previous is fully specified--for help, consult Prack_Builder documentation' );
 		
-		return array_reduce( array_reverse( $middleware_stack ), array( 'Prack_Builder', 'chain' ) );
+		$this->fi_class = $class;
+		return $this;
 	}
 	
-	
 	// TODO: Document!
-	public function getLocation()
+	public function via( $class)
 	{
-		return $this->location;
+		return $this->using( $class );
 	}
 	
 	// TODO: Document!
-	public function getParent()
-	{ 
-		return $this->parent;
-	}
-	
-	// TODO: Document!
-	public function getMiddlewareStack()
+	public function withArgs()
 	{
-		return $this->middleware_stack;
+		$args = func_get_args();
+		$this->fi_args = $args;
+		return $this;
 	}
 	
 	// TODO: Document!
-	public function &getEndpoint()
-	{ 
-		return $this->endpoint;
-	}
-	
-	// TODO: Document!
-	public function getFIUsingClass()
+	public function withCallback( $callback )
 	{
-		return $this->fi_using_class;
+		$this->fi_callback = $callback;
+		return $this;
 	}
 	
 	// TODO: Document!
-	public function isShallow()
+	public function andCallback( $callback )
 	{
-		return ( $this->endpoint instanceof Prack_Interface_MiddlewareApp );
+		return $this->withCallback( $callback );
 	}
 	
 	// TODO: Document!
-	public function isDeep() 
+	public function build()
 	{
-		return is_array( $this->endpoint ) && !empty( $this->endpoint );
+		if ( is_null( $this->fi_class ) )
+			throw new Prack_Error_Argument( 'attempt to specify middleware app failed: you must first provide the middleware app class with using' );
+		
+		if ( is_null( $this->fi_args ) )
+			$this->fi_args = array();
+		
+		if ( isset( $this->fi_callback ) && !is_callable( $this->fi_callback ) )
+			throw new Prack_Error_Callback( 'callback specified in middleware app specification is not actually callable: ' );
+		
+		$this->specify( $this->fi_class, Prack::_Array( $this->fi_args ), $this->fi_callback );
+		
+		$this->fi_class    = null;
+		$this->fi_args     = null;
+		$this->fi_callback = null;
+		
+		return $this;
 	}
 	
 	// TODO: Document!
-	private function specify( $middleware_class, $args )
+	public function call( $env )
 	{
-		$specification = array( $middleware_class, $args );
-		array_push( $this->middleware_stack, $specification );
+		return $this->toMiddlewareApp()->call( $env );
 	}
 	
 	// TODO: Document!
-	private function setEndpoint( $endpoint )
+	private function specify( $class, $args, $callback )
 	{
-		$this->endpoint = $endpoint;
-	}
-	
-	// TODO: Document!
-	private function setFIUsingClass( $fi_using_class )
-	{
-		$this->fi_using_class = $fi_using_class;
+		$this->stack->concat(
+		  Prack::_Array( array( $class, $args, $callback ) )
+		);
 	}
 }
