@@ -64,8 +64,6 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 		
 		foreach ( $this->array as $item )
 		{
-			// If the item is an array, yield its contents to the callback.
-			// TODO: Assess if yielding all values in array is universally a good idea.
 			if ( $item instanceof Prack_Wrapper_Array )
 				call_user_func_array( $callback, $item->toN() );
 			else
@@ -84,6 +82,29 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 	}
 	
 	// TODO: Document!
+	public function inject( $accumulator, $callback )
+	{
+		if ( !is_callable( $callback ) )
+			throw new Prack_Error_Callback();
+		
+		$result = $accumulator;
+		
+		foreach ( $this->array as $item )
+		{
+			if ( $item instanceof Prack_Wrapper_Array )
+			{
+				$args = $item->toN();
+				array_unshift( $args, $result );
+				$result = call_user_func_array( $callback, $args );
+			}
+			else
+				$result = call_user_func( $callback, $result, $item );
+		}
+		
+		return $result;
+	}
+	
+	// TODO: Document!
 	public function collect( $callback )
 	{
 		if ( !is_callable( $callback ) )
@@ -93,8 +114,6 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 		
 		foreach ( $this->array as $item )
 		{
-			// If the item is an array, yield its contents to the callback.
-			// TODO: Assess if yielding all values in array is universally a good idea.
 			if ( $item instanceof Prack_Wrapper_Array )
 				array_push( $map, call_user_func_array( $callback, $item->toN() ) );
 			else
@@ -131,13 +150,20 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 		
 		if ( count( $args ) == 1 )
 			return $this->get( $args[ 0 ] );
-		else if ( count( $args ) == 2 )
+		else if ( count( $args ) == 2 || count( $args ) == 3 && is_bool( $args[ 2 ] ) )
 		{
 			$translated_start = $this->translate( $args[ 0 ] );
 			$translated_end   = $this->translate( $args[ 1 ] );
-			
+			$exclusive        = isset( $args[ 2 ] ) ? $args[ 2 ] : false;
 			if ( is_null( $translated_start ) || is_null( $translated_end ) )
 				return Prack::_Array();
+			
+			if ( $exclusive === true )
+			{
+				$translated_end--;
+				if ( $translated_end < 0 )
+					return Prack::_Array();
+			}
 			
 			return call_user_func_array( array( $this, 'valuesAt' ),
 			                             range( $translated_start, $translated_end ) );
@@ -285,4 +311,11 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 		
 		return $this->length() - $other_ary->length();
 	}
+	
+	// TODO: Document!
+	public function reverse()
+	{
+		return Prack::_Array( array_reverse( $this->array ) );
+	}
+	
 }
