@@ -324,7 +324,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_throw_an_exception_if_run_is_called_with_other_than_Prack_Interface_MiddlewareApp()
 	{
-				try
+		try
 		{
 			// must conclude middleware app specification with a call to build:
 			Prack_Builder::domain()
