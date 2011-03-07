@@ -296,4 +296,45 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 			$this->fail( 'Expected exception when middleware app callback is not actually callable.' );
 	} // It should throw an exception if the callback provided to a new builder isn't actually callable
 	
+	/**
+	 * It should throw an exception if run is called in the middle of a middleware app specification
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_throw_an_exception_if_run_is_called_in_the_middle_of_a_middleware_app_specification()
+	{
+		try
+		{
+			// must conclude middleware app specification with a call to build:
+			Prack_Builder::domain()
+			  ->via( 'Prack_Test_Echo' )->withArgs()->andCallback( array( $this, 'nonexistantFunction' ) )
+			  ->run( new Prack_Test_Echo() );
+		} catch ( Exception $e4 ) {}
+		
+		if ( isset( $e4 ) )
+			$this->assertRegExp( '/until previous is fully specified/', $e4->getMessage() );
+		else
+			$this->fail( 'Expected exception when middleware app specification is incomplete.' );
+	} // It should throw an exception if run is called in the middle of a middleware app specification
+	
+	/**
+	 * It should throw an exception if run is called with other than Prack_Interface_MiddlewareApp
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_throw_an_exception_if_run_is_called_with_other_than_Prack_Interface_MiddlewareApp()
+	{
+				try
+		{
+			// must conclude middleware app specification with a call to build:
+			Prack_Builder::domain()
+			  ->run( new stdClass() );
+		} catch ( Exception $e5 ) {}
+		
+		if ( isset( $e5 ) )
+			$this->assertRegExp( '/must be an instance of Prack_Interface_MiddlewareApp/', $e5->getMessage() );
+		else
+			$this->fail( 'Expected exception when middleware app specification is incomplete.' );
+	} // It should throw an exception if run is called with other than Prack_Interface_MiddlewareApp
+	
 }

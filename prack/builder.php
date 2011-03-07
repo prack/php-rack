@@ -25,9 +25,7 @@ class Prack_Builder
 		$this->parent = $parent;
 		$this->stack  = Prack::_Array();
 		
-		$this->fi_class    = null;
-		$this->fi_args     = null;
-		$this->fi_callback = null;
+		$this->resetFluentInterface();
 		
 		if ( isset( $callback ) )
 		{
@@ -58,6 +56,12 @@ class Prack_Builder
 	// TODO: Document!
 	public function run( $middleware_app )
 	{
+		if ( $this->fi_class || $this->fi_args || $this->fi_callback )
+			throw new Prack_Error_Argument( 'cannot run middleware app until previous is fully specified--for help, consult Prack_Builder documentation' );
+		
+		if ( !($middleware_app instanceof Prack_Interface_MiddlewareApp ) )
+			throw new Prack_Error_Argument( 'run $middleware_map must be an instance of Prack_Interface_MiddlewareApp' );
+		
 		$this->stack->concat( $middleware_app );
 		return is_null( $this->parent ) ? $this : $this->parent;
 	}
@@ -134,10 +138,7 @@ class Prack_Builder
 			throw new Prack_Error_Callback( 'callback specified in middleware app specification is not actually callable: ' );
 		
 		$this->specify( $this->fi_class, Prack::_Array( $this->fi_args ), $this->fi_callback );
-		
-		$this->fi_class    = null;
-		$this->fi_args     = null;
-		$this->fi_callback = null;
+		$this->resetFluentInterface();
 		
 		return $this;
 	}
@@ -155,4 +156,13 @@ class Prack_Builder
 		  Prack::_Array( array( $class, $args, $callback ) )
 		);
 	}
+	
+	// TODO: Document!
+	public function resetFluentInterface()
+	{
+		$this->fi_class    = null;
+		$this->fi_args     = null;
+		$this->fi_callback = null;
+	}
+	
 }
