@@ -76,6 +76,29 @@ class Prack_Wrapper_Hash extends Prack_Wrapper_Abstract_Collection
 	}
 	
 	// TODO: Document!
+	public function inject( $accumulator, $callback )
+	{
+		if ( !is_callable( $callback ) )
+			throw new Prack_Error_Callback();
+		
+		$result = $accumulator;
+		
+		foreach ( $this->array as $key => $value )
+		{
+			if ( $value instanceof Prack_Wrapper_Array )
+			{
+				$args = $value->toN();
+				array_unshift( $args, $result );
+				$result = call_user_func_array( $callback, $args );
+			}
+			else
+				$result = call_user_func( $callback, $result, $key, $value );
+		}
+		
+		return $result;
+	}
+
+	// TODO: Document!
 	public function collect( $callback )
 	{
 		if ( !is_callable( $callback ) )
@@ -119,5 +142,19 @@ class Prack_Wrapper_Hash extends Prack_Wrapper_Abstract_Collection
 	public function setDefault( $default = null )
 	{
 		$this->default = $default;
+	}
+	
+	public function sortBy( $callback )
+	{
+		return Prack::_Hash( parent::sortBy( $callback ) );
+	}
+
+	// TODO: Document!
+	public function toA()
+	{
+		$array = Prack::_Array();
+		foreach ( $this->array as $key => $item )
+			$array->push( Prack::_Array( array( $key, $item ) ) );
+		return $array;
 	}
 }

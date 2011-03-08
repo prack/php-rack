@@ -12,6 +12,14 @@ class Prack_Wrapper_ArrayTest extends PHPUnit_Framework_TestCase
 	}
 	
 	/**
+	 * @callback
+	 */
+	public function addToItems( $item )
+	{
+		array_push( $this->items, $item );
+	}
+
+	/**
 	 * It should handle each
 	 * @author Joshua Morris
 	 * @test
@@ -26,14 +34,6 @@ class Prack_Wrapper_ArrayTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertEquals( $items, $this->items );
 	} // It should handle each
-	
-	/**
-	 * This function is used as a callback for the above test.
-	 */
-	public function addToItems( $item )
-	{
-		array_push( $this->items, $item );
-	}
 	
 	/**
 	 * It should handle set
@@ -177,4 +177,79 @@ class Prack_Wrapper_ArrayTest extends PHPUnit_Framework_TestCase
 		
 		$this->assertTrue( $wrapper->isEmpty() );
 	} // It should know if it's empty
+	
+	/**
+	 * It should handle slice
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_handle_slice()
+	{
+		$wrapper = Prack::_Array( array( 'foo', 'bar', 'baz' ) );
+		
+		$this->assertEquals( Prack::_Array( array( 'foo', 'bar' ) ), $wrapper->slice(  0, 1 ) );
+		$this->assertEquals( Prack::_Array( array( 'foo', 'bar' ) ), $wrapper->slice(  0, -2 ) );
+		$this->assertEquals( Prack::_Array( array( 'foo', 'bar' ) ), $wrapper->slice( -3, -2 ) );
+		$this->assertEquals( Prack::_Array( array( 'foo', 'bar' ) ), $wrapper->slice( -3,  1 ) );
+		$this->assertEquals( Prack::_Array( array( 'baz' ) ),        $wrapper->slice(  2,  4 ) ); // range should be clipped to array size
+		$this->assertNull( $wrapper->slice( -5, 1 ) ); // out of bounds
+	} // It should handle slice
+	
+	/**
+	 * It should handle compact
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_handle_compact()
+	{
+		$wrapper = Prack::_Array( array( null, 'foo', null, 'bar', 'baz', null, null, null ) );
+		$this->assertEquals( Prack::_Array( array( 'foo', 'bar', 'baz' ) ), $wrapper->compact() );
+	} // It should handle compact
+	
+		/**
+	 * It should handle inject
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_handle_inject()
+	{
+		$wrapper = Prack::_Array( array( 'foo', 'bar', 'baz' ) );
+		
+		$callback = create_function( '$accumulator,$item', 'return $accumulator.$item;' );
+		$this->assertEquals( 'hifoobarbaz', $wrapper->inject( 'hi', $callback ) );
+		
+		$wrapper = Prack::_Array( array(
+		  Prack::_Array( array( 'cow', 'cud' ) ),
+		  Prack::_Array( array( 'lol', 'wut' ) )
+		) );
+		$callback = create_function( '$accumulator,$first,$second', 'return $accumulator.$first.$second;' );
+		$this->assertEquals( 'hicowcudlolwut', $wrapper->inject( 'hi', $callback ) );
+	} // It should handle inject
+	
+	/**
+	 * It should return null for compare when incomparable
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_return_null_for_compare_when_incomparable()
+	{
+		$left  = Prack::_Array( array( 'foo', 'bar', 'baz' ) );
+		$right = Prack::_Array( array( 'foo', 'bar', 'baz' ) );
+		$this->assertNull( $left->compare( $right ) );
+	} // It should return null for compare when incomparable
+	
+	/**
+	 * It should handle eachIndex
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_handle_eachIndex()
+	{
+		$wrapper = Prack::_Array( array( 'foo', 'bar', 'baz' ) );
+		
+		$callback = array( $this, 'addToItems' );
+		$wrapper->eachIndex( $callback );
+		
+		$this->assertEquals( array( 0, 1, 2 ), $this->items );
+	} // It should handle eachIndex
 }

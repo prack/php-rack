@@ -40,6 +40,12 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 	}
 	
 	// TODO: Document!
+	public function first()
+	{
+		return $this->get( 0 );
+	}
+	
+	// TODO: Document!
 	public function last()
 	{
 		return $this->get( -1 );
@@ -104,6 +110,12 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 		return $result;
 	}
 	
+		// TODO: Document!
+	public function sortBy( $callback )
+	{
+		return Prack::_Array( parent::sortBy( $callback ) );
+	}
+	
 	// TODO: Document!
 	public function collect( $callback )
 	{
@@ -149,14 +161,14 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 		$args = func_get_args();
 		
 		if ( count( $args ) == 1 )
-			return $this->get( $args[ 0 ] );
+			$result = $this->get( $args[ 0 ] );
 		else if ( count( $args ) == 2 || count( $args ) == 3 && is_bool( $args[ 2 ] ) )
 		{
 			$translated_start = $this->translate( $args[ 0 ] );
 			$translated_end   = $this->translate( $args[ 1 ] );
 			$exclusive        = isset( $args[ 2 ] ) ? $args[ 2 ] : false;
 			if ( is_null( $translated_start ) || is_null( $translated_end ) )
-				return Prack::_Array();
+				return null;
 			
 			if ( $exclusive === true )
 			{
@@ -165,33 +177,25 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 					return Prack::_Array();
 			}
 			
-			return call_user_func_array( array( $this, 'valuesAt' ),
-			                             range( $translated_start, $translated_end ) );
+			if ( $translated_end >= $this->length() )
+				$translated_end = $this->length() - 1;
+			
+			$result = call_user_func_array( array( $this, 'valuesAt' ),
+			                                range( $translated_start, $translated_end ) );
 		}
-	}
-	
-		// TODO: Document!
-	public function sortBy( $callback )
-	{
-		if ( !is_callable( $callback ) )
-			throw new Prack_Error_Callback( 'provided sortBy callback not callable' );
 		
-		$proxies = $this->map( $callback );
-		$links   = array();
-		foreach ( $proxies->toN() as $index => $proxy )
-			$links[ spl_object_hash( $proxy ) ] = $this->array[ $index ];
-		
-		$sorted = Prack::_Array();
-		foreach ( $proxies->sort()->toN() as $item )
-			$sorted->push( $links[ spl_object_hash( $item ) ] );
-		
-		return $sorted;
+		return isset( $result ) ? $result : null;
 	}
 	
 	// TODO: Document!
 	public function compact()
 	{
-		return Prack::_Array( array_map( $this->array, 'strlen' ) ) ;
+		$compacted = Prack::_Array();
+		foreach ( $this->toN() as $item )
+			if ( isset( $item ) )
+				$compacted->push( $item );
+		
+		return $compacted;
 	}
 	
 	// TODO: Document!
@@ -317,5 +321,4 @@ class Prack_Wrapper_Array extends Prack_Wrapper_Abstract_Collection
 	{
 		return Prack::_Array( array_reverse( $this->array ) );
 	}
-	
 }

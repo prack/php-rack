@@ -37,6 +37,29 @@ abstract class Prack_Wrapper_Abstract_Collection
 		return sizeof( $this->array );
 	}
 	
+	// TODO: Document!
+	public function sortBy( $callback )
+	{
+		if ( !is_callable( $callback ) )
+			throw new Prack_Error_Callback( 'provided sortBy callback not callable' );
+		
+		$proxies = $this->map( $callback );
+		$keys    = array_keys( $this->array );
+		$links   = array();
+		
+		foreach ( $proxies->toN() as $index => $proxy )
+			$links[ spl_object_hash( $proxy ) ] = $keys[ $index ];
+		
+		$sorted = array();
+		foreach ( $proxies->sort()->toN() as $proxy )
+		{
+			$key            = $links[ spl_object_hash( $proxy ) ];
+			$sorted[ $key ] = $this->array[ $key ];
+		}
+		
+		return $sorted;
+	}
+
 	public function count() { return $this->length(); }
 	public function size()  { return $this->length(); }
 	

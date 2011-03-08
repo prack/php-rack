@@ -79,4 +79,37 @@ class Prack_Wrapper_HashTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( 'bar', $wrapper->delete( 'foo' ) );
 		$this->assertTrue( $wrapper->isEmpty() );
 	} // It should know if it's empty
+	
+		/**
+	 * It should handle slice
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_handle_slice()
+	{
+		$wrapper = Prack::_Hash( array( 'foo' => 'bar', 'baz' => 'bat', 'blarn' => 'bjork' ) );
+		
+		$this->assertEquals( Prack::_Array( array( 'bar', 'bat' ) ), $wrapper->slice( 'foo', 'baz' ) );
+		$this->assertEquals( Prack::_Array( array( 'bar', null ) ), $wrapper->slice( 'foo', 'wilhelm' ) );
+	} // It should handle slice
+	
+	/**
+	 * It should handle inject
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_handle_inject()
+	{
+		$wrapper = Prack::_Hash( array( 'foo' => 'bar', 'baz' => 'bat', 'blarn' => 'bjork' ) );
+		
+		$callback = create_function( '$accumulator,$key,$value', 'return $accumulator.$value;' );
+		$this->assertEquals( 'hibarbatbjork', $wrapper->inject( 'hi', $callback ) );
+		
+		$wrapper = Prack::_Hash( array(
+		  'foo' => Prack::_Array( array( 'cow', 'cud' ) ),
+		  'baz' => Prack::_Array( array( 'lol', 'wut' ) )
+		) );
+		$callback = create_function( '$accumulator,$left,$right', 'return $accumulator.$left.$right;' );
+		$this->assertEquals( 'hicowcudlolwut', $wrapper->inject( 'hi', $callback ) );
+	} // It should handle inject
 }
