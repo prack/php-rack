@@ -1,7 +1,17 @@
 PHPUnit 3.5.11 by Sebastian Bergmann.
 
 Prack_Builder
+ [x] It supports mapping
+ [x] It doesn t dupe env even when mapping
  [x] It chains apps by default
+ [x] It has implicit toMiddlewareApp
+ [ ] It supports callbacks on use
+ [x] It has explicit toMiddlewareApp
+ [x] It should initialize apps once
+ [x] It should throw an exception if the fluent interface is misused
+ [x] It should throw an exception if the callback provided to a new builder isn t actually callable
+ [x] It should throw an exception if run is called in the middle of a middleware app specification
+ [x] It should throw an exception if run is called with other than Prack Interface MiddlewareApp
 
 Prack_Lint
  [x] It should pass valid request
@@ -136,9 +146,16 @@ Prack_URLMap
  [x] It should route root apps correctly
  [x] It should not squeeze slashes
 
+Prack_Utils_IO_File
+ [x] It should indicate writability correctly
+ [x] It should throw an exception when file at specified path is inaccessible
+ [x] It should know if it was opened in binary mode
+
 Prack_Utils_IO_String
  [x] It should throw an exception if the string is too big
  [x] It should be creatable without a string
+
+Prack_Utils_IO
  [x] It should be able to handle read
  [x] It should be able to handle read with null
  [x] It should be able to handle read with length
@@ -190,15 +207,26 @@ Prack_Wrapper_Array
  [x] It should handle shift
  [x] It should output useful information on inspect
  [x] It should know if it s empty
+ [x] It should handle slice
+ [x] It should handle compact
+ [x] It should handle inject
+ [x] It should return null for compare when incomparable
+ [x] It should handle eachIndex
 
 Prack_Wrapper_Hash
  [x] It should handle each
  [x] It should handle set
  [x] It should handle get
  [x] It should know if it s empty
+ [x] It should handle slice
+ [x] It should handle inject
 
 Prack_Wrapper_Set
  [x] It should handle each
+
+Prack_Wrapper_String
+ [x] It should upcase properly
+ [x] It should downcase properly
 
 
 Writing code coverage data to XML file, this may take a moment.
