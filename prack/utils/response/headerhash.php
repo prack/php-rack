@@ -130,18 +130,6 @@ class Prack_Utils_Response_HeaderHash extends Prack_Wrapper_Hash
 	}
 	
 	// TODO: Document!
-	public function getNames()
-	{
-		return $this->names;
-	}
-	
-	// TODO: Document!
-	public function getEntries()
-	{
-		return $this->entries;
-	}
-	
-		// TODO: Document!
 	private function distill( $value )
 	{
 		if ( is_object( $value ) && method_exists( $value, 'toAry' ) )
