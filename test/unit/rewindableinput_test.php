@@ -12,7 +12,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	function setUp()
 	{
-		$this->rewindable_input = new Prack_RewindableInput(
+		$this->rewindable_input = Prack_RewindableInput::with(
 			Prack_Utils_IO::withString( Prack::_String( 'hello world' ) )
 		);
 	}

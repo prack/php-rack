@@ -1,20 +1,27 @@
 <?php
 
 // TODO: Document!
-abstract class Prack_Utils_IO
+class Prack_Utils_IO
+  implements Prack_Interface_ReadableStreamlike, Prack_Interface_WritableStreamlike
 {
 	const CHUNK_SIZE = 4096; // 4KB chunk size for read
 	
-	private $stream;
-	private $line_no;
-	private $close_underlying;
-	private $is_readable;
-	private $is_writable;
+	private   $stream;
+	private   $line_no;
+	private   $close_underlying;
+	protected $is_readable;
+	protected $is_writable;
 	
 	// TODO: Document!
-	static function withTempfile( $prefix = 'prack-tmp', $opaque = true )
+	static function withTempfile( $prefix = 'prack-tmp' )
 	{
-		return new Prack_Utils_IO_Tempfile( $prefix, $opaque );
+		return new Prack_Utils_IO_Tempfile( $prefix );
+	}
+	
+	// TODO: Document!
+	static function withFile( $path, $mode )
+	{
+		return new Prack_Utils_IO_File( $path, $mode );
 	}
 	
 	// TODO: Document!
@@ -24,10 +31,9 @@ abstract class Prack_Utils_IO
 	}
 	
 	// TODO: Document!
-	static function readlines( $filename )
+	static function withStream( $stream, $close_underlying = false )
 	{
-		$buffer = file_get_contents( $filename );
-		return Prack::_Array( preg_split( "/((\r(?!\n))|((?<!\r)\n)|(\r\n))/", $buffer ) );
+		return new Prack_Utils_IO( $stream, $close_underlying );
 	}
 	
 	// TODO: Document!
@@ -102,11 +108,7 @@ abstract class Prack_Utils_IO
 			if ( !is_callable( $callback ) )
 				throw new Prack_Error_Callback();
 			
-			$lines = array();
-			while ( $line = $this->gets() )
-				array_push( $lines, $line );
-			
-			array_walk( $lines, $callback );
+			$this->readlines()->each( $callback );
 			
 			return;
 		}
@@ -114,6 +116,17 @@ abstract class Prack_Utils_IO
 		throw new Prack_Error_IO( 'stream is not readable' );
 	}
 	
+		// TODO: Document!
+	public function readlines()
+	{
+		$lines = Prack::_Array();
+		
+		while ( $line = $this->gets() )
+			$lines->push( $line );
+		
+		return $lines;
+	}
+
 	public function write( $buffer )
 	{
 		if ( $this->isWritable() )
