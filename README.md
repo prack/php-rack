@@ -6,20 +6,74 @@ Ruby's Rack ported to PHP 5.2+, vetted against the ported Ruby specification (te
 You can learn more about Rack on [its homepage](http://rack.rubyforge.org/ "Rack Homepage").
 
 The webserver interface specification upon which Rack and Prack are built is 
-[here](http://rack.rubyforge.org/doc/SPEC.html "Web Server Interface Specification").
+[here](http://rack.rubyforge.org/doc/SPEC.html "Rack Specification").
 
 A PHP 5.3-only version of Prack will be implemented in its own branch in the long-term,
 but my work-related projects require PHP 5.2 support for now. This means that a lot of
 the stuff accomplished with lambdas in Ruby gets done via callback in Prack. For now.
 
 However, I'm doing my best to design all the callback functions to be future-proof.
-(OK, so it's actually 'present-proof' and I'm stuck in the past.) If you're running
-5.3, you may be able to just drop in anonymous functions and enjoy all the benefits
-of closures, but I can't guarantee anything.
+If you're running 5.3, you may be able to just drop in anonymous functions and enjoy
+the benefits of closures, but I can't guarantee anything.
+
+
+Progress
+========
+
+
+Working and Shippable
+---------------------
+
+* Prack\_DelegateFor_Response: quasi-module to provide response objects (mock and actual) a rich vocab of helpers
+* Prack\_Mock\_Request: Fake requests for testing
+* Prack\_Mock\_Response: Fake responses for testing, delegates some methods
+* Prack\_Utils\_Response\_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
+* Prack_Builder: Fluent interface for building middleware stacks in a domain
+* Prack_URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
+* Prack_RewindableInput: Adds rewindability to any stream
+* Prack_Lint: Catch response errors on the way out
+* Prack_ShowExceptions: Catch uncaught exceptions and show them as pretty HTML with context.
+* Interfaces: MiddlewareApp, ReadableStreamlike, WritableStreamlike, Enumerable, LengthAware (for streams), Logger, Comparable
+
+Working perfectly, but not feature-complete
+-------------------------------------------
+
+* Prack\_Wrapper\_*: A suite of primitive wrappers, enabling enumeration and more (pending: sets, more core functionality for all wrappers)
+* Prack\_Lint\_: Ensures response sanity. (pending: sessions, logger)
+* Prack_Request: Actual request (pending: multipart form data)
+* Prack_Response: Actual response, delegates some methods (pending: cookie management)
+* Prack\_Utils_\_IO\_*: A suite of IO wrappers: string, tempfiles. (pending: more core functionality for streams)
+* Prack_Utils: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending: multipart, cookies, encoding selection)
+
+Works, but doesn't conform to Ruby Rack Spec
+--------------------------------------------
+
+Nothing to list here. See above for things which aren't quite feature complete, but conform to the Ruby spec in their implementation so far.
+
+Incubating
+----------
+
+* Logger
+* Documentation on when to use native PHP primitives (array et al.) vs. Prack's types
+* Everything else in Ruby Rack :)
+
+To Do
+-----
+
+* Middleware to make apache's mod_php compatible with the Rack specfication
+* Rack config
+* Sessions
+* Cookies
+* Multipart-form-data processing
+* Generic Logger
+* Prack Attack (Rack Lobster analog)
+* E-tag generation
+* Actual implementation of HTTP auth (basic, digest, etc.) and other essential middleware
+* HTTP request method override middleware
 
 
 Running Tests
--------------
+=============
 
 This project is designed using test-driven development. I've made the test
 method names as descriptive and consistent as possible, so please check them
@@ -28,6 +82,7 @@ out as documentation until the project matures a bit more.
 To run tests:
 	git clone https://onethirtyfive@github.com/onethirtyfive/prack.git
 	cd Prack
+	cp phpunit{.xml.dist,.xml}
 	phpunit
 
 Of course, you must have PHPUnit installed, preferably alongside XDebug. I'm using
@@ -35,7 +90,7 @@ PHPUnit 3.5.
 
 
 Getting started
----------------
+===============
 
 Prack_Builder is the class for setting up middleware:
 
@@ -73,27 +128,29 @@ This example assumes the existence of several classes:
 		
 		public function call( $env )
 		{
-			$auth_header = $env[ 'HTTP_AUTHORIZATION' ]; // This would, in actuality, take more work.
+			$auth_header = $env->get( 'HTTP_AUTHORIZATION' ); // This would, in actuality, take more work.
 			
 			// ... process credentials into:
 			$username = 'admin';  /* username should obviously be extracted from the request. */
 			$password = 'secret'; /* same for password. derp. */
 			
 			if ( is_callable( $this->callback ) ) // an array of class, method should eval to true
-				$authorized = call_user_func_array( $callback, array( $username, $password ) );
+				$authorized = call_user_func( $callback, $username, $password );
 			else
 				throw new Prack_Error_Callback( "Can't call http auth callback." );
 			
 			if ( !$authorized )
-				return array( 401, array( 'WWW-Authenticate' => /* for simplicity */ ), 'Unauthorized' );
+				return array(
+				  401,
+				  Prack::_Hash( array( 'WWW-Authenticate' => /* header */ ) ),
+				  Prack::_String( 'Unauthorized' );
+				);
 			
 			// And finally, if they're authorized, forward the request to the enclosed app,
 			// returning its value as an array of:
 			//   1.                        (int)$status
-			//   2.                      (array)$headers
-			//   3. (Prack_Interface_Enumerable)$body
-			// Note: #3 can also be a primitive string if you want, but it's discouraged. Per the Rack
-			//   spec, the response body should be an enumerable containing strings or stringable objects.
+			//   2.         (Prack_Wrapper_Hash)$headers
+			//   3. (Prack_Interface_Enumerable)$body    // Body can also be Prack_Interface_Stringable
 			list( $status, $headers, $body ) = $this->app->call( $env );
 			
 			// Note that it's possible to modify the response here if you want, on its way 'out.'
@@ -107,7 +164,7 @@ straight-forward:
 
 	interface Prack_Interface_MiddlewareApp
 	{
-		public function call( $env );
+		public function call( $env ); // $env is a Prack_Wrapper_Hash
 	}
 
 I put this interface in place for 5.2-compatibility, but when 5.3 is implemented,
@@ -131,14 +188,12 @@ want to construct a middleware stack by 'mapping' out applications on your site:
 	$domain = Prack_Builder::domain();
 	
 	$domain->
-	  map( '/admin' )->wherein()->
-	    using( 'HTTPAuthentication' )
-	      ->withArgs( array( 'SomeMiddlewareConfigClass', 'callbackFunction' ) )->
-	    using( 'Benchmarker' )
-	      ->withArgs()
-	    run( new WebsiteAdminApplication() )
-	  map( '/' )->wherein()->
-	    run( new WebsiteApplication() );
+	  map( '/admin' )
+	    ->using( 'HTTPAuthentication' )->withArgs( 'SomeMiddlewareConfigClass', 'callbackFunction' )->build()
+	    ->using( 'Benchmarker' )->build()
+	    ->run( new WebsiteAdminApplication() )->
+	  map( '/' )
+	    ->run( new WebsiteApplication() );
 
 All requests to '/admin', for example, will be routed through HTTPAuthentication first, 
 then Benchmarker, ending up finally in WebsiteAdminApplication, which is responsible
@@ -152,61 +207,6 @@ Prack works exactly the same way, even in the environment variable names it uses
 
 You can also supply hosts in in the call to map(), i.e. 'http://example.org/admin'.
 HTTP and HTTPS, as with Ruby's Rack, are the only protocols supported.
-
-
-Progress
-========
-
-
-Working and Shippable
----------------------
-
-* Prack\_DelegateFor_Response: quasi-module to provide response objects (mock and actual) a rich vocab of helpers
-* Prack\_Mock\_Request: Fake requests for testing
-* Prack\_Mock\_Response: Fake responses for testing, delegates some methods
-* Prack\_Utils\_Response\_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
-* Interfaces: MiddlewareApp, ReadableStreamlike, WritableStreamlike, Enumerable, LengthAware (for streams), Logger
-
-Working perfectly, but not feature-complete
--------------------------------------------
-
-* Prack\_Wrapper\_*: A suite of primitive wrappers, enabling enumeration and more (pending: sets, more core functionality for all wrappers)
-* Prack\_Lint\_: Ensures response sanity. (pending: sessions, logger)
-* Prack_Request: Actual request (pending: multipart form data)
-* Prack_Response: Actual response, delegates some methods (pending: cookie management)
-* Prack\_Utils_\_IO\_*: A suite of IO wrappers: string, tempfiles. (pending: php streams, file streams)
-
-Works, but doesn't conform to Ruby Rack Spec
---------------------------------------------
-
-* Prack_Builder: Fluent interface for building middleware stacks in a domain
-* Prack_RewindableInput: Wrapper implements rewindability for stdin and other streams
-* Prack_URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
-
-Incubating
-----------
-
-* Want to clean up error namespace.
-* Rework of core Rack functionality using new, highly functional hash, array, and string wrappers
-* Documentation on when to use native PHP primitives (array et al.) vs. Prack's types
-* Prack_Utils: This is gonna have a lot of stuff in it, some of which comes natively from PHP
-* Everything else in Ruby Rack :)
-
-
-To Do
------
-
-* Rack config
-* PHP stream, File stream wrappers
-* Sessions
-* Cookies
-* Multipart-form-data processing
-* Generic Logger
-* Middleware to make apache's mod_php compatible with the Rack specfication
-* Prack Attack (Rack Lobster analog)
-* E-tag generation
-* Actual implementation of HTTP auth (basic, digest, etc.) and other essential middleware
-* HTTP request method override middleware
 
 
 Things I'm would love guidance on/help with
@@ -224,7 +224,7 @@ approach are enough for me to think this should be useful.
 
 
 Acknowledgments
----------------
+===============
 
 Thanks to the Ruby Rack team for all their hard work on Rack, and thanks to the Python folks
-who dreamed up WSGI.
+who dreamed up WSGI. And thanks to Matz for making such an amazing language.
