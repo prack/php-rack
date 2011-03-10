@@ -26,9 +26,9 @@ class Prack_URLMap
 		$callback       = array( $this, 'onRemap' );
 		$proxy_callback = create_function( '$h,$l,$m,$a', '
 		  return Prack::_Array( array (
-		    isset( $h ) ? Prack_Wrapper_Numeric::with( -$h->length() )
-		                : Prack_Wrapper_Numeric::with( -PHP_INT_MAX  ),
-		    Prack_Wrapper_Numeric::with( -$l->length() )
+		    isset( $h ) ? Prack::_Numeric( -$h->length() )
+		                : Prack::_Numeric( -PHP_INT_MAX  ),
+		    Prack::_Numeric( -$l->length() )
 		  ) );
 		');
 		$result = $hash_map->map( $callback );
