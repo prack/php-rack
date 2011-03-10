@@ -65,10 +65,9 @@ class Prack_Utils
 		
 		if ( is_null( $callback ) )
 			$callback = create_function(
-			  '$i', 'return Prack_Utils::singleton()->HTMLEscapes()->get( $i );'
+			  '$i', 'return Prack_Utils::singleton()->HTMLEscapes()->get( $i[ 0 ] )->toN();'
 			);
 		
-		// Returning value as primitive for easier HTML output.
 		return $string->toS()->gsub( $this->HTMLEscapesPattern(), $callback )->toN();
 	}
 	
