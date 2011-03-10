@@ -78,7 +78,9 @@ class Prack_ShowExceptions
 	// TODO: Document!
 	public function collectFrames( $line )
 	{
-		if ( !isset( $line[ 'file' ] ) || !isset( $line[ 'line' ] ) )
+		// PHPUnit's stack traces are ridiculous. The regexp match here removes those lines from consideration.
+		// This avoids a lot of file IO, since lines from the files aren't loaded.
+		if ( !isset( $line[ 'file' ] ) || !isset( $line[ 'line' ] ) || preg_match( '/PHPUnit|phpunit/', $line[ 'file' ] ) )
 			return null;
 			
 		$frame = new stdClass();
