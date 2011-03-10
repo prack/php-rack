@@ -44,4 +44,16 @@ class Prack
 	{
 		return new Prack_Wrapper_String( $wrap );
 	}
+	
+	// TODO: Document!
+	static function _Numeric( $wrap = null )
+	{
+		return new Prack_Wrapper_Numeric( $wrap );
+	}
+	
+	// TODO: Document!
+	static function _Time( $wrap = null )
+	{
+		return new Prack_Wrapper_Time( $wrap );
+	}
 }

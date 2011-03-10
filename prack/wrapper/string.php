@@ -113,8 +113,8 @@ class Prack_Wrapper_String
 			
 			foreach( $as_array as $item )
 				$wrapped->push( Prack::_String( $item ) );
-				
-			return $wrapped->get( (int)$args[ 0 ] );
+			
+			return $wrapped->slice( $args[ 0 ] );
 		}
 		else if ( count( $args ) == 2 )
 		{
@@ -124,7 +124,7 @@ class Prack_Wrapper_String
 			foreach( $as_array as $item )
 				$wrapped->push( Prack::_String( $item ) );
 				
-			return $wrapped->slice( (int)$args[ 0 ], (int)$args[ 1 ] );
+			return $wrapped->slice( $args[ 0 ], $args[ 1 ] )->join( Prack::_String() );
 		}
 		
 		return $sliced;
@@ -189,6 +189,24 @@ class Prack_Wrapper_String
 			$result->concat( Prack::_String( $primitive ) );
 		
 		return $result;
+	}
+	
+	// TODO: Document!
+	public function sprintf()
+	{
+		$args = func_get_args();
+		$args = Prack::_Array( $args );
+		
+		static $callback = null;
+		if ( is_null( $callback ) )
+			$callback = create_function( '$i', 'return $i->toS()->toN();' );
+		
+		$args = $args->collect( $callback )->toN();
+		array_unshift( $args, $this->string );
+		
+		$result = @call_user_func_array( 'sprintf', $args );
+		
+		return is_string( $result ) ? Prack::_String( $result ) : null;
 	}
 	
 	// TODO: Document!

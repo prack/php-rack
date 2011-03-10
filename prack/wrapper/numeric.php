@@ -3,7 +3,7 @@
 class Prack_Wrapper_Numeric
   implements Prack_Interface_Comparable
 {
-	private $numeric;
+	protected $numeric;
 	
 	// TODO: Document!
 	static function with( $numeric )
@@ -24,6 +24,12 @@ class Prack_Wrapper_Numeric
 	public function toN()
 	{
 		return $this->numeric;
+	}
+	
+	// TODO: Document!
+	public function toS()
+	{
+		return Prack::_String( (string)$this->numeric );
 	}
 	
 	// TODO: Document!
