@@ -49,9 +49,9 @@ Prack_Mock_Request
  [x] It should accept raw input in params for POST requests
  [ ] It should accept params and build multipart encoded params for POST requests
  [x] It should behave valid according to the Rack spec
- [x] It should throw an exception if uri is not a Prack Wrapper String
- [x] It should throw an exception if options is not a Prack Wrapper Hash
- [x] It should throw an exception if rack input is neither Prack Interface Stringable nor Prack Interface ReadableStreamlike
+ [x] It should throw an exception if uri is not a Prb String
+ [x] It should throw an exception if options is not a Prb Hash
+ [x] It should throw an exception if rack input is neither Prb Interface Stringable nor Prb Interface ReadableStreamlike
 
 Prack_Mock_Response
  [x] It should provide access to the HTTP status
@@ -61,8 +61,8 @@ Prack_Mock_Response
  [x] It should optionally make Rack errors fatal
  [x] It should optionally make Rack errors fatal  part 2 
  [x] It should throw an exception when an unknown method is called  on account of delegation
- [x] It should throw an exception if body is neither a Prack Interface Stringable or Prack Interface Enumerable
- [x] It should throw an exception if headers is not a Prack Wrapper Hash
+ [x] It should throw an exception if body is neither a Prb Interface Stringable or Prb Interface Enumerable
+ [x] It should throw an exception if headers is not a Prb Hash
 
 Prack_Request
  [x] It should wrap the rack variables
@@ -132,8 +132,8 @@ Prack_RewindableInput
  [x] It should handle really big strings
  [x] It should be possible to call close when no data has been buffered yet
  [x] It should be possible to call close multiple times
- [x] It should not buffer into a Prack Utils IO Tempfile if no data has been read yet
- [x] It should buffer into a Prack Utils IO Tempfile when data has been consumed for the first time
+ [x] It should not buffer into a Prb IO Tempfile if no data has been read yet
+ [x] It should buffer into a Prb IO Tempfile when data has been consumed for the first time
  [x] It should close the underlying tempfile upon calling close
 
 Prack_ShowExceptions
@@ -146,37 +146,13 @@ Prack_URLMap
  [x] It should route root apps correctly
  [x] It should not squeeze slashes
 
-Prack_Utils_IO_File
- [x] It should indicate writability correctly
- [x] It should throw an exception when file at specified path is inaccessible
- [x] It should know if it was opened in binary mode
-
-Prack_Utils_IO_String
- [x] It should throw an exception if the string is too big
- [x] It should be creatable without a string
-
-Prack_Utils_IO
- [x] It should be able to handle read
- [x] It should be able to handle read with null
- [x] It should be able to handle read with length
- [x] It should be able to handle read with length and buffer
- [x] It should be able to handle read with null and buffer
- [x] It should rewind to the beginning when rewind is called
- [x] It should be able to handle gets
- [x] It should be able to handle each
- [x] It should throw an exception on each if callback is not callable
- [x] It should handle read on really big strings
- [x] It should handle write
- [x] It should be possible to call close immediately
- [x] It should be possible to call close multiple times
-
-Prack_Utils_Response_HeaderHash
+Prack_Utils_HeaderHash
  [x] It should retain header case
  [x] It should check existence of keys case insensitively
  [x] It should merge case insensitively
  [x] It should overwrite case insensitively and assume the new key s case
- [x] It should be converted to real Prack Wrapper Hash
- [x] It should convert values to Prack Wrapper String when converting to Prack Wrapper Hash
+ [x] It should be converted to real Prb Hash
+ [x] It should convert values to Prb String when converting to Prb Hash
  [x] It should replace correctly
  [x] It should be able to delete the given key case sensitively
  [x] It should return the deleted value when delete is called on an existing key
@@ -194,39 +170,6 @@ Prack_Utils
  [x] It should parse nested query strings correctly
  [x] It should build query strings correctly
  [x] It should build nested query strings correctly
-
-Prack_Wrapper_Array
- [x] It should handle each
- [x] It should handle set
- [x] It should handle get
- [x] It should return null on get with a negative index that is out of bounds
- [x] It should throw an exception on set with a negative index that is out of bounds
- [x] It should handle push
- [x] It should handle pop
- [x] It should handle unshift
- [x] It should handle shift
- [x] It should output useful information on inspect
- [x] It should know if it s empty
- [x] It should handle slice
- [x] It should handle compact
- [x] It should handle inject
- [x] It should return null for compare when incomparable
- [x] It should handle eachIndex
-
-Prack_Wrapper_Hash
- [x] It should handle each
- [x] It should handle set
- [x] It should handle get
- [x] It should know if it s empty
- [x] It should handle slice
- [x] It should handle inject
-
-Prack_Wrapper_Set
- [x] It should handle each
-
-Prack_Wrapper_String
- [x] It should upcase properly
- [x] It should downcase properly
 
 
 Writing code coverage data to XML file, this may take a moment.

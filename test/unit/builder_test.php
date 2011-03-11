@@ -51,8 +51,8 @@ class Prack_Test_AppClass
 		
 		return array(
 			200,
-			Prack::_Hash( array( 'Content-Type' => Prack::_String( 'text/plain' ) ) ),
-			Prack::_Array( array( Prack::_String( 'OK' ) ) )
+			Prb::_Hash( array( 'Content-Type' => Prb::_String( 'text/plain' ) ) ),
+			Prb::_Array( array( Prb::_String( 'OK' ) ) )
 		);
 	}
 }
@@ -72,26 +72,26 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		    ->run(
 		      new Prack_Test_Echo(
 		        200,
-		        Prack::_Hash(),
-		        Prack::_Array( array( Prack::_String( 'root' ) ) )
+		        Prb::_Hash(),
+		        Prb::_Array( array( Prb::_String( 'root' ) ) )
 		      )
 		    )
 		  ->map( '/sub' )
 		    ->run(
 		      new Prack_Test_Echo(
 		        200,
-		        Prack::_Hash(),
-		        Prack::_Array( array( Prack::_String( 'sub' ) ) )
+		        Prb::_Hash(),
+		        Prb::_Array( array( Prb::_String( 'sub' ) ) )
 		      )
 		    )
 		->toMiddlewareApp();
 		
 		$this->assertEquals(
-		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->getBody()->toS()->toN()
+		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->getBody()->toS()->toN()
 		);
 		
 		$this->assertEquals(
-		  'sub', Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/sub' ) )->getBody()->toS()->toN()
+		  'sub', Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/sub' ) )->getBody()->toS()->toN()
 		);
 	} // It supports mapping
 	
@@ -108,17 +108,17 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->map( '/' )
 		    ->run(
 		      new Prack_Test_Echo(
-		        200, Prack::_Hash(), Prack::_Array( array( Prack::_String( 'root' ) ) ),
-		        '$env->set( "new_key", Prack::_String( "new_value" ) );'
+		        200, Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
+		        '$env->set( "new_key", Prb::_String( "new_value" ) );'
 		      )
 		    )
 		->toMiddlewareApp();
 		
 		$this->assertEquals(
-		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->getBody()->toS()->toN()
+		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->getBody()->toS()->toN()
 		);
 		
-		$this->assertEquals( Prack::_String( 'new_value' ),
+		$this->assertEquals( Prb::_String( 'new_value' ),
 		                     Prack_Test_NothingMiddleware::env()->get( 'new_key' ) );
 	} // It doesn't dupe env even when mapping
 	
@@ -134,15 +134,15 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->using( 'Prack_ShowExceptions' )->build()
 		  ->run(
 		    new Prack_Test_Echo(
-		      200, Prack::_Hash(), Prack::_Array( array( Prack::_String( 'root' ) ) ),
+		      200, Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
 		      'throw new Exception( "bzzzt" );'
 		    )
 		  )
 		->toMiddlewareApp();
 		
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
 	} // It chains apps by default
 	
 	/**
@@ -157,14 +157,14 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->using( 'Prack_ShowExceptions' )->build()
 		  ->run(
 		    new Prack_Test_Echo(
-		      200, Prack::_Hash(), Prack::_Array( array( Prack::_String( 'root' ) ) ),
+		      200, Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
 		      'throw new Exception( "bzzzt" );'
 		    )
 		  );
 		
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
 	} // It has implicit toMiddlewareApp
 	
 	/**
@@ -208,15 +208,15 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->using( 'Prack_ShowExceptions' )->build()
 		  ->run(
 		    new Prack_Test_Echo(
-		      200, Prack::_Hash(), Prack::_Array( array( Prack::_String( 'root' ) ) ),
+		      200, Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
 		      'throw new Exception( "bzzzt" );'
 		    )
 		  )
 		->toMiddlewareApp();
 		
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
 	} // It has explicit toMiddlewareApp
 	
 	/**
@@ -231,8 +231,8 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->using( 'Prack_ShowExceptions' )->build()
 		  ->run( new Prack_Test_AppClass() );
 		
-		$this->assertEquals( 200, Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->getStatus() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prack::_String( '/' ) )->isServerError() );
+		$this->assertEquals( 200, Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->getStatus() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
 	} // It should initialize apps once
 	
 	/**

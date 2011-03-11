@@ -6,45 +6,45 @@ Prack
 Prack is Ruby's Rack ported to PHP 5.2+, vetted against the ported Ruby specification (test suite).
 
 You can learn more about Rack on [its homepage](http://rack.rubyforge.org/ "Rack Homepage").
-
 The webserver interface specification upon which Rack and Prack are built is 
 [here](http://rack.rubyforge.org/doc/SPEC.html "Rack Specification").
 
-A PHP 5.3-only version of Prack will be implemented in its own branch in the long-term,
-but my work-related projects require PHP 5.2 support for now. This means that a lot of
-the stuff accomplished with lambdas in Ruby gets done via callback in Prack. For now.
-
-However, I'm doing my best to design all the callback functions to be future-proof.
+I'm doing my best to design all the callback functions to be future-proof.
 If you're running 5.3, you may be able to just drop in anonymous functions and enjoy
 the benefits of closures, but I can't guarantee anything.
+
+
+Dependencies
+============
+
+Prack is built on top of a "Rubification" library called
+[php-ruby](http://github.com/prack/php-rb "Prb Homepage") ("Prb" for short).
+
+For information on how to use it yourself, visit the above link. You may want to see
+phpunit.bootstrap.php file for an example of how to include Prb.
 
 
 Progress
 ========
 
-
 Working and Shippable
 ---------------------
 
-* Prack\_DelegateFor_Response: quasi-module to provide response objects (mock and actual) a rich vocab of helpers
-* Prack\_Mock\_Request: Fake requests for testing
-* Prack\_Mock\_Response: Fake responses for testing, delegates some methods
-* Prack\_Utils\_Response\_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
 * Prack_Builder: Fluent interface for building middleware stacks in a domain
 * Prack_URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
+* Prack\_Mock\_Request: Fake requests for testing
+* Prack\_Mock\_Response: Fake responses for testing, delegates some methods
 * Prack_RewindableInput: Adds rewindability to any stream
-* Prack_Lint: Catch response errors on the way out
 * Prack_ShowExceptions: Catch uncaught exceptions and show them as pretty HTML with context.
-* Interfaces: MiddlewareApp, ReadableStreamlike, WritableStreamlike, Enumerable, LengthAware (for streams), Logger, Comparable
+* Prack\_Utils\_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
+* Interfaces: MiddlewareApp
 
 Working perfectly, but not feature-complete
 -------------------------------------------
 
-* Prack\_Wrapper\_*: A suite of primitive wrappers, enabling enumeration and more (pending: sets, more core functionality for all wrappers)
-* Prack\_Lint\_: Ensures response sanity. (pending: sessions, logger)
+* Prack\_Lint: Ensures response sanity. (pending: sessions, logger)
 * Prack_Request: Actual request (pending: multipart form data)
 * Prack_Response: Actual response, delegates some methods (pending: cookie management)
-* Prack\_Utils_\_IO\_*: A suite of IO wrappers: string, tempfiles. (pending: more core functionality for streams)
 * Prack_Utils: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending: multipart, cookies, encoding selection)
 
 Works, but doesn't conform to Ruby Rack Spec
@@ -56,7 +56,7 @@ To Do
 -----
 
 * Documentation on when to use native PHP primitives (array et al.) vs. Prack's wrapper types
-* Middleware to make apache's mod_php (mostly) compatible with the Rack specfication
+* Prack\_Apache\_Compat to make apache's mod_php (mostly) compatible with the Rack specfication
 * Rack config
 * Sessions
 * Cookies
@@ -93,7 +93,7 @@ stupidly easy to implement:
 
 	interface Prack_Interface_MiddlewareApp
 	{
-		public function call( $env ); // $env is a Prack_Wrapper_Hash
+		public function call( $env ); // $env is a Prb_Hash
 	}
 
 I put this interface in place for 5.2-compatibility, but when 5.3 is implemented,
@@ -116,18 +116,18 @@ Prack_Builder is the what you use to set up an application stack:
 	
 	list( $status, $headers, $body ) = $domain->call( $env );
 
+Note: Prack_Builder supports nested mapping, just like Ruby Rack.
+
 All requests to your site will be routed through Prack\_Apache\_Compat, then Prack_Lint, then
 HTTPAuthentication, ending up finally in EchoServer, which is responsible for returning the
 Rack-spec-compliant response back up through the stack. (Whew.)
 
 Unfortunately, Apache isn't a rack-compliant server, and since I haven't written a mod\_php\_rack yet,
 the 'Prack\_Apache_Compat' middleware is necessary. It reads the $\_SERVER (and possibly $\_ENV)
-superglobals to clobber together an $env which conforms (mostly) to the Rack specification.
+superglobals to clobber together an $env which conforms (mostly) to the Rack specification. This
+isn't a problem in the test environment, since Prack\_Mock_Request implements a fake env generator.
 
-This isn't a problem in the test environment, since Prack\_Mock_Request implements a fake env generator.
 This is also why Prack\_Apache_Compat is still unimplemented. :P
-
-Note: Prack_Builder supports nested mapping, just like Ruby Rack.
 
 The above stack assumes the existence of several classes. Here's a look at a hypothetical
 HTTPAuthenticate middleware app:
@@ -161,20 +161,20 @@ HTTPAuthenticate middleware app:
 			if ( is_callable( $this->callback ) ) // an array of class, method should eval to true
 				$authorized = call_user_func( $callback, $username, $password );
 			else
-				throw new Prack_Error_Callback( "Can't call http auth callback." );
+				throw new Prb_Exception_Callback( "Can't call http auth callback." );
 			
 			if ( !$authorized )
 				return array(
 				  401,
-				  Prack::_Hash( array( 'WWW-Authenticate' => /* header */ ) ),
-				  Prack::_String( 'Unauthorized' );
+				  Prb::_Hash( array( 'WWW-Authenticate' => /* header */ ) ),
+				  Prb::_String( 'Unauthorized' );
 				);
 			
 			// And finally, if they're authorized, forward the request to the enclosed app,
 			// returning its value as an array of:
-			//   1.                        (int)$status
-			//   2.         (Prack_Wrapper_Hash)$headers
-			//   3. (Prack_Interface_Enumerable)$body    // Body can also be Prack_Interface_Stringable
+			//   1.                      (int)$status
+			//   2.                 (Prb_Hash)$headers
+			//   3. (Prb_Interface_Enumerable)$body    // Body can also be Prb_Interface_Stringable
 			list( $status, $headers, $body ) = $this->app->call( $env );
 			
 			// Note that it's possible to modify the response here if you want, on its way 'out.'

@@ -13,7 +13,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	function setUp()
 	{
 		$this->rewindable_input = Prack_RewindableInput::with(
-			Prack_Utils_IO::withString( Prack::_String( 'hello world' ) )
+			Prb_IO::withString( Prb::_String( 'hello world' ) )
 		);
 	}
 	
@@ -33,7 +33,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_creatable_without_a_string()
 	{
-		$this->rewindable_input = Prack_Utils_IO::withString( Prack::_String() );
+		$this->rewindable_input = Prb_IO::withString( Prb::_String() );
 		$this->assertEquals( '', $this->rewindable_input->read()->toN() );
 	} // It should be creatable without a string
 	
@@ -51,7 +51,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		{
 			$this->rewindable_input->read();
 		} 
-		catch ( Prack_Error_IO $e )
+		catch ( Prb_Exception_IO $e )
 		{
 			return;
 		}
@@ -86,7 +86,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_length_and_buffer()
 	{
-		$buffer = Prack::_String();
+		$buffer = Prb::_String();
 		$result = $this->rewindable_input->read( 1, $buffer );
 		$this->assertEquals( 'h', $result->toN() );
 		$this->assertSame( $buffer, $result );
@@ -99,7 +99,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_null_and_buffer()
 	{
-		$buffer = Prack::_String();
+		$buffer = Prb::_String();
 		$result = $this->rewindable_input->read( null, $buffer );
 		$this->assertEquals( 'hello world', $result->toN() );
 		$this->assertSame( $buffer, $result );
@@ -131,7 +131,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		{
 			$this->rewindable_input->gets();
 		} 
-		catch ( Prack_Error_IO $e )
+		catch ( Prb_Exception_IO $e )
 		{
 			return;
 		}
@@ -148,16 +148,16 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'eachCallback' );
 		
-		$this->lines = Prack::_Array();
+		$this->lines = Prb::_Array();
 		$this->rewindable_input->each( $callback );
-		$this->assertEquals( array( Prack::_String( 'hello world' ) ), $this->lines->toN() );
+		$this->assertEquals( array( Prb::_String( 'hello world' ) ), $this->lines->toN() );
 		
 		$this->rewindable_input->close();
 		try
 		{
 			$this->rewindable_input->each( $callback );
 		} 
-		catch ( Prack_Error_IO $e )
+		catch ( Prb_Exception_IO $e )
 		{
 			return;
 		}
@@ -180,8 +180,8 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_handle_really_big_strings()
 	{
-		$string = TestHelper::gibberish( Prack_Utils_IO::CHUNK_SIZE * 2 );
-		$rewindable_input    = Prack_Utils_IO::withString( $string );
+		$string = Prack_TestHelper::gibberish( Prb_IO::CHUNK_SIZE * 2 );
+		$rewindable_input    = Prb_IO::withString( $string );
 		$this->assertEquals( $string, $rewindable_input->read() );
 	} // It should handle really big strings
 	
@@ -207,21 +207,21 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	} // It should be possible to call close multiple times
 	
 	/**
-	 * It should not buffer into a Prack_Utils_IO_Tempfile if no data has been read yet
+	 * It should not buffer into a Prb_IO_Tempfile if no data has been read yet
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function It_should_not_buffer_into_a_Prack_Utils_IO_Tempfile_if_no_data_has_been_read_yet()
+	public function It_should_not_buffer_into_a_Prb_IO_Tempfile_if_no_data_has_been_read_yet()
 	{
 		$this->assertNull( $this->rewindable_input->getRewindableIO() );
-	} // It should not buffer into a Prack_Utils_IO_Tempfile if no data has been read yet
+	} // It should not buffer into a Prb_IO_Tempfile if no data has been read yet
 	
 	/**
-	 * It should buffer into a Prack_Utils_IO_Tempfile when data has been consumed for the first time
+	 * It should buffer into a Prb_IO_Tempfile when data has been consumed for the first time
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function It_should_buffer_into_a_Prack_Utils_IO_Tempfile_when_data_has_been_consumed_for_the_first_time()
+	public function It_should_buffer_into_a_Prb_IO_Tempfile_when_data_has_been_consumed_for_the_first_time()
 	{
 		$this->rewindable_input->read( 1 );
 		$tempfile = $this->rewindable_input->getRewindableIO();
@@ -229,7 +229,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		$this->rewindable_input->read( 1 );
 		$tempfile2 = $this->rewindable_input->getRewindableIO();
 		$this->assertEquals( $tempfile->getPath(), $tempfile2->getPath() );
-	} // It should buffer into a Prack_Utils_IO_Tempfile when data has been consumed for the first time
+	} // It should buffer into a Prb_IO_Tempfile when data has been consumed for the first time
 	
 	/**
 	 * It should close the underlying tempfile upon calling close

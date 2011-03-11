@@ -17,7 +17,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_return_a_Prack_Mock_Response()
 	{
 		$mock_request  = self::app();
-		$mock_response = $mock_request->get( Prack::_String() );
+		$mock_response = $mock_request->get( Prb::_String() );
 		$this->assertTrue( $mock_response instanceof Prack_Mock_Response );
 	} // It should return a Prack_Mock_Response
 	
@@ -29,7 +29,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_be_able_to_only_return_the_environment()
 	{
 		$env = Prack_Mock_Request::envFor();
-		$this->assertTrue( $env instanceof Prack_Wrapper_Hash );
+		$this->assertTrue( $env instanceof Prb_Hash );
 		$this->assertTrue( $env->contains( 'rack.input' ) );
 	} // It should be able to only return the environment
 	
@@ -41,7 +41,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_provide_sensible_defaults()
 	{
 		$mock_request  = self::app();
-		$mock_response = $mock_request->request( Prack::_String( 'GET' ) );
+		$mock_response = $mock_request->request( Prb::_String( 'GET' ) );
 		
 		$env = unserialize( $mock_response->getBody()->toN() );
 		
@@ -64,29 +64,29 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 		$mock_request = self::app();
 		
 		$mock_response = $mock_request->get(
-		  Prack::_String(),
-		  Prack::_Hash( array( 'input' => Prack::_String( 'foo' ) ) )
+		  Prb::_String(),
+		  Prb::_Hash( array( 'input' => Prb::_String( 'foo' ) ) )
 		);
 		$env = unserialize( $mock_response->getBody()->toN() );
 		$this->assertEquals( 'GET', $env->get( 'REQUEST_METHOD' )->toN() );
 		
 		$mock_response = $mock_request->post(
-		  Prack::_String(),
-		  Prack::_Hash( array( 'input' => Prack::_String( 'foo' ) ) )
+		  Prb::_String(),
+		  Prb::_Hash( array( 'input' => Prb::_String( 'foo' ) ) )
 		);
 		$env = unserialize( $mock_response->getBody()->toN() );
 		$this->assertEquals( 'POST', $env->get( 'REQUEST_METHOD' )->toN() );
 		
 		$mock_response = $mock_request->put(
-		  Prack::_String(),
-		  Prack::_Hash( array( 'input' => Prack::_String( 'foo' ) ) )
+		  Prb::_String(),
+		  Prb::_Hash( array( 'input' => Prb::_String( 'foo' ) ) )
 		);
 		$env = unserialize( $mock_response->getBody()->toN() );
 		$this->assertEquals( 'PUT', $env->get( 'REQUEST_METHOD' )->toN() );
 		
 		$mock_response = $mock_request->delete(
-			Prack::_String(),
-			Prack::_Hash( array( 'input' => Prack::_String( 'foo' ) ) )
+			Prb::_String(),
+			Prb::_Hash( array( 'input' => Prb::_String( 'foo' ) ) )
 		);
 		$env = unserialize( $mock_response->getBody()->toN() );
 		$this->assertEquals( 'DELETE', $env->get( 'REQUEST_METHOD' )->toN() );
@@ -100,7 +100,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_set_content_length()
 	{
 		$env = Prack_Mock_Request::envFor(
-			Prack::_String( '/' ), Prack::_Hash( array( 'input' => Prack::_string( 'foo' ) ) )
+			Prb::_String( '/' ), Prb::_Hash( array( 'input' => Prb::_string( 'foo' ) ) )
 		);
 		$this->assertEquals( "3", $env->get( 'CONTENT_LENGTH' )->toN() );
 	} // It should set content length
@@ -115,15 +115,15 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 		$mock_request = self::app();
 		
 		$mock_response = $mock_request->delete(
-		  Prack::_String(),
-		  Prack::_Hash( array( 'input' => Prack::_String( 'foo' ) ) )
+		  Prb::_String(),
+		  Prb::_Hash( array( 'input' => Prb::_String( 'foo' ) ) )
 		);
 		$env = unserialize( $mock_response->getBody()->toN() );
 		$this->assertEquals( 'foo', $env->get( 'mock.postdata' )->toN() );
 		
 		$mock_response = $mock_request->delete(
-		  Prack::_String(),
-		  Prack::_Hash( array( 'input' => Prack_Utils_IO::withString( Prack::_String( 'foo' ) ) ) )
+		  Prb::_String(),
+		  Prb::_Hash( array( 'input' => Prb_IO::withString( Prb::_String( 'foo' ) ) ) )
 		);
 		$env = unserialize( $mock_response->getBody()->toN() );
 		$this->assertEquals( 'foo', $env->get( 'mock.postdata' )->toN() );
@@ -138,7 +138,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	{
 		$mock_request  = self::app();
 		
-		$mock_response = $mock_request->get( Prack::_String( 'https://bla.example.org:9292/meh/foo?bar' ) );
+		$mock_response = $mock_request->get( Prb::_String( 'https://bla.example.org:9292/meh/foo?bar' ) );
 		$this->assertTrue( $mock_response instanceof Prack_Mock_Response );
 		
 		$env = unserialize( $mock_response->getBody()->toN() );
@@ -160,7 +160,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	{
 		$mock_request  = self::app();
 		
-		$mock_response = $mock_request->get( Prack::_String( 'https://example.org/foo' ) );
+		$mock_response = $mock_request->get( Prb::_String( 'https://example.org/foo' ) );
 		$this->assertTrue( $mock_response instanceof Prack_Mock_Response );
 		
 		$env = unserialize( $mock_response->getBody()->toN() );
@@ -182,7 +182,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_prepend_slash_to_uri_path()
 	{
 		$mock_request  = self::app();
-		$mock_response = $mock_request->get( Prack::_String( 'foo' ) );
+		$mock_response = $mock_request->get( Prb::_String( 'foo' ) );
 		
 		$this->assertTrue( $mock_response instanceof Prack_Mock_Response );
 		
@@ -204,7 +204,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_properly_convert_method_name_to_an_uppercase_string()
 	{
 		$mock_request  = self::app();
-		$mock_response = $mock_request->request( Prack::_String( 'GeT' ) );
+		$mock_response = $mock_request->request( Prb::_String( 'GeT' ) );
 		
 		$env = unserialize( $mock_response->getBody()->toN() );
 		
@@ -220,11 +220,11 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	{
 		$mock_request  = self::app();
 		$mock_response = $mock_request->get(
-		  Prack::_String( '/foo?baz=2' ),
-		  Prack::_Hash( array( 
-		    'params' => Prack::_Hash( array(
-		      'foo' => Prack::_Hash( array(
-		        'bar' => Prack::_String( '1' )
+		  Prb::_String( '/foo?baz=2' ),
+		  Prb::_Hash( array( 
+		    'params' => Prb::_Hash( array(
+		      'foo' => Prb::_Hash( array(
+		        'bar' => Prb::_String( '1' )
 		      ) )
 		    ) )
 		  ) )
@@ -235,8 +235,8 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( 'GET',  $env->get( 'REQUEST_METHOD'  )->toN() );
 		$this->assertEquals( '/foo', $env->get( 'PATH_INFO'       )->toN() );
 		$this->assertEquals( '',     $env->get( 'mock.postdata'   )->toN() );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prack::_String( 'baz=2'      ) ) );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prack::_String( 'foo[bar]=1' ) ) );
+		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prb::_String( 'baz=2'      ) ) );
+		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prb::_String( 'foo[bar]=1' ) ) );
 	} // It should accept params and build query string for GET requests
 	
 	/**
@@ -248,9 +248,9 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	{
 		$mock_request  = self::app();
 		$mock_response = $mock_request->get(
-		  Prack::_String( '/foo?baz=2' ),
-		  Prack::_Hash( array(
-		    'params' => Prack::_String( 'foo[bar]=1' )
+		  Prb::_String( '/foo?baz=2' ),
+		  Prb::_Hash( array(
+		    'params' => Prb::_String( 'foo[bar]=1' )
 		  ) )
 		);
 		
@@ -259,8 +259,8 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( 'GET',  $env->get( 'REQUEST_METHOD'  )->toN() );
 		$this->assertEquals( '/foo', $env->get( 'PATH_INFO'       )->toN() );
 		$this->assertEquals( '',     $env->get( 'mock.postdata'   )->toN() );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prack::_String( 'baz=2'      ) ) );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prack::_String( 'foo[bar]=1' ) ) );
+		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prb::_String( 'baz=2'      ) ) );
+		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prb::_String( 'foo[bar]=1' ) ) );
 	} // It should accept raw input in params for GET requests
 	
 	/**
@@ -272,11 +272,11 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	{
 		$mock_request  = self::app();
 		$mock_response = $mock_request->post(
-		  Prack::_String( '/foo' ),
-		  Prack::_Hash( array(
-		    'params' => Prack::_Hash( array(
-		      'foo' => Prack::_Hash( array(
-		        'bar' => Prack::_String( '1' )
+		  Prb::_String( '/foo' ),
+		  Prb::_Hash( array(
+		    'params' => Prb::_Hash( array(
+		      'foo' => Prb::_Hash( array(
+		        'bar' => Prb::_String( '1' )
 		      ) )
 		    ) )
 		  ) )
@@ -299,7 +299,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_accept_raw_input_in_params_for_POST_requests()
 	{
 		$mock_request  = self::app();
-		$mock_response = $mock_request->post( Prack::_String( '/foo' ), Prack::_Hash( array( 'params' => Prack::_String( 'foo[bar]=1' ) ) ) );
+		$mock_response = $mock_request->post( Prb::_String( '/foo' ), Prb::_Hash( array( 'params' => Prb::_String( 'foo[bar]=1' ) ) ) );
 		
 		$env = unserialize( $mock_response->getBody()->toN() );
 		
@@ -340,54 +340,54 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	{
 		$mock_request  = self::app();
 		$mock_response = $mock_request->get(
-		  Prack::_String( 'https://bla.example.org:9292/meh/foo?bar' ),
-		  Prack::_Hash( array( 'lint' => true ) )
+		  Prb::_String( 'https://bla.example.org:9292/meh/foo?bar' ),
+		  Prb::_Hash( array( 'lint' => true ) )
 		);
 	} // It should behave valid according to the Rack spec
 	
 		/**
-	 * It should throw an exception if uri is not a Prack_Wrapper_String
+	 * It should throw an exception if uri is not a Prb_String
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function It_should_throw_an_exception_if_uri_is_not_a_Prack_Wrapper_String()
+	public function It_should_throw_an_exception_if_uri_is_not_a_Prb_String()
 	{
-		$this->setExpectedException( 'Prack_Error_Type' );
+		$this->setExpectedException( 'Prb_Exception_Type' );
 		$mock_request  = self::app();
 		$mock_response = $mock_request->get(
 		  'https://bla.example.org:9292/meh/foo?bar',
-		  Prack::_Hash( array( 'lint' => true ) )
+		  Prb::_Hash( array( 'lint' => true ) )
 		);
-	} // It should throw an exception if uri is not a Prack_Wrapper_String
+	} // It should throw an exception if uri is not a Prb_String
 	
 	/**
-	 * It should throw an exception if options is not a Prack_Wrapper_Hash
+	 * It should throw an exception if options is not a Prb_Hash
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function It_should_throw_an_exception_if_options_is_not_a_Prack_Wrapper_Hash()
+	public function It_should_throw_an_exception_if_options_is_not_a_Prb_Hash()
 	{
-		$this->setExpectedException( 'Prack_Error_Type' );
+		$this->setExpectedException( 'Prb_Exception_Type' );
 		$mock_request  = self::app();
 		$mock_response = $mock_request->get(
-		  Prack::_String( 'https://bla.example.org:9292/meh/foo?bar' ),
+		  Prb::_String( 'https://bla.example.org:9292/meh/foo?bar' ),
 		  array()
 		);
-	} // It should throw an exception if headers is not a Prack_Wrapper_Hash
+	} // It should throw an exception if headers is not a Prb_Hash
 	
 		/**
-	 * It should throw an exception if rack.input is neither Prack_Interface_Stringable nor Prack_Interface_ReadableStreamlike
+	 * It should throw an exception if rack.input is neither Prb_Interface_Stringable nor Prb_Interface_ReadableStreamlike
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function It_should_throw_an_exception_if_rack_input_is_neither_Prack_Interface_Stringable_nor_Prack_Interface_ReadableStreamlike()
+	public function It_should_throw_an_exception_if_rack_input_is_neither_Prb_Interface_Stringable_nor_Prb_Interface_ReadableStreamlike()
 	{
-		$this->setExpectedException( 'Prack_Error_Type' );
+		$this->setExpectedException( 'Prb_Exception_Type' );
 		
 		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
 		$mock_response = $mock_request->get(
-			Prack::_String(),
-			Prack::_Hash( array( 'input' => Prack::_Array() ) )
+			Prb::_String(),
+			Prb::_Hash( array( 'input' => Prb::_Array() ) )
 		);
-	} // It should throw an exception if rack.input is neither Prack_Interface_Stringable nor Prack_Interface_ReadableStreamlike
+	} // It should throw an exception if rack.input is neither Prb_Interface_Stringable nor Prb_Interface_ReadableStreamlike
 }

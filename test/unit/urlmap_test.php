@@ -9,8 +9,8 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 	{
 		return new Prack_Test_Echo(
 		  200,
-		  Prack::_Hash(),
-		  Prack::_Array( array( Prack::_String() ) ),
+		  Prb::_Hash(),
+		  Prb::_Array( array( Prb::_String() ) ),
 		  $eval
 		);
 	}
@@ -29,63 +29,63 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 		');
 		
 		$url_map = Prack_URLMap::with(
-		  Prack::_Hash( array(
+		  Prb::_Hash( array(
 		    'http://foo.org/bar' => $middleware_app,
 		    '/foo'               => $middleware_app,
 		    '/foo/bar'           => $middleware_app,
 		  ) )
 		);
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/' ) );
 		$this->assertTrue( $mock_response->isNotFound() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/qux' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/qux' ) );
 		$this->assertTrue( $mock_response->isNotFound() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/foo' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/foo' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( '/foo', $mock_response->get( 'X-ScriptName' )->toN() );
 		$this->assertEquals( ''    , $mock_response->get( 'X-PathInfo'   )->toN() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/foo/' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/foo/' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( '/foo', $mock_response->get( 'X-ScriptName' )->toN() );
 		$this->assertEquals( '/'   , $mock_response->get( 'X-PathInfo'   )->toN() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/foo/bar' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/foo/bar' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( '/foo/bar', $mock_response->get( 'X-ScriptName' )->toN() );
 		$this->assertEquals( ''        , $mock_response->get( 'X-PathInfo'   )->toN() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/foo/bar/' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/foo/bar/' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( '/foo/bar', $mock_response->get( 'X-ScriptName' )->toN() );
 		$this->assertEquals( '/'       , $mock_response->get( 'X-PathInfo'   )->toN() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/foo///bar//quux' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/foo///bar//quux' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( '/foo/bar', $mock_response->get( 'X-ScriptName' )->toN() );
 		$this->assertEquals( '//quux'  , $mock_response->get( 'X-PathInfo'   )->toN() );
 		
 		$mock_response = Prack_Mock_Request::with( $url_map )->get(
-		  Prack::_String( '/foo/quux' ),
-		  Prack::_Hash( array( 'SCRIPT_NAME' => Prack::_String( '/bleh' ) ) )
+		  Prb::_String( '/foo/quux' ),
+		  Prb::_Hash( array( 'SCRIPT_NAME' => Prb::_String( '/bleh' ) ) )
 		);
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( '/bleh/foo', $mock_response->get( 'X-ScriptName' )->toN() );
 		$this->assertEquals( '/quux'    , $mock_response->get( 'X-PathInfo'   )->toN() );
 		
 		$mock_response = Prack_Mock_Request::with( $url_map )->get(
-		  Prack::_String( '/bar' ),
-		  Prack::_Hash( array( 'HTTP_HOST' => Prack::_String( 'foo.org' ) ) )
+		  Prb::_String( '/bar' ),
+		  Prb::_Hash( array( 'HTTP_HOST' => Prb::_String( 'foo.org' ) ) )
 		);
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( '/bar', $mock_response->get( 'X-ScriptName' )->toN() );
 		$this->assertTrue( $mock_response->get( 'X-PathInfo' )->isEmpty() );
 		
 		$mock_response = Prack_Mock_Request::with( $url_map )->get(
-		  Prack::_String( '/bar/' ),
-		  Prack::_Hash( array( 'HTTP_HOST' => Prack::_String( 'foo.org' ) ) )
+		  Prb::_String( '/bar/' ),
+		  Prb::_Hash( array( 'HTTP_HOST' => Prb::_String( 'foo.org' ) ) )
 		);
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( '/bar', $mock_response->get( 'X-ScriptName' )->toN() );
@@ -100,79 +100,79 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 	public function It_dispatches_hosts_correctly()
 	{
 		$url_map = Prack_URLMap::with(
-		  Prack::_Hash( array( 
+		  Prb::_Hash( array( 
 		    'http://foo.org/' => self::appWithEval('
-		      $this->headers->set( "Content-Type", Prack::_String( "text/plain" ) );
-		      $this->headers->set( "X-Position",   Prack::_String( "foo.org"    ) );
+		      $this->headers->set( "Content-Type", Prb::_String( "text/plain" ) );
+		      $this->headers->set( "X-Position",   Prb::_String( "foo.org"    ) );
 		      $this->headers->set( "X-Host",       $env->contains( "HTTP_HOST") ? $env->get( "HTTP_HOST"   )
 		                                                                        : $env->get( "SERVER_NAME" ) );
 		    '),
 		    'http://subdomain.foo.org/' => self::appWithEval('
-		      $this->headers->set( "Content-Type", Prack::_String( "text/plain"        ) );
-		      $this->headers->set( "X-Position",   Prack::_String( "subdomain.foo.org" ) );
+		      $this->headers->set( "Content-Type", Prb::_String( "text/plain"        ) );
+		      $this->headers->set( "X-Position",   Prb::_String( "subdomain.foo.org" ) );
 		      $this->headers->set( "X-Host",       $env->contains( "HTTP_HOST") ? $env->get( "HTTP_HOST"   )
 		                                                                        : $env->get( "SERVER_NAME" ) );
 		    '),
 		    'http://bar.org/' => self::appWithEval('
-		      $this->headers->set( "Content-Type", Prack::_String( "text/plain" ) );
-		      $this->headers->set( "X-Position",   Prack::_String( "bar.org"    ) );
+		      $this->headers->set( "Content-Type", Prb::_String( "text/plain" ) );
+		      $this->headers->set( "X-Position",   Prb::_String( "bar.org"    ) );
 		      $this->headers->set( "X-Host",       $env->contains( "HTTP_HOST") ? $env->get( "HTTP_HOST"   )
 		                                                                        : $env->get( "SERVER_NAME" ) );
 		    '),
 		    '/' => self::appWithEval('
-		      $this->headers->set( "Content-Type", Prack::_String( "text/plain"  ) );
-		      $this->headers->set( "X-Position",   Prack::_String( "default.org" ) );
+		      $this->headers->set( "Content-Type", Prb::_String( "text/plain"  ) );
+		      $this->headers->set( "X-Position",   Prb::_String( "default.org" ) );
 		      $this->headers->set( "X-Host",       $env->contains( "HTTP_HOST" ) ? $env->get( "HTTP_HOST"   )
 		                                                                         : $env->get( "SERVER_NAME" ) );
 		    '),
 		  ) )
 		);
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( 'default.org', $mock_response->get( 'X-Position' )->toN() );
 		
 		$mock_response = Prack_Mock_Request::with( $url_map )->get(
-		  Prack::_String( '/' ),
-		  Prack::_Hash( array( 'HTTP_HOST' => Prack::_String( 'bar.org' ) ) )
+		  Prb::_String( '/' ),
+		  Prb::_Hash( array( 'HTTP_HOST' => Prb::_String( 'bar.org' ) ) )
 		);
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( 'bar.org', $mock_response->get( 'X-Position' )->toN() );
 		
 		$mock_response = Prack_Mock_Request::with( $url_map )->get(
-		  Prack::_String( '/' ),
-		  Prack::_Hash( array( 'HTTP_HOST' => Prack::_String( 'foo.org' ) ) )
+		  Prb::_String( '/' ),
+		  Prb::_Hash( array( 'HTTP_HOST' => Prb::_String( 'foo.org' ) ) )
 		);
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( 'foo.org', $mock_response->get( 'X-Position' )->toN() );
 		
 		$mock_response = Prack_Mock_Request::with( $url_map )->get(
-		  Prack::_String( '/' ),
-		  Prack::_Hash( array(
-		    'HTTP_HOST'   => Prack::_String( 'subdomain.foo.org' ),
-		    'SERVER_NAME' => Prack::_String( 'foo.org'           )
+		  Prb::_String( '/' ),
+		  Prb::_Hash( array(
+		    'HTTP_HOST'   => Prb::_String( 'subdomain.foo.org' ),
+		    'SERVER_NAME' => Prb::_String( 'foo.org'           )
 		  ) )
 		);
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( 'subdomain.foo.org', $mock_response->get( 'X-Position' )->toN() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( 'http://foo.org' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( 'http://foo.org' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( 'default.org', $mock_response->get( 'X-Position' )->toN() );
 		
 		//FAILS
 		$mock_response = Prack_Mock_Request::with( $url_map )->get(
-		  Prack::_String( '/' ),
-		  Prack::_Hash( array( 'HTTP_HOST' => Prack::_String( 'example.org' ) ) )
+		  Prb::_String( '/' ),
+		  Prb::_Hash( array( 'HTTP_HOST' => Prb::_String( 'example.org' ) ) )
 		);
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( 'default.org', $mock_response->get( 'X-Position' )->toN() );
 		
 		$mock_response = Prack_Mock_Request::with( $url_map )->get(
-		  Prack::_String( '/' ),
-		  Prack::_Hash( array(
-		    'HTTP_HOST'   => Prack::_String( 'example.org:9292' ),
-		    'SERVER_PORT' => Prack::_String( '9292'             )
+		  Prb::_String( '/' ),
+		  Prb::_Hash( array(
+		    'HTTP_HOST'   => Prb::_String( 'example.org:9292' ),
+		    'SERVER_PORT' => Prb::_String( '9292'             )
 		  ) )
 		);
 		$this->assertTrue( $mock_response->isOK() );
@@ -186,12 +186,12 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_nestable()
 	{
-		$url_map = Prack_URLMap::with( Prack::_Hash( array (
-		  '/foo'  => Prack_URLMap::with( Prack::_Hash( array(
-		    '/bar'  => Prack_URLMap::with( Prack::_Hash( array(
+		$url_map = Prack_URLMap::with( Prb::_Hash( array (
+		  '/foo'  => Prack_URLMap::with( Prb::_Hash( array(
+		    '/bar'  => Prack_URLMap::with( Prb::_Hash( array(
 		      '/quux' => self::appWithEval('
-		        $this->headers->set( "Content-Type", Prack::_String( "text/plain"    ) );
-		        $this->headers->set( "X-Position",   Prack::_String( "/foo/bar/quux" ) );
+		        $this->headers->set( "Content-Type", Prb::_String( "text/plain"    ) );
+		        $this->headers->set( "X-Position",   Prb::_String( "/foo/bar/quux" ) );
 		        $this->headers->set( "X-PathInfo",   $env->get( "PATH_INFO"   )        );
 		        $this->headers->set( "X-ScriptName", $env->get( "SCRIPT_NAME" )        );
 		      ')
@@ -199,10 +199,10 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 		  ) ) )
 		) ) );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/foo/bar' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/foo/bar' ) );
 		$this->assertTrue( $mock_response->isNotFound() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/foo/bar/quux' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/foo/bar/quux' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( '/foo/bar/quux', $mock_response->get( 'X-Position'   )->toN() );
 		$this->assertEquals(              '', $mock_response->get( 'X-PathInfo'   )->toN() );
@@ -217,41 +217,41 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 	public function It_should_route_root_apps_correctly()
 	{
 		$url_map = Prack_URLMap::with(
-		  Prack::_Hash( array( 
+		  Prb::_Hash( array( 
 		    '/' => self::appWithEval('
-		      $this->headers->set( "Content-Type", Prack::_String( "text/plain" ) );
-		      $this->headers->set( "X-Position",   Prack::_String( "root"       ) );
+		      $this->headers->set( "Content-Type", Prb::_String( "text/plain" ) );
+		      $this->headers->set( "X-Position",   Prb::_String( "root"       ) );
 		      $this->headers->set( "X-PathInfo",   $env->get( "PATH_INFO"   )     );
 		      $this->headers->set( "X-ScriptName", $env->get( "SCRIPT_NAME" )     );
 		    '),
 		    '/foo' => self::appWithEval('
-		      $this->headers->set( "Content-Type", Prack::_String( "text/plain" ) );
-		      $this->headers->set( "X-Position",   Prack::_String( "foo"        ) );
+		      $this->headers->set( "Content-Type", Prb::_String( "text/plain" ) );
+		      $this->headers->set( "X-Position",   Prb::_String( "foo"        ) );
 		      $this->headers->set( "X-PathInfo",   $env->get( "PATH_INFO"   )     );
 		      $this->headers->set( "X-ScriptName", $env->get( "SCRIPT_NAME" )     );
 		    '),
 		  ) )
 		);
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/foo/bar' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/foo/bar' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals(  'foo', $mock_response->get( 'X-Position'   )->toN() );
 		$this->assertEquals( '/bar', $mock_response->get( 'X-PathInfo'   )->toN() );
 		$this->assertEquals( '/foo', $mock_response->get( 'X-ScriptName' )->toN() );
 
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/foo' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/foo' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals(  'foo', $mock_response->get( 'X-Position'   )->toN() );
 		$this->assertEquals(     '', $mock_response->get( 'X-PathInfo'   )->toN() );
 		$this->assertEquals( '/foo', $mock_response->get( 'X-ScriptName' )->toN() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/bar' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/bar' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( 'root', $mock_response->get( 'X-Position'   )->toN() );
 		$this->assertEquals( '/bar', $mock_response->get( 'X-PathInfo'   )->toN() );
 		$this->assertEquals(     '', $mock_response->get( 'X-ScriptName' )->toN() );
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String() );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String() );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals( 'root', $mock_response->get( 'X-Position'   )->toN() );
 		$this->assertEquals(    '/', $mock_response->get( 'X-PathInfo'   )->toN() );
@@ -266,23 +266,23 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 	public function It_should_not_squeeze_slashes()
 	{
 		$url_map = Prack_URLMap::with(
-		  Prack::_Hash( array( 
+		  Prb::_Hash( array( 
 		    '/' => self::appWithEval('
-		      $this->headers->set( "Content-Type", Prack::_String( "text/plain" ) );
-		      $this->headers->set( "X-Position",   Prack::_String( "root"       ) );
+		      $this->headers->set( "Content-Type", Prb::_String( "text/plain" ) );
+		      $this->headers->set( "X-Position",   Prb::_String( "root"       ) );
 		      $this->headers->set( "X-PathInfo",   $env->get( "PATH_INFO"   )     );
 		      $this->headers->set( "X-ScriptName", $env->get( "SCRIPT_NAME" )     );
 		    '),
 		    '/foo' => self::appWithEval('
-		      $this->headers->set( "Content-Type", Prack::_String( "text/plain" ) );
-		      $this->headers->set( "X-Position",   Prack::_String( "foo"        ) );
+		      $this->headers->set( "Content-Type", Prb::_String( "text/plain" ) );
+		      $this->headers->set( "X-Position",   Prb::_String( "foo"        ) );
 		      $this->headers->set( "X-PathInfo",   $env->get( "PATH_INFO"   )     );
 		      $this->headers->set( "X-ScriptName", $env->get( "SCRIPT_NAME" )     );
 		    '),
 		  ) )
 		);
 		
-		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prack::_String( '/http://example.org/bar' ) );
+		$mock_response = Prack_Mock_Request::with( $url_map )->get( Prb::_String( '/http://example.org/bar' ) );
 		$this->assertTrue( $mock_response->isOK() );
 		$this->assertEquals(                    'root', $mock_response->get( 'X-Position'   )->toN() );
 		$this->assertEquals( '/http://example.org/bar', $mock_response->get( 'X-PathInfo'   )->toN() );
