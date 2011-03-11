@@ -5,7 +5,7 @@
          backupStaticAttributes="false"
          syntaxCheck="false">
   <testsuites>
-    <testsuite name="Prack_Core">
+    <testsuite name="Prack_Unit">
       <directory suffix="test.php">test/unit</directory>
     </testsuite>
     <testsuite name="Prack_Integration">
@@ -26,7 +26,7 @@
 
   <filter>
     <whitelist addUncoveredFilesFromWhitelist="true">
-      <directory suffix=".php">prack</directory>
+      <directory suffix=".php">lib/prack</directory>
        <exclude>
        </exclude>
     </whitelist>
