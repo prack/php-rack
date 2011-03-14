@@ -30,12 +30,13 @@ Progress
 Working and Shippable
 ---------------------
 
+* Prack_Logger: Adds a logger to the environment for downstream apps to use
 * Prack_Builder: Fluent interface for building middleware stacks in a domain
 * Prack_URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
 * Prack\_Mock\_Request: Fake requests for testing
 * Prack\_Mock\_Response: Fake responses for testing, delegates some methods
 * Prack_RewindableInput: Adds rewindability to any stream
-* Prack_ShowExceptions: Catch uncaught exceptions and show them as pretty HTML with context.
+* Prack_ShowExceptions: Catches uncaught exceptions and show them as pretty HTML with context
 * Prack\_Utils\_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
 * Interfaces: MiddlewareApp
 
@@ -55,13 +56,12 @@ Nothing to list here. See above for things which aren't quite feature complete, 
 To Do
 -----
 
-* Documentation on when to use native PHP primitives (array et al.) vs. Prack's wrapper types
+* Documentation on when Prack uses PHP primitives vs. Prb wrappers
 * Prack\_Apache\_Compat to make apache's mod_php (mostly) compatible with the Rack specfication
 * Rack config
 * Sessions
 * Cookies
 * Multipart-form-data processing
-* Generic Logger
 * Prack Attack (Rack Lobster analog)
 * E-tag generation
 * Actual implementation of HTTP auth (basic, digest, etc.) and other essential middleware
