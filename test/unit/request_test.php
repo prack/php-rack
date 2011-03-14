@@ -53,7 +53,7 @@ class Prack_RequestTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals( 'example.com',      $request->host()->toN()          );
 		$this->assertEquals(          8080, (int)$request->port()->toN()          );
 		$this->assertEquals(           '0',      $request->contentLength()->toN() );
-		$this->assertEquals(          null,      $request->logger()                    );
+		$this->assertEquals(          null,      $request->logger()               );
 		$this->assertNull( $request->contentType() );
 		// $this->assertEquals( array(), $request->session() );
 		// $this->assertEquals( array(), $request->sessionOptions() );
