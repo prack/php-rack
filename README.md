@@ -39,6 +39,7 @@ Working and Shippable
 * RewindableInput: Adds rewindability to any stream
 * ShowExceptions: Catches uncaught exceptions and show them as pretty HTML with context
 * Utils_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
+* Mime: a default and configurable set of MIME types
 * Interfaces: MiddlewareApp
 
 Working perfectly, but not feature-complete
