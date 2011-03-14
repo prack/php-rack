@@ -241,10 +241,13 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 		*/
 		
 		// FIXME: Implement logger.
-		/*
 		try
 		{
-			$env  = self::env( array( 'rack.logger' => new stdClass() ) );
+			$env  = self::env(
+			  Prb::_Hash( array(
+			    'rack.logger' => new stdClass()
+			  ) )
+			);
 			$lint->call( $env );
 		} catch ( Prack_Exception_Lint $e10 ) { }
 		
@@ -255,7 +258,6 @@ class Prack_LintTest extends PHPUnit_Framework_TestCase
 			$this->fail( 'Expected exception on $env where rack.logger does not conform to Prb_Interface_Logger.' );
 			return;
 		}
-		*/
 		
 		try
 		{

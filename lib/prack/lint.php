@@ -377,12 +377,9 @@ class Prack_Lint
 		##                        The object must implement:
 		if ( $logger = $env->get( 'rack.logger' ) )
 		{
-			// FIXME: Implement logger.
-			/*
 			$as_string = print_r( $logger, true );
 			prack_lint_assert( $logger instanceof Prb_Interface_Logger,
 			                   "logger {$as_string} must conform to Prb_Interface_Logger" );
-			*/
 		}
 		
 		## The server or the application can store their own data in the

@@ -42,7 +42,7 @@ Working and Shippable
 Working perfectly, but not feature-complete
 -------------------------------------------
 
-* Prack\_Lint: Ensures response sanity. (pending: sessions, logger)
+* Prack\_Lint: Ensures response sanity. (pending: sessions)
 * Prack_Request: Actual request (pending: multipart form data)
 * Prack_Response: Actual response, delegates some methods (pending: cookie management)
 * Prack_Utils: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending: multipart, cookies, encoding selection)
