@@ -49,11 +49,11 @@ class Prack_Test_AppClass
 		
 		$this->called++;
 		
-		return array(
-			200,
+		return Prb::_Array( array(
+			Prb::_Numeric( 200 ),
 			Prb::_Hash( array( 'Content-Type' => Prb::_String( 'text/plain' ) ) ),
 			Prb::_Array( array( Prb::_String( 'OK' ) ) )
-		);
+		) );
 	}
 }
 
@@ -71,7 +71,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->map( '/' )
 		    ->run(
 		      new Prack_Test_Echo(
-		        200,
+		        Prb::_Numeric( 200 ),
 		        Prb::_Hash(),
 		        Prb::_Array( array( Prb::_String( 'root' ) ) )
 		      )
@@ -79,7 +79,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->map( '/sub' )
 		    ->run(
 		      new Prack_Test_Echo(
-		        200,
+		        Prb::_Numeric( 200 ),
 		        Prb::_Hash(),
 		        Prb::_Array( array( Prb::_String( 'sub' ) ) )
 		      )
@@ -108,7 +108,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->map( '/' )
 		    ->run(
 		      new Prack_Test_Echo(
-		        200, Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
+		        Prb::_Numeric( 200 ), Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
 		        '$env->set( "new_key", Prb::_String( "new_value" ) );'
 		      )
 		    )
@@ -134,7 +134,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->using( 'Prack_ShowExceptions' )->build()
 		  ->run(
 		    new Prack_Test_Echo(
-		      200, Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
+		      Prb::_Numeric( 200 ), Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
 		      'throw new Exception( "bzzzt" );'
 		    )
 		  )
@@ -157,7 +157,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->using( 'Prack_ShowExceptions' )->build()
 		  ->run(
 		    new Prack_Test_Echo(
-		      200, Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
+		      Prb::_Numeric( 200 ), Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
 		      'throw new Exception( "bzzzt" );'
 		    )
 		  );
@@ -181,7 +181,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		//       'secret' == password
 		//     end
 		// 
-		//     run lambda { |env| [200, {}, ['Hi Boss']] }
+		//     run lambda { |env| [Prb::_Numeric( 200 ), {}, ['Hi Boss']] }
 		//   end
 		// 
 		//   response = Rack::MockRequest.new(app).get("/")
@@ -208,7 +208,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->using( 'Prack_ShowExceptions' )->build()
 		  ->run(
 		    new Prack_Test_Echo(
-		      200, Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
+		      Prb::_Numeric( 200 ), Prb::_Hash(), Prb::_Array( array( Prb::_String( 'root' ) ) ),
 		      'throw new Exception( "bzzzt" );'
 		    )
 		  )
@@ -231,7 +231,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		  ->using( 'Prack_ShowExceptions' )->build()
 		  ->run( new Prack_Test_AppClass() );
 		
-		$this->assertEquals( 200, Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->getStatus() );
+		$this->assertEquals( Prb::_Numeric( 200 ), Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->getStatus() );
 		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->isServerError() );
 	} // It should initialize apps once
 	

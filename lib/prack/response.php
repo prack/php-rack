@@ -39,25 +39,27 @@ class Prack_Response
 	}
 	
 	// TODO: Document!
-	static function with( $body = null, $status = 200, $headers = null, $on_build = null )
+	static function with( $body = null, $status = null, $headers = null, $on_build = null )
 	{
 		return new Prack_Response( $body, $status, $headers, $on_build );
 	}
 	
 	// TODO: Document!
-	function __construct( $body = null, $status = 200, $headers = null, $on_build = null )
+	function __construct( $body = null, $status = null, $headers = null, $on_build = null )
 	{
 		$body = is_null( $body ) ? Prb::_Array() : $body;
 		if ( !( $body instanceof Prb_Interface_Stringable ) && !( $body instanceof Prb_Interface_Enumerable ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: __construct $body must be Prb_Interface_Stringable or Prb_Interface_Enumerable' );
 		
-		$status = is_null( $status ) ? 200 : (int)$status;
+		$status = is_null( $status ) ? Prb::_Numeric( 200 ) : $status->toN();
+		if ( !( $status instanceof Prb_Numeric ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: __construct $status must be Prb_Numeric' );
 		
 		$headers = is_null( $headers ) ? self::defaultHeaders() : $headers;
 		if ( !( $headers instanceof Prb_Hash ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: __construct $headers an instance of Prb_Hash' );
 		
-		$this->status       = (int)$status;
+		$this->status       = $status;
 		$this->header       = new Prack_Utils_HeaderHash( self::defaultHeaders()->merge( $headers ) );
 		$this->writer       = array( $this, 'onWrite' );
 		$this->callback     = null;
@@ -131,10 +133,14 @@ class Prack_Response
 	*/
 	
 	// TODO: Document!
-	public function redirect( $target, $status = 302 )
+	public function redirect( $target, $status = null )
 	{
 		if ( !( $target instanceof Prb_Interface_Stringable ) )
-			throw new Prb_Exception_Type( 'redirect argument must be Stringable' );
+			throw new Prb_Exception_Type( 'redirect $target must be Prack_Interface_Stringable' );
+		
+		$status = is_null( $status ) ? Prb::_Numeric( 302 ) : $status;
+		if ( !( $status instanceof Prb_Numeric ) )
+			throw new Prb_Exception_Type( 'redirect $status must be Prb_Numeric' );
 		
 		$this->set( 'Location', $target->toS() );
 		$this->status = $status;
@@ -145,19 +151,29 @@ class Prack_Response
 	{
 		$this->callback = $callback;
 		
-		if ( in_array( (int)$this->status, array( 204, 304 ) ) )
+		if ( in_array( (int)$this->status->raw(), array( 204, 304 ) ) )
 		{
 			$this->header->delete( 'Content-Type' );
-			return array( (int)$this->status, $this->header->toHash(), Prb::_Array() );
+			return Prb::_Array( array(
+			  $this->status,
+			  $this->header->toHash(),
+			  Prb::_Array()
+			) );
 		}
 		
-		return array( (int)$this->status, $this->header->toHash(), $this );
+		return Prb::_Array( array( $this->status, $this->header->toHash(), $this ) );
 	}
 	
 	// TODO: Document!
-	public function raw() 
+	public function toA() 
 	{
 		return $this->finish();
+	}
+	
+	// TODO: Document!
+	public function raw()
+	{
+		return $this->toA()->raw();
 	}
 	
 	// TODO: Document!

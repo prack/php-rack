@@ -11,7 +11,7 @@ class Prack_LoggerTest extends PHPUnit_Framework_TestCase
 	public function It_should_log_to_rack_errors()
 	{
 		$middleware_app = new Prack_Test_Echo(
-			200,
+			Prb::_Numeric( 200 ),
 			Prb::_Hash( array( 'Content-Type' ) ),
 			Prb::_Array( array( Prb::_String( 'Hello, World!' ) ) ),
 			'

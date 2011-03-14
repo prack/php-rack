@@ -213,7 +213,7 @@ class Prack_Lint
 		$env->set( 'rack.errors', new Prack_Lint_ErrorWrapper( $env->get( 'rack.errors' ) ) );
 		
 		## and returns an Array of exactly three values:
-		list( $status, $headers, $this->body ) = $this->middleware_app->call( $env );
+		list( $status, $headers, $this->body ) = $this->middleware_app->call( $env )->raw();
 		if ( is_array( $this->body ) )
 			$this->body = Prb::_Array( $this->body ); // Make body OO-enumerable
 		
@@ -230,7 +230,7 @@ class Prack_Lint
 		
 		$this->popAssertOptions();
 		
-		return array( $status, $headers, $this );
+		return Prb::_Array( array( $status, $headers, $this ) );
 	}
 	
 	// TODO: Document!
@@ -509,7 +509,7 @@ class Prack_Lint
 	{
 		## This is an HTTP status. When parsed as integer (+to_i+), it must be
 		## greater than or equal to 100.
-		prack_lint_assert( (int)$status >= 100, 'Status must be >= 100 seen as integer' );
+		prack_lint_assert( $status->raw() >= 100, 'Status must be >= 100 seen as integer' );
 	}
 	
 	// TODO: Document!
@@ -571,13 +571,13 @@ class Prack_Lint
 			## given.
 			if ( strtolower( $key ) == 'content-type' )
 			{
-				prack_lint_assert( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( (int)$status ),
-				                   "Content-Type header found in {$status} response, not allowed" );
+				prack_lint_assert( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( (int)$status->raw() ),
+				                   "Content-Type header found in {$status->raw()} response, not allowed" );
 				return;
 			}
 		}
 		
-		prack_lint_assert( Prack_Utils::singleton()->statusWithNoEntityBody()->contains( (int)$status ),
+		prack_lint_assert( Prack_Utils::singleton()->statusWithNoEntityBody()->contains( $status->raw() ),
 		                   "No Content-Type header found" );
 	}
 	
@@ -591,8 +591,8 @@ class Prack_Lint
 			## +Status+ is 1xx, 204 or 304.
 			if ( strtolower( $key ) == 'content-length' )
 			{
-				prack_lint_assert( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( (int)$status ),
-				                   "Content-Length header found in {$status} response, not allowed" );
+				prack_lint_assert( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( $status->raw() ),
+				                   "Content-Length header found in {$status->raw()} response, not allowed" );
 				$this->content_length = $value;
 			}
 		}

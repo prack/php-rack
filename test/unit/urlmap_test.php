@@ -8,7 +8,7 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 	static function appWithEval( $eval )
 	{
 		return new Prack_Test_Echo(
-		  200,
+		  Prb::_Numeric( 200 ),
 		  Prb::_Hash(),
 		  Prb::_Array( array( Prb::_String() ) ),
 		  $eval
@@ -270,14 +270,14 @@ class Prack_URLMapTest extends PHPUnit_Framework_TestCase
 		    '/' => self::appWithEval('
 		      $this->headers->set( "Content-Type", Prb::_String( "text/plain" ) );
 		      $this->headers->set( "X-Position",   Prb::_String( "root"       ) );
-		      $this->headers->set( "X-PathInfo",   $env->get( "PATH_INFO"   )     );
-		      $this->headers->set( "X-ScriptName", $env->get( "SCRIPT_NAME" )     );
+		      $this->headers->set( "X-PathInfo",   $env->get( "PATH_INFO"   )   );
+		      $this->headers->set( "X-ScriptName", $env->get( "SCRIPT_NAME" )   );
 		    '),
 		    '/foo' => self::appWithEval('
 		      $this->headers->set( "Content-Type", Prb::_String( "text/plain" ) );
 		      $this->headers->set( "X-Position",   Prb::_String( "foo"        ) );
-		      $this->headers->set( "X-PathInfo",   $env->get( "PATH_INFO"   )     );
-		      $this->headers->set( "X-ScriptName", $env->get( "SCRIPT_NAME" )     );
+		      $this->headers->set( "X-PathInfo",   $env->get( "PATH_INFO"   )   );
+		      $this->headers->set( "X-ScriptName", $env->get( "SCRIPT_NAME" )   );
 		    '),
 		  ) )
 		);

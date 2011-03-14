@@ -112,17 +112,30 @@ class Prack_URLMap
 				);
 				
 				// Call the middleware the entry refers to, providing it the newly modified environment.
-				return $mapping_middleware_app->call( $env );
+				$return = $mapping_middleware_app->call( $env );
+				
+				$return->get( 1 )
+				  ->mergeInPlace(
+				    Prb::_Hash( array( 
+				      'PATH_INFO'   => $env_path,
+				      'SCRIPT_NAME' => $env_script_name
+				    ) )
+				  );
+				
+				return $return;
 			}
 			
-			return array(
-			  404,
+			return Prb::_Array( array(
+			  Prb::_Numeric( 404 ),
 			  Prb::_Hash( array(
 			    'Content-Type' => Prb::_String( 'text/html' ),
 			    'X-Cascade'    => Prb::_String( 'pass' ),
-			  ) ),
+			  ) )->mergeInPlace( Prb::_Hash( array( 
+			    'PATH_INFO'   => $env_path,
+			    'SCRIPT_NAME' => $env_script_name
+			  ) ) ),
 			  Prb::_Array( array( Prb::_String( "Not Found: {$env_path->raw()}" ) ) )
-			);
+			) );
 		}
 		catch ( Exception $e )
 		{

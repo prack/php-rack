@@ -257,7 +257,7 @@ class Prack_Mock_Request
 		$env    = self::envFor( $uri, $options );
 		$errors = $env->get( 'rack.errors' );
 		
-		list( $status, $headers, $body ) = $middleware_app->call( $env );
+		list( $status, $headers, $body ) = $middleware_app->call( $env )->raw();
 		
 		return new Prack_Mock_Response( $status, $headers, $body, $errors );
 	}

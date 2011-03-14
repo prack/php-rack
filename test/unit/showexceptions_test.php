@@ -21,7 +21,7 @@ class Prack_ShowExceptionsTest extends PHPUnit_Framework_TestCase
 		$mock_response = $mock_request->get( Prb::_String( '/' ) );
 		
 		$this->assertTrue( $mock_response->isServerError() );
-		$this->assertEquals( 500, $mock_response->getStatus() );
+		$this->assertEquals( 500, $mock_response->getStatus()->raw() );
 		
 		$this->assertTrue( $mock_response->match( '/RuntimeException/' ) );
 		$this->assertTrue( $mock_response->match( '/ShowExceptions/'   ) );

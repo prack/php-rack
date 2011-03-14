@@ -44,14 +44,14 @@ class Prack_ShowExceptions
 		{ 
 			$backtrace = $this->pretty( $env, $e );
 			
-			return array(
-			  500, 
+			return Prb::_Array( array(
+			  Prb::_Numeric( 500 ),
 			  Prb::_Hash( array(
 			    'Content-Type'   => Prb::_String( 'text/html' ),
-			    'Content-Length' => Prb::_String( (string)($backtrace->join()->size()) )
+			    'Content-Length' => Prb::_String( (string)( $backtrace->join()->size() ) )
 			  ) ),
 			  $backtrace
-			);
+			) );
 		}
 		return $response;
 	}

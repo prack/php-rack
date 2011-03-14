@@ -60,9 +60,9 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Response::with();
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->toA()->raw();
 		
-		$this->assertEquals( 200, $status );
+		$this->assertEquals( 200, $status->raw() );
 		$this->assertEquals( array( 'Content-Type' => Prb::_String( 'text/html' ) ),
 		                     $headers->raw() );
 		
@@ -82,13 +82,13 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'writeToResponse' );
 		
-		$response = Prack_Response::with( null, 200, Prb::_Hash(), $callback );
+		$response = Prack_Response::with( null, null, null, $callback );
 		$response->write( Prb::_String( 'foo' ) );
 		$response->write( Prb::_String( 'bar' ) );
 		$response->write( Prb::_String( 'baz' ) );
 		$response->finish();
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->toA()->raw();
 		
 		$this->parts = Prb::_Array();
 		$body->each( array( $this, 'addToParts' ) );
@@ -255,16 +255,16 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$response = new Prack_Response();
 		$response->redirect( Prb::_String( '/foo' ) );
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->toA()->raw();
 		
-		$this->assertEquals( 302, $status );
+		$this->assertEquals( 302, $status->raw() );
 		$this->assertEquals( '/foo', $response->get( 'Location' )->raw() );
 		
 		$response = new Prack_Response();
-		$response->redirect( Prb::_String( '/foo' ), 307 );
+		$response->redirect( Prb::_String( '/foo' ), Prb::_Numeric( 307 ) );
 		list( $status, $headers, $body ) = $response->raw();
 		
-		$this->assertEquals( 307, $status );
+		$this->assertEquals( 307, $status->raw() );
 	} // It can do redirects
 	
 	/**
@@ -277,7 +277,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$callback = array( $this, 'addToBuffer' );
 		
 		$response = new Prack_Response( Prb::_String( 'foo' ) );
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->toA()->raw();
 		$this->buffer = Prb::_String();
 		$body->each( $callback );
 		$this->assertEquals( Prb::_String( 'foo' ), $this->buffer );
@@ -307,11 +307,11 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$body->each( $callback );
 		$this->assertEquals( 'foobar', $this->buffer->raw() );
 		
-		$response = new Prack_Response( Prb::_Array(), 500 );
-		$this->assertEquals( 500, $response->getStatus() );
+		$response = new Prack_Response( Prb::_Array(), Prb::_Numeric( 500 ) );
+		$this->assertEquals( 500, $response->getStatus()->raw() );
 		
-		$response = new Prack_Response( Prb::_Array(), "200 OK" );
-		$this->assertEquals( 200, $response->getStatus() );
+		$response = new Prack_Response( Prb::_Array(), Prb::_String( "200 OK" ) );
+		$this->assertEquals( 200, $response->getStatus()->raw() );
 	} // It has a useful constructor
 	
 	/**
@@ -323,17 +323,17 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'configureResponse' );
 		$response = Prack_Response::with(
-			Prb::_String(), 200, Prb::_Hash(), $callback
+			null, null, null, $callback
 		);
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->toA()->raw();
 		
 		$callback = array( $this, 'addToBuffer' );
 		$this->buffer = Prb::_String();
 		$body->each( $callback );
 		
 		$this->assertEquals( 'foo', $this->buffer->raw() );
-		$this->assertEquals( 404, $response->getStatus() );
+		$this->assertEquals( 404, $response->getStatus()->raw() );
 	} // It has a constructor that can take a callback
 	
 	/**
@@ -341,7 +341,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	 */
 	public function configureResponse( $response )
 	{
-		$response->setStatus( 404 );
+		$response->setStatus( Prb::_Numeric( 404 ) );
 		$response->write( Prb::_String( 'foo' ) );
 	}
 	
@@ -357,10 +357,10 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 				Prb::_String( 'foo' ),
 				Prb::_String( 'bar' )
 			) ),
-			204
+			Prb::_Numeric( 204 )
 		);
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->toA()->raw();
 		
 		$callback = array( $this, 'addToBuffer' );
 		$this->buffer = Prb::_String();
@@ -402,20 +402,20 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	public function It_should_provide_access_to_the_HTTP_status()
 	{
 		$response = new Prack_Response();
-		$response->setStatus( 200 );
+		$response->setStatus( Prb::_Numeric( 200 ) );
 		$this->assertTrue( $response->isSuccessful() );
 		$this->assertTrue( $response->isOK() );
 		
-		$response->setStatus( 404 );
+		$response->setStatus( Prb::_Numeric( 404 ) );
 		$this->assertFalse( $response->isSuccessful() );
 		$this->assertTrue( $response->isClientError() );
 		$this->assertTrue( $response->isNotFound() );
 		
-		$response->setStatus( 501 );
+		$response->setStatus( Prb::_Numeric( 501 ) );
 		$this->assertFalse( $response->isSuccessful() );
 		$this->assertTrue( $response->isServerError() );
 		
-		$response->setStatus( 307 );
+		$response->setStatus( Prb::_Numeric( 307 ) );
 		$this->assertTrue( $response->isRedirect() );
 	} // It should provide access to the HTTP status
 	
@@ -445,12 +445,12 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	public function It_does_not_add_or_change_Content_Length_within_finish()
 	{
 		$response = new Prack_Response();
-		$response->setStatus( 200 );
+		$response->setStatus( Prb::_Numeric( 200 ) );
 		$response->finish();
 		$this->assertNull( $response->get( 'Content-Length' ) );
 		
 		$response = new Prack_Response();
-		$response->setStatus( 200 );
+		$response->setStatus( Prb::_Numeric( 200 ) );
 		$response->set( 'Content-Length', Prb::_String( '10' ) );
 		$response->finish();
 		$this->assertEquals( Prb::_String( '10' ), $response->get( 'Content-Length' ) );
@@ -464,7 +464,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	public function It_updates_Content_Length_when_body_appended_to_using_write()
 	{
 		$response = new Prack_Response();
-		$response->setStatus( 200 );
+		$response->setStatus( Prb::_Numeric( 200 ) );
 		$this->assertNull( $response->get( 'Content-Length' ) );
 		$response->write( Prb::_String( 'Hi' ) );
 		$this->assertEquals( '2', $response->get( 'Content-Length' )->raw() );

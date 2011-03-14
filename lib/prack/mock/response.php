@@ -47,17 +47,23 @@ class Prack_Mock_Response
 	// TODO: Document!
 	function __construct( $status, $headers, $body, $errors = null )
 	{
+		$status = is_null( $status ) ? Prb::_Numeric() : $status;
+		if ( !( $status instanceof Prb_Numeric ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: mock request $status must be Prb_Numeric' );
+		
 		$headers = is_null( $headers ) ? Prb::_Hash() : $headers;
 		if ( !( $headers instanceof Prb_Hash ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: mock request $headers must be Prb_Hash' );
+		
 		$body = is_null( $body ) ? Prb::_String() : $body;
 		if ( !( $body instanceof Prb_Interface_Stringable ) && !( $body instanceof Prb_Interface_Enumerable ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: mock request $body must be Prb_Interface_Stringable or Prb_Interface_Enumerable' );
+		
 		$errors = is_null( $errors ) ? Prb_IO::withString() : $errors;
 		if ( !( $errors instanceof Prb_Interface_WritableStreamlike ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: mock request $errors must be Prack_Writable_Streamlike' );
 		
-		$this->status           = (int)$status;
+		$this->status           = $status;
 		$this->original_headers = $headers;
 		$this->headers          = Prack_Utils_HeaderHash::using( Prb::_Hash() );
 		

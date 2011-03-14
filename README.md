@@ -67,7 +67,6 @@ To Do
 * Prack Attack (Rack Lobster analog)
 * E-tag generation
 * Actual implementation of HTTP auth (basic, digest, etc.) and other essential middleware
-* HTTP request method override middleware
 * Everything else in Ruby Rack :)
 
 
@@ -116,7 +115,7 @@ Prack_Builder is the what you use to set up an application stack:
 	    ->run( new EchoServer() )
 	->toMiddlewareApp();
 	
-	list( $status, $headers, $body ) = $domain->call( $env );
+	list( $status, $headers, $body ) = $domain->call( $env )->raw();
 
 Note: Prack_Builder supports nested mapping, just like Ruby Rack.
 
@@ -154,7 +153,7 @@ HTTPAuthenticate middleware app:
 		
 		public function call( $env )
 		{
-			$auth_header = $env->get( 'HTTP_AUTHORIZATION' ); // This would, in actuality, take more work.
+			$auth_header = $env->get( 'HTTP_AUTHORIZATION' );
 			
 			// ... process credentials into:
 			$username = 'admin';  /* username should obviously be extracted from the request. */
@@ -166,22 +165,22 @@ HTTPAuthenticate middleware app:
 				throw new Prb_Exception_Callback( "Can't call http auth callback." );
 			
 			if ( !$authorized )
-				return array(
-				  401,
+				return Prb::_Array( array(
+				  Prb::_Numeric( 401 ),
 				  Prb::_Hash( array( 'WWW-Authenticate' => /* header */ ) ),
 				  Prb::_String( 'Unauthorized' );
-				);
+				) );
 			
 			// And finally, if they're authorized, forward the request to the enclosed app,
-			// returning its value as an array of:
-			//   1.                      (int)$status
+			// returning its value as an Prb_Array of:
+			//   1.              (Prb_Numeric)$status
 			//   2.                 (Prb_Hash)$headers
 			//   3. (Prb_Interface_Enumerable)$body    // Body can also be Prb_Interface_Stringable
-			list( $status, $headers, $body ) = $this->app->call( $env );
+			list( $status, $headers, $body ) = $this->app->call( $env )->raw();
 			
-			// Note that it's possible to modify the response here if you want, on its way 'out.'
+			// Modify $status, $headers, or $body as you see fit here.
 			
-			return array( $status, $headers, $body );
+			return Prb::_Array( array( $status, $headers, $body ) );
 		}
 	}
 
@@ -195,7 +194,7 @@ The middleware configuration class might look like this:
 		}
 	}
 
-If all this confuses you, grok the [Rack spec](http://rack.rubyforge.org/doc/SPEC.html "Web Server Interface Specification").
+If all this confuses you, grok the [Rack spec](http://rack.rubyforge.org/doc/SPEC.html "Rack Interface Specification").
 Prack works exactly the same way, even in the environment variable names it uses.
 
 
