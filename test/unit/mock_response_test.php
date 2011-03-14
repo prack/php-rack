@@ -56,10 +56,10 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 		$original_headers = $mock_response->getOriginalHeaders();
 
 		$this->assertTrue( $mock_response->contains( 'Content-Type' ) );
-		$this->assertEquals( 'text/yaml', $mock_response->getHeaders()->get( 'Content-Type' )->toN() );
-		$this->assertEquals( 'text/yaml', $original_headers->get( 'Content-Type' )->toN() );
-		$this->assertEquals( 'text/yaml', $mock_response->get( 'Content-Type' )->toN() );
-		$this->assertEquals( 'text/yaml', $mock_response->contentType()->toN() );
+		$this->assertEquals( 'text/yaml', $mock_response->getHeaders()->get( 'Content-Type' )->raw() );
+		$this->assertEquals( 'text/yaml', $original_headers->get( 'Content-Type' )->raw() );
+		$this->assertEquals( 'text/yaml', $mock_response->get( 'Content-Type' )->raw() );
+		$this->assertEquals( 'text/yaml', $mock_response->contentType()->raw() );
 		$this->assertGreaterThanOrEqual( 0, $mock_response->contentLength() );
 		$this->assertNull( $mock_response->location() );
 	} // It should provide access to the HTTP headers
@@ -111,12 +111,12 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 			Prb::_Hash( array( 'fatal' => true ) )
 		);
 		
-		$env = unserialize( $mock_response->getBody()->toN() );
+		$env = unserialize( $mock_response->getBody()->raw() );
 		
 		// Cheating for coverage:
 		$mock_response->setErrors( $env->get( 'rack.errors' ) );
 		$env->get( 'rack.errors' )->flush();
-		$this->assertEquals( '', $env->get( 'rack.errors' )->string()->toN() );
+		$this->assertEquals( '', $env->get( 'rack.errors' )->string()->raw() );
 		
 		$this->setExpectedException( 'Prack_Exception_Mock_Response_FatalWarning' );
 		$env->get( 'rack.errors' )->write( Prb::_String( 'Error 1' ) );
@@ -135,7 +135,7 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 			Prb::_Hash( array( 'fatal' => true ) )
 		);
 		
-		$env = unserialize( $mock_response->getBody()->toN() );
+		$env = unserialize( $mock_response->getBody()->raw() );
 		
 		$this->setExpectedException( 'Prack_Exception_Mock_Response_FatalWarning' );
 		$env->get( 'rack.errors' )->puts( Prb::_String( 'Error 2' ) );

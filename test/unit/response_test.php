@@ -60,16 +60,16 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Response::with();
 		
-		list( $status, $headers, $body ) = $response->toN();
+		list( $status, $headers, $body ) = $response->raw();
 		
 		$this->assertEquals( 200, $status );
 		$this->assertEquals( array( 'Content-Type' => Prb::_String( 'text/html' ) ),
-		                     $headers->toN() );
+		                     $headers->raw() );
 		
 		$this->parts = Prb::_Array();
 		$body->each( array( $this, 'addToParts' ) );
 		
-		foreach ( $this->parts->toN() as $part )
+		foreach ( $this->parts->raw() as $part )
 			$this->assertTrue( $part->isEmpty() );
 	} // It should have sensible default values
 	
@@ -88,7 +88,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$response->write( Prb::_String( 'baz' ) );
 		$response->finish();
 		
-		list( $status, $headers, $body ) = $response->toN();
+		list( $status, $headers, $body ) = $response->raw();
 		
 		$this->parts = Prb::_Array();
 		$body->each( array( $this, 'addToParts' ) );
@@ -97,7 +97,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 			Prb::_String( 'foo' ), Prb::_String( 'bar' ), Prb::_String( 'baz' )
 		);
 		
-		$this->assertEquals( $expected, $this->parts->toN() );
+		$this->assertEquals( $expected, $this->parts->raw() );
 	} // It can be written to
 	
 	/**
@@ -108,9 +108,9 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	public function It_can_set_and_read_headers()
 	{
 		$response = new Prack_Response();
-		$this->assertEquals( 'text/html', $response->get( 'Content-Type' )->toN() );
+		$this->assertEquals( 'text/html', $response->get( 'Content-Type' )->raw() );
 		$response->set( 'Content-Type', Prb::_String( 'text/plain' ) );
-		$this->assertEquals( 'text/plain', $response->get( 'Content-Type' )->toN() );
+		$this->assertEquals( 'text/plain', $response->get( 'Content-Type' )->raw() );
 	} // It can set and read headers
 	
 	/**
@@ -255,14 +255,14 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$response = new Prack_Response();
 		$response->redirect( Prb::_String( '/foo' ) );
-		list( $status, $headers, $body ) = $response->toN();
+		list( $status, $headers, $body ) = $response->raw();
 		
 		$this->assertEquals( 302, $status );
-		$this->assertEquals( '/foo', $response->get( 'Location' )->toN() );
+		$this->assertEquals( '/foo', $response->get( 'Location' )->raw() );
 		
 		$response = new Prack_Response();
 		$response->redirect( Prb::_String( '/foo' ), 307 );
-		list( $status, $headers, $body ) = $response->toN();
+		list( $status, $headers, $body ) = $response->raw();
 		
 		$this->assertEquals( 307, $status );
 	} // It can do redirects
@@ -277,7 +277,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$callback = array( $this, 'addToBuffer' );
 		
 		$response = new Prack_Response( Prb::_String( 'foo' ) );
-		list( $status, $headers, $body ) = $response->toN();
+		list( $status, $headers, $body ) = $response->raw();
 		$this->buffer = Prb::_String();
 		$body->each( $callback );
 		$this->assertEquals( Prb::_String( 'foo' ), $this->buffer );
@@ -289,10 +289,10 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 			)
 		) );
 		
-		list( $status, $headers, $body ) = $response->toN();
+		list( $status, $headers, $body ) = $response->raw();
 		$this->buffer = Prb::_String();
 		$body->each( $callback );
-		$this->assertEquals( 'foobar', $this->buffer->toN() );
+		$this->assertEquals( 'foobar', $this->buffer->raw() );
 		
 		$response = new Prack_Response(
 			new Prack_ResponseTest_Iterator( 
@@ -302,10 +302,10 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		 		) )
 		) );
 		
-		list( $status, $headers, $body ) = $response->toN();
+		list( $status, $headers, $body ) = $response->raw();
 		$this->buffer = Prb::_String();
 		$body->each( $callback );
-		$this->assertEquals( 'foobar', $this->buffer->toN() );
+		$this->assertEquals( 'foobar', $this->buffer->raw() );
 		
 		$response = new Prack_Response( Prb::_Array(), 500 );
 		$this->assertEquals( 500, $response->getStatus() );
@@ -326,13 +326,13 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 			Prb::_String(), 200, Prb::_Hash(), $callback
 		);
 		
-		list( $status, $headers, $body ) = $response->toN();
+		list( $status, $headers, $body ) = $response->raw();
 		
 		$callback = array( $this, 'addToBuffer' );
 		$this->buffer = Prb::_String();
 		$body->each( $callback );
 		
-		$this->assertEquals( 'foo', $this->buffer->toN() );
+		$this->assertEquals( 'foo', $this->buffer->raw() );
 		$this->assertEquals( 404, $response->getStatus() );
 	} // It has a constructor that can take a callback
 	
@@ -360,7 +360,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 			204
 		);
 		
-		list( $status, $headers, $body ) = $response->toN();
+		list( $status, $headers, $body ) = $response->raw();
 		
 		$callback = array( $this, 'addToBuffer' );
 		$this->buffer = Prb::_String();
@@ -430,9 +430,9 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$response->set( 'Content-Type', Prb::_String( 'text/yaml' ) );
 		
 		$this->assertTrue( $response->contains( 'Content-Type' ) );
-		$this->assertEquals( 'text/yaml', $response->getHeaders()->get( 'Content-Type' )->toN() );
-		$this->assertEquals( 'text/yaml', $response->get( 'Content-Type' )->toN() );
-		$this->assertEquals( 'text/yaml', $response->contentType()->toN() );
+		$this->assertEquals( 'text/yaml', $response->getHeaders()->get( 'Content-Type' )->raw() );
+		$this->assertEquals( 'text/yaml', $response->get( 'Content-Type' )->raw() );
+		$this->assertEquals( 'text/yaml', $response->contentType()->raw() );
 		$this->assertNull( $response->contentLength() );
 		$this->assertNull( $response->location() );
 	} // It should provide access to the HTTP headers
@@ -467,9 +467,9 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$response->setStatus( 200 );
 		$this->assertNull( $response->get( 'Content-Length' ) );
 		$response->write( Prb::_String( 'Hi' ) );
-		$this->assertEquals( '2', $response->get( 'Content-Length' )->toN() );
+		$this->assertEquals( '2', $response->get( 'Content-Length' )->raw() );
 		$response->write( Prb::_String( ' there' ) );
-		$this->assertEquals( '8', $response->get( 'Content-Length' )->toN() );
+		$this->assertEquals( '8', $response->get( 'Content-Length' )->raw() );
 	} // It updates Content-Length when body appended to using write
 	
 	/**

@@ -50,11 +50,11 @@ class Prack_URLMap
 		else
 			$host = null;
 		
-		if ( $location->slice( 0 )->toN() != '/' )
+		if ( $location->slice( 0 )->raw() != '/' )
 			throw new Prb_Exception_Argument( 'paths need to start with /' );
 		
 		$location   = $location->chomp( Prb::_String( '/' ) );
-		$normalized = preg_replace( '/\//', '\/+', preg_quote( $location->toN() ) );
+		$normalized = preg_replace( '/\//', '\/+', preg_quote( $location->raw() ) );
 		$pattern    = "/\A{$normalized}(.*)/";
 		
 		return Prb::_Array( array(
@@ -74,23 +74,23 @@ class Prack_URLMap
 		
 		try
 		{
-			foreach ( $this->mapping->toN() as $mapping )
+			foreach ( $this->mapping->raw() as $mapping )
 			{
-				list( $mapping_host, $mapping_location, $mapping_matcher, $mapping_middleware_app ) = $mapping->toN();
+				list( $mapping_host, $mapping_location, $mapping_matcher, $mapping_middleware_app ) = $mapping->raw();
 				
 				// All the conditions for which we'd consider the request host as a 'match':
 				$host_viable = $mapping_host    == $env_http_host ||
 				               $env_server_name == $env_http_host ||
 				               ( is_null( $mapping_host ) &&
-				                      ( $env_http_host->toN() == $env_server_name->toN() ||
-				                        $env_http_host->toN() == $env_server_name->toN().':'.$env_server_port->toN() ) );
+				                      ( $env_http_host->raw() == $env_server_name->raw() ||
+				                        $env_http_host->raw() == $env_server_name->raw().':'.$env_server_port->raw() ) );
 				
 				// Skip the current entry if none of these strategies evaluate to true:
 				if ( !$host_viable )
 					continue;
 				
 				// Each entry has a regex pattern to match against. Check if the request URI matches:
-				if ( !( preg_match_all( $mapping_matcher, $env_path->toN(), $matches ) > 0 ) )
+				if ( !( preg_match_all( $mapping_matcher, $env_path->raw(), $matches ) > 0 ) )
 					continue;
 				
 				// If the request URI matches, the remainder (i.e. $match[ 1 ]) should start with a '/':
@@ -106,7 +106,7 @@ class Prack_URLMap
 				// Note that any query string won't make it into PATH_INFO because the web server will put it in QUERY_STRING.
 				$env->mergeInPlace(
 				  Prb::_Hash( array(
-				    'SCRIPT_NAME' => Prb::_String( $env_script_name->toN().$mapping_location->toN() ),
+				    'SCRIPT_NAME' => Prb::_String( $env_script_name->raw().$mapping_location->raw() ),
 				    'PATH_INFO'   => Prb::_String( $matches[ 1 ][ 0 ] )
 				  ) )
 				);
@@ -121,7 +121,7 @@ class Prack_URLMap
 			    'Content-Type' => Prb::_String( 'text/html' ),
 			    'X-Cascade'    => Prb::_String( 'pass' ),
 			  ) ),
-			  Prb::_Array( array( Prb::_String( "Not Found: {$env_path->toN()}" ) ) )
+			  Prb::_Array( array( Prb::_String( "Not Found: {$env_path->raw()}" ) ) )
 			);
 		}
 		catch ( Exception $e )

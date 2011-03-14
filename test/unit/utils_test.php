@@ -10,10 +10,10 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_escape_correctly()
 	{
-		$this->assertEquals( 'fo%3Co%3Ebar', Prack_Utils::singleton()->escape( Prb::_String( 'fo<o>bar' ) )->toN() );
-		$this->assertEquals( 'a+space', Prack_Utils::singleton()->escape( Prb::_String( 'a space' ) )->toN() );
+		$this->assertEquals( 'fo%3Co%3Ebar', Prack_Utils::singleton()->escape( Prb::_String( 'fo<o>bar' ) )->raw() );
+		$this->assertEquals( 'a+space', Prack_Utils::singleton()->escape( Prb::_String( 'a space' ) )->raw() );
 		$this->assertEquals( 'q1%212%22%27w%245%267%2Fz8%29%3F%5C',
-		                     Prack_Utils::singleton()->escape( Prb::_String( "q1!2\"'w$5&7/z8)?\\" ) )->toN() );
+		                     Prack_Utils::singleton()->escape( Prb::_String( "q1!2\"'w$5&7/z8)?\\" ) )->raw() );
 		
 	} // It should escape correctly
 	
@@ -40,11 +40,11 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_unescape_correctly()
 	{
-		$this->assertEquals( 'fo<o>bar', Prack_Utils::singleton()->unescape( Prb::_String( 'fo%3Co%3Ebar' ) )->toN() );
-		$this->assertEquals( 'a space', Prack_Utils::singleton()->unescape( Prb::_String( 'a+space' ) )->toN() );
-		$this->assertEquals( 'a space', Prack_Utils::singleton()->unescape( Prb::_String( 'a%20space' ) )->toN() );
+		$this->assertEquals( 'fo<o>bar', Prack_Utils::singleton()->unescape( Prb::_String( 'fo%3Co%3Ebar' ) )->raw() );
+		$this->assertEquals( 'a space', Prack_Utils::singleton()->unescape( Prb::_String( 'a+space' ) )->raw() );
+		$this->assertEquals( 'a space', Prack_Utils::singleton()->unescape( Prb::_String( 'a%20space' ) )->raw() );
 		$this->assertEquals( "q1!2\"'w$5&7/z8)?\\",
-		                     Prack_Utils::singleton()->unescape( Prb::_String( 'q1%212%22%27w%245%267%2Fz8%29%3F%5C' ) )->toN() );
+		                     Prack_Utils::singleton()->unescape( Prb::_String( 'q1%212%22%27w%245%267%2Fz8%29%3F%5C' ) )->raw() );
 	} // It should unescape correctly
 	
 	/**
@@ -55,17 +55,17 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 	public function It_should_parse_query_strings_correctly()
 	{
 		$this->assertEquals( array( 'foo' => Prb::_String( 'bar' ) ),
-		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo=bar' ) )->toN() );
+		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo=bar' ) )->raw() );
 		$this->assertEquals( array( 'foo' => Prb::_String( '"bar"' ) ),
-		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo="bar"' ) )->toN() );
+		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo="bar"' ) )->raw() );
 		$this->assertEquals( array( 'foo' => Prb::_Array( Prb::_String( 'bar' ), Prb::_String( 'quux' ) ) ),
-		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo=bar&foo=quux' ) )->toN() );
+		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo=bar&foo=quux' ) )->raw() );
 		$this->assertEquals( array( 'foo' => Prb::_String( '1' ), 'bar' => Prb::_String( '2' ) ),
-		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo=1&bar=2' ) )->toN() );
+		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo=1&bar=2' ) )->raw() );
 		$this->assertEquals( array( 'my weird field' => Prb::_String( "q1!2\"'w$5&7/z8)?" ) ),
-		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'my+weird+field=q1%212%22%27w%245%267%2Fz8%29%3F' ) )->toN() );
+		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'my+weird+field=q1%212%22%27w%245%267%2Fz8%29%3F' ) )->raw() );
 		$this->assertEquals( array( 'foo=baz' => Prb::_String( 'bar' ) ),
-		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo%3Dbaz=bar' ) )->toN() );
+		                     Prack_Utils::singleton()->parseQuery( Prb::_String( 'foo%3Dbaz=bar' ) )->raw() );
 	} // It should parse query strings correctly
 	
 	/**
@@ -320,7 +320,7 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		  'foo=bar',
 		  Prack_Utils::singleton()->buildQuery(
 		    Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) )
-		  )->toN()
+		  )->raw()
 		);
 		$this->assertEquals(
 		  'foo=bar&foo=quux',
@@ -331,7 +331,7 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		        Prb::_String( 'quux' )
 		      ) )
 		    ) )
-		  )->toN()
+		  )->raw()
 		);
 		$this->assertEquals(
 		  'my+weird+field=q1%212%22%27w%245%267%2Fz8%29%3F',
@@ -339,7 +339,7 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		    Prb::_Hash( array(
 		      'my weird field' => Prb::_String( "q1!2\"'w$5&7/z8)?" )
 		    ) )
-		  )->toN()
+		  )->raw()
 		);
 	} // It should build query strings correctly
 	
@@ -354,19 +354,19 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		  'foo',
 		  Prack_Utils::singleton()->buildNestedQuery(
 		    Prb::_Hash( array( 'foo' => null ) )
-		  )->toN()
+		  )->raw()
 		);
 		$this->assertEquals(
 		  'foo=',
 		  Prack_Utils::singleton()->buildNestedQuery(
 		    Prb::_Hash( array( 'foo' => Prb::_String() ) )
-		  )->toN()
+		  )->raw()
 		);
 		$this->assertEquals(
 		  'foo=bar',
 		  Prack_Utils::singleton()->buildNestedQuery(
 		    Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) )
-		  )->toN()
+		  )->raw()
 		);
 		
 		$this->assertEquals(
@@ -376,7 +376,7 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		      'foo' => Prb::_String( '1' ),
 		      'bar' => Prb::_String( '2' )
 		    ) )
-		  )->toN()
+		  )->raw()
 		);
 		$this->assertEquals(
 		  'my+weird+field=q1%212%22%27w%245%267%2Fz8%29%3F',
@@ -384,7 +384,7 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		    Prb::_Hash( array(
 		      'my weird field' => Prb::_String( "q1!2\"'w$5&7/z8)?" ),
 		    ) )
-		  )->toN()
+		  )->raw()
 		);
 		
 		$this->assertEquals(
@@ -393,7 +393,7 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		    Prb::_Hash( array(
 		      'foo' => Prb::_Array( array( null ) ),
 		    ) )
-		  )->toN()
+		  )->raw()
 		);
 		$this->assertEquals(
 		  'foo[]=',
@@ -401,7 +401,7 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		    Prb::_Hash( array(
 		      'foo' => Prb::_Array( array( Prb::_String() ) ),
 		    ) )
-		  )->toN()
+		  )->raw()
 		);
 		$this->assertEquals(
 		  'foo[]=bar',
@@ -409,7 +409,7 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		    Prb::_Hash( array(
 		      'foo' => Prb::_Array( array( Prb::_String( 'bar' ) ) ),
 		    ) )
-		  )->toN()
+		  )->raw()
 		);
 		
 		# Test that build_nested_query performs the inverse

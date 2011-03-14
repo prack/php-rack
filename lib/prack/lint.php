@@ -226,7 +226,7 @@ class Prack_Lint
 		## and the *body*.
 		$this->checkContentType( $status, $headers );
 		$this->checkContentLength( $status, $headers );
-		$this->head_request = ( $env->get( 'REQUEST_METHOD' )->toN() == 'HEAD' );
+		$this->head_request = ( $env->get( 'REQUEST_METHOD' )->raw() == 'HEAD' );
 		
 		$this->popAssertOptions();
 		
@@ -240,8 +240,8 @@ class Prack_Lint
 			prack_lint_assert( $bytes == 0,
 		                     'Response body was given for HEAD request, but should be empty' );
 		else if ( $this->content_length )
-			prack_lint_assert( $this->content_length->toN() == $bytes,
-		                     "Content-Length header was {$this->content_length->toN()}, but should be {$bytes}" );
+			prack_lint_assert( $this->content_length->raw() == $bytes,
+		                     "Content-Length header was {$this->content_length->raw()}, but should be {$bytes}" );
 	}
 	
 	// TODO: Document!
@@ -407,7 +407,7 @@ class Prack_Lint
 		}
 		
 		## The CGI keys (named without a period) must have String values.
-		foreach ( $env->toN() as $key => $value )
+		foreach ( $env->raw() as $key => $value )
 		{
 			if ( strpos( $key, '.' ) )
 				continue;
@@ -427,7 +427,7 @@ class Prack_Lint
 		
 		$url_scheme      = $env->get( 'rack.url_scheme' );
 		$url_scheme_type = is_object( $url_scheme ) ? get_class( $url_scheme ) : gettype( $url_scheme );
-		prack_lint_assert( in_array( $env->get( 'rack.url_scheme' )->toN(), array( 'http', 'https' ) ),
+		prack_lint_assert( in_array( $env->get( 'rack.url_scheme' )->raw(), array( 'http', 'https' ) ),
 		                   "rack.url_scheme unknown: {$url_scheme_type}"
 		);
 		
@@ -439,7 +439,7 @@ class Prack_Lint
 		## * The <tt>REQUEST_METHOD</tt> must be a valid token.
 		$rm_pattern = "/\A[0-9A-Za-z!\#$%&'*+.^_`|~-]+\z/";
 		prack_lint_assert( $env->get( 'REQUEST_METHOD' )->match( $rm_pattern ),
-		                   "REQUEST_METHOD unknown: {$env->get( 'REQUEST_METHOD' )->toN()}" );
+		                   "REQUEST_METHOD unknown: {$env->get( 'REQUEST_METHOD' )->raw()}" );
 		
 		## * The <tt>SCRIPT_NAME</tt>, if non-empty, must start with <tt>/</tt>
 		$sn_pattern = '/\A\//';
@@ -454,7 +454,7 @@ class Prack_Lint
 		## * The <tt>CONTENT_LENGTH</tt>, if given, must consist of digits only.
 		$cl_pattern = '/\A\d+\z/';
 		prack_lint_assert( !$env->contains( 'CONTENT_LENGTH' ) || $env->get( 'CONTENT_LENGTH' )->match( $cl_pattern ),
-		                   "Invalid CONTENT_LENGTH: {$env->get( 'CONTENT_LENGTH' )->toN()}" );
+		                   "Invalid CONTENT_LENGTH: {$env->get( 'CONTENT_LENGTH' )->raw()}" );
 		
 		## * One of <tt>SCRIPT_NAME</tt> or <tt>PATH_INFO</tt> must be
 		##   set.  <tt>PATH_INFO</tt> should be <tt>/</tt> if
@@ -464,7 +464,7 @@ class Prack_Lint
 		                   "One of SCRIPT_NAME or PATH_INFO must be set (make PATH_INFO '/' if SCRIPT_NAME is empty)" );
 		
 		##   <tt>SCRIPT_NAME</tt> never should be <tt>/</tt>, but instead be empty.
-		prack_lint_assert( $env->contains( 'SCRIPT_NAME' ) && $env->get( 'SCRIPT_NAME' )->toN() != '/',
+		prack_lint_assert( $env->contains( 'SCRIPT_NAME' ) && $env->get( 'SCRIPT_NAME' )->raw() != '/',
 		                   "SCRIPT_NAME cannot be '/', make it '' and PATH_INFO '/'" );
 	}
 	
@@ -555,8 +555,8 @@ class Prack_Lint
 		## consisting of lines (for multiple header values, e.g. multiple
 		## <tt>Set-Cookie</tt> values) seperated by "\n".
 		$exploded = $value->split( "/\n/" );
-		foreach ( $exploded->toN() as $key => $value )
-			prack_lint_assert( preg_match( '/[\000-\037]/', $value->toN() ) === 0,
+		foreach ( $exploded->raw() as $key => $value )
+			prack_lint_assert( preg_match( '/[\000-\037]/', $value->raw() ) === 0,
 		                     "invalid header value {$key}: {$value_type}" );
 	}
 	
@@ -564,7 +564,7 @@ class Prack_Lint
 	## === The Content-Type
 	public function checkContentType( $status, $headers )
 	{
-		foreach ( $headers->toN() as $key => $value )
+		foreach ( $headers->raw() as $key => $value )
 		{
 			## There must be a <tt>Content-Type</tt>, except when the
 			## +Status+ is 1xx, 204 or 304, in which case there must be none
@@ -585,7 +585,7 @@ class Prack_Lint
 	## === The Content-Length
 	public function checkContentLength( $status, $headers )
 	{
-		foreach ( $headers->toN() as $key => $value )
+		foreach ( $headers->raw() as $key => $value )
 		{
 			## There must not be a <tt>Content-Length</tt> header when the
 			## +Status+ is 1xx, 204 or 304.

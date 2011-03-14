@@ -85,7 +85,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 		
 		$headerhash->set( 'foo-bar', Prb::_String( 'bizzle' ) );
 		
-		$this->assertEquals( 'bizzle', $headerhash->get( 'FOO-BAR' )->toN() );
+		$this->assertEquals( 'bizzle', $headerhash->get( 'FOO-BAR' )->raw() );
 		$this->assertEquals( 1, $headerhash->length() );
 		$this->assertEquals(
 		  Prb::_Hash( array(
@@ -122,7 +122,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 		    ) )
 		  ) )
 		);
-		$this->assertEquals( array( 'foo' => Prb::_String( "bar\nbaz" ) ), $headerhash->toHash()->toN() );
+		$this->assertEquals( array( 'foo' => Prb::_String( "bar\nbaz" ) ), $headerhash->toHash()->raw() );
 	} // It should convert values to Prb_String when converting to Prb_Hash
 	
 	/**
@@ -137,7 +137,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 		);
 		$replacement = Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) );
 		$headerhash->replace( $replacement );
-		$this->assertEquals( 'bar', $headerhash->get( 'foo' )->toN() );
+		$this->assertEquals( 'bar', $headerhash->get( 'foo' )->raw() );
 	} // It should replace correctly
 	
 	/**
@@ -165,7 +165,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 		$headerhash = Prack_Utils_HeaderHash::using(
 		  Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) )
 		);
-		$this->assertEquals( 'bar', $headerhash->delete( 'Foo' )->toN() );
+		$this->assertEquals( 'bar', $headerhash->delete( 'Foo' )->raw() );
 	} // It should return the deleted value when delete is called on an existing key
 	
 	/**

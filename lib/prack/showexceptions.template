@@ -108,7 +108,7 @@
 <body>
 
 <div id="summary">
-  <h1><?php echo $se->h( get_class( $exception ) ); ?> at <?php echo $this->h( $path->toN() ); ?></h1>
+  <h1><?php echo $se->h( get_class( $exception ) ); ?> at <?php echo $this->h( $path->raw() ); ?></h1>
   <h2><?php echo $se->h( $exception->getMessage() ); ?></h2>
   <table><tr>
     <th>PHP</th>
@@ -118,7 +118,7 @@
     </td>
   </tr><tr>
     <th>Web</th>
-    <td><code><?php echo $se->h( $request->requestMethod() ); ?> <?php echo $se->h( $request->host()->toN().$path->toN() ); ?></code></td>
+    <td><code><?php echo $se->h( $request->requestMethod() ); ?> <?php echo $se->h( $request->host()->raw().$path->raw() ); ?></code></td>
   </tr></table>
 
   <h3>Jump to:</h3>
@@ -133,7 +133,7 @@
 <div id="traceback">
   <h2>Traceback <span>(innermost first)</span></h2>
   <ul class="traceback">
-<?php foreach( $frames->toN() as $frame ): ?>
+<?php foreach( $frames->raw() as $frame ): ?>
       <li class="frame">
         <code><?php echo $se->h( $frame->filename ); ?></code>: in <code><?php echo $se->h( $frame->function ); ?></code>
           
@@ -141,9 +141,9 @@
           <div class="context" id="c<?php echo $se->h( spl_object_hash( $frame ) ); ?>">
               <?php if ( $frame->pre_context ): ?>
               <ol start="<?php echo $se->h( $frame->pre_context_lineno + 1 ); ?>" class="pre-context" id="pre<?php echo $se->h( spl_object_hash( $frame ) ); ?>">
-                <?php foreach ( $frame->pre_context->toN() as $line ): ?>
+                <?php foreach ( $frame->pre_context->raw() as $line ): ?>
                 <li onclick="toggle('pre<?php echo $se->h( spl_object_hash( $frame ) ); ?>', 'post<?php echo $se->h( spl_object_hash( $frame ) ); ?>')">
-                  <?php echo $se->h( $line->toN() ); ?>
+                  <?php echo $se->h( $line->raw() ); ?>
                 </li>
                 <?php endforeach; ?>
               </ol>
@@ -157,9 +157,9 @@
 
               <?php if ( $frame->post_context ): ?>
               <ol start="<?php echo $se->h( $frame->lineno + 1 ); ?>" class="post-context" id="post<?php echo $se->h( spl_object_hash( $frame ) ); ?>">
-                <?php foreach ( $frame->post_context->toN() as $line ): ?>
+                <?php foreach ( $frame->post_context->raw() as $line ): ?>
                 <li onclick="toggle('pre<?php echo $se->h( spl_object_hash( $frame ) ); ?>', 'post<?php echo $se->h( spl_object_hash( $frame ) ); ?>')">
-                  <?php echo $se->h( isset( $line ) ? $line->toN() : '' ); ?>
+                  <?php echo $se->h( isset( $line ) ? $line->raw() : '' ); ?>
                 </li>
                 <?php endforeach; ?>
               </ol>
@@ -187,10 +187,10 @@
           <?php
             $callback = create_function( '$k,$v', 'return Prb::_String( $k );' );
             $sorted   = $request->GET()->sortBy( $callback );
-            foreach( $sorted->toN() as $key => $val ):
+            foreach( $sorted->raw() as $key => $val ):
           ?>
           <tr>
-            <td><?php echo $se->h( $key->toN() ); ?></td>
+            <td><?php echo $se->h( $key->raw() ); ?></td>
             <td class="code"><div><?php echo print_r( $val, true ); ?></div></td>
           </tr>
           <?php endforeach; ?>
@@ -213,10 +213,10 @@
           <?php
             $callback = create_function( '$k,$v', 'return Prb::_String( $k );' );
             $sorted   = $request->POST()->sortBy( $callback );
-            foreach( $sorted->toN() as $key => $val ):
+            foreach( $sorted->raw() as $key => $val ):
           ?>
           <tr>
-            <td><?php echo $se->h( $key->toN() ); ?></td>
+            <td><?php echo $se->h( $key->raw() ); ?></td>
             <td class="code"><div><?php echo print_r( $val, true ); ?></div></td>
           </tr>
           <?php endforeach; ?>
@@ -262,7 +262,7 @@
           <?php
             $callback = create_function( '$k,$v', 'return Prb::_String( $k );' );
             $sorted   = $environment->sortBy( $callback );
-            foreach( $sorted->toN() as $key => $val ):
+            foreach( $sorted->raw() as $key => $val ):
           ?>
           <tr>
             <td><?php echo $se->h( $key ); ?></td>

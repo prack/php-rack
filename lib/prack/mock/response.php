@@ -8,13 +8,13 @@ class Prack_Mock_FatalWarner
 	public function puts()
 	{
 		$args = func_get_args();
-		throw new Prack_Exception_Mock_Response_FatalWarning( $args[ 0 ]->toN() );
+		throw new Prack_Exception_Mock_Response_FatalWarning( $args[ 0 ]->raw() );
 	}
 	
 	// TODO: Document!
 	public function write( $warning )
 	{
-		throw new Prack_Exception_Mock_Response_FatalWarning( $warning->toN() );
+		throw new Prack_Exception_Mock_Response_FatalWarning( $warning->raw() );
 	}
 	
 	// TODO: Document!
@@ -61,7 +61,7 @@ class Prack_Mock_Response
 		$this->original_headers = $headers;
 		$this->headers          = Prack_Utils_HeaderHash::using( Prb::_Hash() );
 		
-		foreach ( $headers->toN() as $key => $values )
+		foreach ( $headers->raw() as $key => $values )
 		{
 			$this->headers->set( $key, $values );
 			if ( is_null( $values ) || $values->isEmpty() )
@@ -106,7 +106,7 @@ class Prack_Mock_Response
 	// TODO: Document!
 	public function match( $pattern, &$matches = null )
 	{
-		return ( preg_match_all( $pattern, $this->body->toN(), $matches ) > 0 );
+		return ( preg_match_all( $pattern, $this->body->raw(), $matches ) > 0 );
 	}
 	
 	// TODO: Document!

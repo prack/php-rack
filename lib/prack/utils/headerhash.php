@@ -22,11 +22,11 @@ class Prack_Utils_HeaderHash extends Prb_Hash
 	// TODO: Document!
 	function __construct( $headers )
 	{
-		parent::__construct( $headers->toN() );
+		parent::__construct( $headers->raw() );
 		
 		$this->names = Prb::_Hash();
 		
-		foreach ( $headers->toN() as $key => $value )
+		foreach ( $headers->raw() as $key => $value )
 			$this->set( $key, $value );
 	}
 	
@@ -83,7 +83,7 @@ class Prack_Utils_HeaderHash extends Prb_Hash
 		$canonical = strtolower( $key );
 		$result    = parent::delete( $this->names->delete( $canonical ) );
 		
-		foreach ( $this->names->toN() as $key => $value )
+		foreach ( $this->names->raw() as $key => $value )
 		{
 			if ( strtolower( $key ) == $canonical )
 				$this->names->delete( $key );
@@ -124,7 +124,7 @@ class Prack_Utils_HeaderHash extends Prb_Hash
 	public function replace( $other )
 	{
 		$this->clear();
-		foreach ( $other->toN() as $key => $value )
+		foreach ( $other->raw() as $key => $value )
 			$this->set( $key, $value );
 		return $this;
 	}

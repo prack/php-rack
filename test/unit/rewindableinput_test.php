@@ -34,7 +34,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	public function It_should_be_creatable_without_a_string()
 	{
 		$this->rewindable_input = Prb_IO::withString( Prb::_String() );
-		$this->assertEquals( '', $this->rewindable_input->read()->toN() );
+		$this->assertEquals( '', $this->rewindable_input->read()->raw() );
 	} // It should be creatable without a string
 	
 	/**
@@ -44,7 +44,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read()
 	{
-		$this->assertEquals( 'hello world', $this->rewindable_input->read()->toN() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->read()->raw() );
 		
 		$this->rewindable_input->close();
 		try
@@ -66,7 +66,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_null()
 	{
-		$this->assertEquals( 'hello world', $this->rewindable_input->read( null )->toN() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->read( null )->raw() );
 	} // It should be able to handle read( null )
 	
 	/**
@@ -76,7 +76,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_length()
 	{
-		$this->assertEquals( 'h', $this->rewindable_input->read( 1 )->toN() );
+		$this->assertEquals( 'h', $this->rewindable_input->read( 1 )->raw() );
 	} // It should be able to handle read( length )
 	
 	/**
@@ -88,7 +88,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$buffer = Prb::_String();
 		$result = $this->rewindable_input->read( 1, $buffer );
-		$this->assertEquals( 'h', $result->toN() );
+		$this->assertEquals( 'h', $result->raw() );
 		$this->assertSame( $buffer, $result );
 	} // It should be able to handle read( length, buffer )
 	
@@ -101,7 +101,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$buffer = Prb::_String();
 		$result = $this->rewindable_input->read( null, $buffer );
-		$this->assertEquals( 'hello world', $result->toN() );
+		$this->assertEquals( 'hello world', $result->raw() );
 		$this->assertSame( $buffer, $result );
 	} // It should be able to handle read( null, buffer )
 	
@@ -114,7 +114,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$this->rewindable_input->read( 1 );
 		$this->rewindable_input->rewind();
-		$this->assertEquals( 'hello world', $this->rewindable_input->read()->toN() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->read()->raw() );
 	} // It should rewind to the beginning when rewind is called
 	
 	/**
@@ -124,7 +124,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_gets()
 	{
-		$this->assertEquals( 'hello world', $this->rewindable_input->gets()->toN() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->gets()->raw() );
 		
 		$this->rewindable_input->close();
 		try
@@ -150,7 +150,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 		
 		$this->lines = Prb::_Array();
 		$this->rewindable_input->each( $callback );
-		$this->assertEquals( array( Prb::_String( 'hello world' ) ), $this->lines->toN() );
+		$this->assertEquals( array( Prb::_String( 'hello world' ) ), $this->lines->raw() );
 		
 		$this->rewindable_input->close();
 		try

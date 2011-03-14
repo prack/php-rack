@@ -1171,9 +1171,9 @@ class Prack_Lint_InputWrapperTest extends PHPUnit_Framework_TestCase
 			Prb_IO::withString( Prb::_String( '123' ) )
 		);
 		
-		$this->assertEquals( '123', $wrapper->read()->toN() );
-		$this->assertEquals(    '', $wrapper->read()->toN() );
+		$this->assertEquals( '123', $wrapper->read()->raw() );
+		$this->assertEquals(    '', $wrapper->read()->raw() );
 		$wrapper->rewind();
-		$this->assertEquals( '123', $wrapper->read()->toN() );
+		$this->assertEquals( '123', $wrapper->read()->raw() );
 	} // It should delegate method rewind to the underlying IO object
 }

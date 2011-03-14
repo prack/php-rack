@@ -44,7 +44,7 @@ class Prack_MethodOverride
 	// TODO: Document!
 	public function call( $env )
 	{
-		if ( $env->get( 'REQUEST_METHOD' )->toN() == 'POST' )
+		if ( $env->get( 'REQUEST_METHOD' )->raw() == 'POST' )
 		{
 			$request = Prack_Request::with( $env );
 			$method  = $request->POST()->contains( self::METHOD_OVERRIDE_PARAM_KEY )

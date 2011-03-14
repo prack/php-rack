@@ -28,7 +28,7 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
 		$request        = $middleware_app->call( $env );
-		$this->assertEquals( 'GET', $request->getEnv()->get( 'REQUEST_METHOD' )->toN() );
+		$this->assertEquals( 'GET', $request->getEnv()->get( 'REQUEST_METHOD' )->raw() );
 	} // It should not affect GET requests
 	
 	/**
@@ -47,7 +47,7 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
 		$request        = $middleware_app->call( $env );
-		$this->assertEquals( 'PUT', $request->getEnv()->get( 'REQUEST_METHOD' )->toN() );
+		$this->assertEquals( 'PUT', $request->getEnv()->get( 'REQUEST_METHOD' )->raw() );
 	} // It should modify REQUEST_METHOD for POST requests when _method parameter is set
 	
 	/**
@@ -66,7 +66,7 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
 		$request        = $middleware_app->call( $env );
-		$this->assertEquals( 'PUT', $request->getEnv()->get( 'REQUEST_METHOD' )->toN() );
+		$this->assertEquals( 'PUT', $request->getEnv()->get( 'REQUEST_METHOD' )->raw() );
 	} // It should modify REQUEST_METHOD for POST requests when X-HTTP-Method-Override is set
 	
 	/**
@@ -85,7 +85,7 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
 		$request        = $middleware_app->call( $env );
-		$this->assertEquals( 'POST', $request->getEnv()->get( 'REQUEST_METHOD' )->toN() );
+		$this->assertEquals( 'POST', $request->getEnv()->get( 'REQUEST_METHOD' )->raw() );
 	} // It should not modify REQUEST_METHOD if the method is unknown
 	
 	/**
@@ -104,7 +104,7 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
 		$request        = $middleware_app->call( $env );
-		$this->assertEquals( 'POST', $request->getEnv()->get( 'REQUEST_METHOD' )->toN() );
+		$this->assertEquals( 'POST', $request->getEnv()->get( 'REQUEST_METHOD' )->raw() );
 	} // It should not modify REQUEST_METHOD when _method is nil
 	
 	/**
@@ -123,6 +123,6 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
 		$request        = $middleware_app->call( $env );
-		$this->assertEquals( 'POST', $request->getEnv()->get( 'rack.methodoverride.original_method' )->toN() );
+		$this->assertEquals( 'POST', $request->getEnv()->get( 'rack.methodoverride.original_method' )->raw() );
 	} // It should store the original REQUEST_METHOD prior to overriding
 }

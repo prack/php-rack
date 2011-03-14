@@ -155,7 +155,7 @@ class Prack_Response
 	}
 	
 	// TODO: Document!
-	public function toN() 
+	public function raw() 
 	{
 		return $this->finish();
 	}

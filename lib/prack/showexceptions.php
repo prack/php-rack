@@ -60,7 +60,7 @@ class Prack_ShowExceptions
 	public function pretty( $env, $exception )
 	{
 		$request = new Prack_Request( $env );
-		$path    = Prb::_String( $request->scriptName()->toN() . $request->pathInfo()->toN() )->squeeze( '/' );
+		$path    = Prb::_String( $request->scriptName()->raw() . $request->pathInfo()->raw() )->squeeze( '/' );
 		
 		// Gather up the frames by iterating over them.
 		$callback    = array( $this, 'collectFrames' );

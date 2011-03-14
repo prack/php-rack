@@ -110,7 +110,7 @@ class Prack_Request
 		if ( is_null( $content_type ) )
 			return null;
 		
-		$components = preg_split( '/\s*[;,]\s*/', $content_type->toN(), 2 );
+		$components = preg_split( '/\s*[;,]\s*/', $content_type->raw(), 2 );
 		return Prb::_String( strtolower( $components[ 0 ] ) );
 	}
 	
@@ -126,7 +126,7 @@ class Prack_Request
 		if ( is_null( $content_type ) )
 			return Prb::_Array();
 		
-		$components = preg_split( '/\s*[;,]\s*/', $content_type->toN() );
+		$components = preg_split( '/\s*[;,]\s*/', $content_type->raw() );
 		array_shift( $components );  // Ditch the MIME type.
 		
 		$function   = create_function( '$s', '$split = preg_split( \'/=/\', $s, 2 ); return array( $split[0], $split[1] );' );
@@ -157,7 +157,7 @@ class Prack_Request
 	{
 		if ( $forwarded = $this->env->get( 'HTTP_X_FORWARDED_HOST' ) )
 		{
-			$forwarded = preg_split( '/,\s?/', $forwarded->toN(), 2 );
+			$forwarded = preg_split( '/,\s?/', $forwarded->raw(), 2 );
 			return Prb::_String( end( $forwarded ) );
 		}
 		
@@ -167,9 +167,9 @@ class Prack_Request
 		if ( $this->env->contains( 'SERVER_NAME' ) ) 
 			return $this->env->get( 'SERVER_NAME' );
 		
-		$host = $this->env->contains( 'SERVER_ADDR' ) ? $this->env->get( 'SERVER_ADDR' )->toN()
+		$host = $this->env->contains( 'SERVER_ADDR' ) ? $this->env->get( 'SERVER_ADDR' )->raw()
 		                                              : '';
-		$port = $this->env->contains( 'SERVER_PORT' ) ? $this->env->get( 'SERVER_PORT' )->toN()
+		$port = $this->env->contains( 'SERVER_PORT' ) ? $this->env->get( 'SERVER_PORT' )->raw()
 		                                              : '';
 		return Prb::_String( "{$host}:{$port}" );
 	}
@@ -177,7 +177,7 @@ class Prack_Request
 	// TODO: Document!
 	public function host()
 	{
-		return Prb::_String( preg_replace( '/:\d+$/', '', $this->hostWithPort()->toN() ) );
+		return Prb::_String( preg_replace( '/:\d+$/', '', $this->hostWithPort()->raw() ) );
 	}
 	
 	// TODO: Document!
@@ -195,43 +195,43 @@ class Prack_Request
 	// TODO: Document!
 	public function isDelete()
 	{
-		return ( $this->requestMethod()->toN() == 'DELETE' );
+		return ( $this->requestMethod()->raw() == 'DELETE' );
 	}
 	
 	// TODO: Document!
 	public function isGet()
 	{
-		return ( $this->requestMethod()->toN() == 'GET' );
+		return ( $this->requestMethod()->raw() == 'GET' );
 	}
 	
 	// TODO: Document!
 	public function isHead()
 	{
-		return ( $this->requestMethod()->toN() == 'HEAD' );
+		return ( $this->requestMethod()->raw() == 'HEAD' );
 	}
 	
 	// TODO: Document!
 	public function isOptions()
 	{
-		return ( $this->requestMethod()->toN() == 'OPTIONS' );
+		return ( $this->requestMethod()->raw() == 'OPTIONS' );
 	}
 	
 	// TODO: Document!
 	public function isPost()
 	{
-		return ( $this->requestMethod()->toN() == 'POST' );
+		return ( $this->requestMethod()->raw() == 'POST' );
 	}
 	
 	// TODO: Document!
 	public function isPut()
 	{
-		return ( $this->requestMethod()->toN() == 'PUT' );
+		return ( $this->requestMethod()->raw() == 'PUT' );
 	}
 	
 	// TODO: Document!
 	public function isTrace()
 	{
-		return ( $this->requestMethod()->toN() == 'TRACE' );
+		return ( $this->requestMethod()->raw() == 'TRACE' );
 	}
 	
 	// TODO: Document!
@@ -249,7 +249,7 @@ class Prack_Request
 		$method_override = "rack.methodoverride.original_method";
 		$request_method  = $this->env->contains( $method_override ) ? $this->env->get( $method_override )
 		                                                            : $this->env->get( 'REQUEST_METHOD' );
-		return ( $request_method->toN() == 'POST' && 
+		return ( $request_method->raw() == 'POST' && 
 		         is_null( $type ) || self::formDataMediaTypes()->contains( $type ) );
 	}
 	
@@ -298,7 +298,7 @@ class Prack_Request
 			{
 				// FIXME: Implement preg_replace on Prb_String
 				$form_vars = $this->env->get( 'rack.input' )->read();
-				$form_vars = Prb::_String( preg_replace( '/\0\z/', '', $form_vars->toN() ) );
+				$form_vars = Prb::_String( preg_replace( '/\0\z/', '', $form_vars->raw() ) );
 				
 				$this->env->set( 'rack.request.form_vars', $form_vars );
 				$this->env->set( 'rack.request.form_hash', $this->parseQuery( $form_vars ) );
@@ -376,7 +376,7 @@ class Prack_Request
 		else
 		{
 			$cookie_string = $this->env->get( 'HTTP_COOKIE' );
-			$cookie        = http_parse_cookie( $cookie_string->toN() ); // FIXME: Implement cookie parsing.
+			$cookie        = http_parse_cookie( $cookie_string->raw() ); // FIXME: Implement cookie parsing.
 			
 			$this->env->set( 'rack.request.cookie_string', $cookie_string  );
 			$this->env->set( 'rack.request.cookie_hash',   $cookie->cookies );
@@ -388,7 +388,7 @@ class Prack_Request
 	// TODO: Document!
 	public function isXhr()
 	{
-		return ( ( $xhr = $this->env->get( 'HTTP_X_REQUESTED_WITH' ) ) && $xhr->toN() == 'XMLHttpRequest' );
+		return ( ( $xhr = $this->env->get( 'HTTP_X_REQUESTED_WITH' ) ) && $xhr->raw() == 'XMLHttpRequest' );
 	}
 	
 	// TODO: Document!
@@ -396,16 +396,16 @@ class Prack_Request
 	public function url()
 	{
 		$scheme = $this->scheme();
-		$port   = (int)( $this->port()->toN() );
+		$port   = (int)( $this->port()->raw() );
 		
-		$url  = $scheme->toN().'://';
-		$url .= $this->host()->toN();
+		$url  = $scheme->raw().'://';
+		$url .= $this->host()->raw();
 		
-		if ( ( $scheme->toN() == 'https' && $port != 443 ) ||
-		     ( $scheme->toN() == 'http'  && $port != 80  )    )
+		if ( ( $scheme->raw() == 'https' && $port != 443 ) ||
+		     ( $scheme->raw() == 'http'  && $port != 80  )    )
 			$url .= ':'.$port;
 			
-		$url .= $this->fullpath()->toN();
+		$url .= $this->fullpath()->raw();
 		
 		return Prb::_String( $url );
 	}
@@ -413,17 +413,17 @@ class Prack_Request
 	// TODO: Document!
 	public function path()
 	{
-		return Prb::_String( $this->scriptName()->toN().$this->pathInfo()->toN() );
+		return Prb::_String( $this->scriptName()->raw().$this->pathInfo()->raw() );
 	}
 	
 	// TODO: Document!
 	public function fullpath()
 	{
-		$query_string = $this->queryString()->toN();
+		$query_string = $this->queryString()->raw();
 		if ( empty( $query_string ) )
 			return $this->path();
 		
-		return Prb::_String( $this->path()->toN().'?'.$this->queryString()->toN() );
+		return Prb::_String( $this->path()->raw().'?'.$this->queryString()->raw() );
 	}
 	
 	// TODO: Document!
@@ -434,7 +434,7 @@ class Prack_Request
 		
 		// If there are no matches, preg_split returns an array with one empty string.
 		// This is absolutely fucking stupid, but hey.
-		$raw = preg_split( '/,\s*/', (string)$accept_encoding->toN() );
+		$raw = preg_split( '/,\s*/', (string)$accept_encoding->raw() );
 		if ( $raw == array( '' ) )
 			return Prb::_Array();
 			
@@ -449,10 +449,10 @@ class Prack_Request
 	{
 		if ( $address = $this->env->get( 'HTTP_X_FORWARDED_FOR' ) )
 		{
-			$address = explode( ',', $address->toN() );
+			$address = explode( ',', $address->raw() );
 			$address = preg_grep( '/\d\./', $address ); // FIXME: Implement grep on array wrapper
 			return isset( $address ) ? Prb::_String( reset( $address ) )
-			                         : Prb::_String( trim( $this->env->get( 'REMOTE_ADDR' )->toN() ) ); // FIXME Implement chomp/trim on String
+			                         : Prb::_String( trim( $this->env->get( 'REMOTE_ADDR' )->raw() ) ); // FIXME Implement chomp/trim on String
 		}
 		
 		return $this->env->get( 'REMOTE_ADDR' );

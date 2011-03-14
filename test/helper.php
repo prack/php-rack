@@ -18,7 +18,7 @@ class Prack_Test_EnvSerializer
 			$env->get( 'rack.errors' )->flush();
 		}
 		
-		$status = $get_params->contains( 'status' ) ? (int)$get_params->get( 'status' )->toN()
+		$status = $get_params->contains( 'status' ) ? (int)$get_params->get( 'status' )->raw()
 		                                            : 200;
 		
 		$response = new Prack_Response(
@@ -27,7 +27,7 @@ class Prack_Test_EnvSerializer
 		  Prb::_Hash( array( 'Content-Type' => Prb::_String( 'text/yaml' ) ) )
 		);
 		
-		return $response->toN();
+		return $response->raw();
 	}
 }
 

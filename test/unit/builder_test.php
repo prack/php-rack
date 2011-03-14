@@ -87,11 +87,11 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		->toMiddlewareApp();
 		
 		$this->assertEquals(
-		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->getBody()->toS()->toN()
+		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->getBody()->toS()->raw()
 		);
 		
 		$this->assertEquals(
-		  'sub', Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/sub' ) )->getBody()->toS()->toN()
+		  'sub', Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/sub' ) )->getBody()->toS()->raw()
 		);
 	} // It supports mapping
 	
@@ -115,7 +115,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		->toMiddlewareApp();
 		
 		$this->assertEquals(
-		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->getBody()->toS()->toN()
+		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) )->getBody()->toS()->raw()
 		);
 		
 		$this->assertEquals( Prb::_String( 'new_value' ),

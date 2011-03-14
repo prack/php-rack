@@ -44,7 +44,7 @@ class Prack_Utils
 		if ( is_null( $html_escapes_pattern ) )
 		{
 			$callback = create_function(
-			  '$i', 'return Prb::_String( preg_quote( $i->toN() ) );'
+			  '$i', 'return Prb::_String( preg_quote( $i->raw() ) );'
 			);
 			
 			$html_escapes_pattern =
@@ -52,7 +52,7 @@ class Prack_Utils
 			       ->keys()->map( $callback )
 			       ->join( Prb::_String( '|' ) );
 			$html_escapes_pattern =
-			  "/{$html_escapes_pattern->toN()}/";
+			  "/{$html_escapes_pattern->raw()}/";
 		}
 		
 		return $html_escapes_pattern;
@@ -65,10 +65,10 @@ class Prack_Utils
 		
 		if ( is_null( $callback ) )
 			$callback = create_function(
-			  '$i', 'return Prack_Utils::singleton()->HTMLEscapes()->get( $i[ 0 ] )->toN();'
+			  '$i', 'return Prack_Utils::singleton()->HTMLEscapes()->get( $i[ 0 ] )->raw();'
 			);
 		
-		return $string->toS()->gsub( $this->HTMLEscapesPattern(), $callback )->toN();
+		return $string->toS()->gsub( $this->HTMLEscapesPattern(), $callback )->raw();
 	}
 	
 	// TODO: Document!
@@ -152,9 +152,9 @@ class Prack_Utils
 		  $callback = create_function( '$x', 'return Prack_Utils::singleton()->unescape( $x );' );
 		
 		list( $key, $value ) = $param->split( '/=/', 2 )
-		                             ->map( $callback )->toN();
+		                             ->map( $callback )->raw();
 		
-		$key = $key->toN();
+		$key = $key->raw();
 		
 		if ( $current = $this->params->get( $key ) )
 		{
@@ -211,7 +211,7 @@ class Prack_Utils
 		if ( $after->isEmpty() )
 			$params->set( $key, isset( $value ) ? $value : null );
 		
-		else if ( $after->toN() == '[]' )
+		else if ( $after->raw() == '[]' )
 		{
 			if ( !$params->contains( $key ) )
 				$params->set( $key, Prb::_Array() );
@@ -242,7 +242,7 @@ class Prack_Utils
 			}
 			
 			$last_param = $params->get( $key )->last();
-			if ( $last_param instanceof Prb_Hash && !$last_param->contains( $child_key->toN() ) )
+			if ( $last_param instanceof Prb_Hash && !$last_param->contains( $child_key->raw() ) )
 				$this->normalizeParams( $last_param, $child_key, $value );
 			else
 				$operand->concat( $this->normalizeParams( Prb::_Hash(), $child_key, $value ) );
@@ -283,7 +283,7 @@ class Prack_Utils
 			return $this->buildQuery( $value->collect( $callback ) );
 		}
 		
-		return Prb::_String( "{$this->escape( Prb::_String( $key ) )->toN()}={$this->escape( $value )->toN()}" );
+		return Prb::_String( "{$this->escape( Prb::_String( $key ) )->raw()}={$this->escape( $value )->raw()}" );
 	}
 	
 	// TODO: Document!
@@ -324,7 +324,7 @@ class Prack_Utils
 		{
 			if ( is_null( $prefix ) )
 				throw new Prb_Exception_Argument( 'value must be a Prb_Hash' );
-			return Prb::_String( $prefix."={$this->escape( $value )->toN()}" );
+			return Prb::_String( $prefix."={$this->escape( $value )->raw()}" );
 		}
 		
 		return Prb::_String( $prefix );
@@ -333,7 +333,7 @@ class Prack_Utils
 	// TODO: Document!
 	public function onBuildNestedQueryHashIteration( $key, $value )
 	{
-		$escaped_key = $this->escape( Prb::_String( $key ) )->toN();
+		$escaped_key = $this->escape( Prb::_String( $key ) )->raw();
 		if ( empty( $this->obnq_p ) )
 			$prefix = $escaped_key;
 		else

@@ -111,7 +111,7 @@ class Prack_Mock_Request
 			'rack.run_once'     => true
 		);
 		
-		$components = self::parseURL( $url->toN() );
+		$components = self::parseURL( $url->raw() );
 		if ( ( $path = $components->get( 'path' ) ) && substr( $path, 0, 1 ) != '/' )
 			$components->set( 'path', "/{$path}" );
 		
@@ -124,10 +124,10 @@ class Prack_Mock_Request
 		  $components->contains( 'scheme' ) ? Prb::_String( $components->get( 'scheme' ) )
 		                                    : Prb::_String( 'http' );
 		$env[ 'HTTPS' ] =
-		  $env[ 'rack.url_scheme' ]->toN() == 'https' ? Prb::_String( 'on' )
+		  $env[ 'rack.url_scheme' ]->raw() == 'https' ? Prb::_String( 'on' )
 		                                              : Prb::_String( 'off' );
 		$default_port =
-		  $env[ 'rack.url_scheme' ]->toN() == 'https' ? Prb::_String( '443' )
+		  $env[ 'rack.url_scheme' ]->raw() == 'https' ? Prb::_String( '443' )
 		                                              : Prb::_String( '80'  );
 		
 		$env[ 'SERVER_NAME' ] = $components->contains( 'host' ) ? Prb::_String( $components->get( 'host' ) )
@@ -150,7 +150,7 @@ class Prack_Mock_Request
 		// FIXME: Implement query building and multipart form data processing.
 		if ( $params = $options->delete( 'params' ) )
 		{
-			if ( $env[ 'REQUEST_METHOD' ]->toN() == 'GET' )
+			if ( $env[ 'REQUEST_METHOD' ]->raw() == 'GET' )
 			{
 				if ( $params instanceof Prb_String )
 					$params = Prack_Utils::singleton()->parseNestedQuery( $params );
@@ -195,7 +195,7 @@ class Prack_Mock_Request
 		if ( !isset( $env[ 'CONTENT_LENGTH' ] ) )
 			$env[ 'CONTENT_LENGTH' ] = Prb::_String( (string)$rack_input->length() );
 		
-		foreach ( $options->toN() as $field => $value )
+		foreach ( $options->raw() as $field => $value )
 			$env[ $field ] = $value;
 		
 		return Prb::_Hash( $env );

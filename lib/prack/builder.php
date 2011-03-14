@@ -78,7 +78,7 @@ class Prack_Builder
 			$callback = create_function(
 			  '$calling_middleware_app, $class, $args, $callback',
 			  '$reflection = new ReflectionClass( $class );
-			   $args       = $args->toN();
+			   $args       = $args->raw();
 			   array_unshift( $args, $calling_middleware_app );
 			   if ( isset( $callback ) )
 			     array_push( $args, $callback );
