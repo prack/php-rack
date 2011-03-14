@@ -30,23 +30,24 @@ Progress
 Working and Shippable
 ---------------------
 
-* Prack_Logger: Adds a logger to the environment for downstream apps to use
-* Prack_Builder: Fluent interface for building middleware stacks in a domain
-* Prack_URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
-* Prack\_Mock\_Request: Fake requests for testing
-* Prack\_Mock\_Response: Fake responses for testing, delegates some methods
-* Prack_RewindableInput: Adds rewindability to any stream
-* Prack_ShowExceptions: Catches uncaught exceptions and show them as pretty HTML with context
-* Prack\_Utils\_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
+* MethodOverride: allows HTTP request method override via hidden form input or HTTP header
+* Logger: Adds a logger to the environment for downstream apps to use
+* Builder: Fluent interface for building middleware stacks in a domain
+* URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
+* Mock_Request: Fake requests for testing
+* Mock_Response: Fake responses for testing, delegates some methods
+* RewindableInput: Adds rewindability to any stream
+* ShowExceptions: Catches uncaught exceptions and show them as pretty HTML with context
+* Utils_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
 * Interfaces: MiddlewareApp
 
 Working perfectly, but not feature-complete
 -------------------------------------------
 
-* Prack\_Lint: Ensures response sanity. (pending: sessions)
-* Prack_Request: Actual request (pending: multipart form data)
-* Prack_Response: Actual response, delegates some methods (pending: cookie management)
-* Prack_Utils: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending: multipart, cookies, encoding selection)
+* Lint: Ensures response sanity. (pending: sessions)
+* Request: Actual request (pending: multipart form data)
+* Response: Actual response, delegates some methods (pending: cookie management)
+* Utils: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending: multipart, cookies, encoding selection)
 
 Works, but doesn't conform to Ruby Rack Spec
 --------------------------------------------

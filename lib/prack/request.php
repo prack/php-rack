@@ -459,7 +459,7 @@ class Prack_Request
 	}
 	
 	// TODO: Document!
-	public function &getEnv()
+	public function getEnv()
 	{
 		return $this->env;
 	}
