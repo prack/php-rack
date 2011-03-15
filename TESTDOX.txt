@@ -1,11 +1,18 @@
 PHPUnit 3.5.11 by Sebastian Bergmann.
 
+Prack_Auth_Basic
+ [x] It should challenge correctly when no credentials are specified
+ [x] It should rechallenge if incorrect credentials are specified
+ [x] It should return application output if correct credentials are specified
+ [x] It should return 400 Bad Request if different auth scheme used
+ [x] It takes realm as an optional constructor arg
+
 Prack_Builder
  [x] It supports mapping
  [x] It doesn t dupe env even when mapping
  [x] It chains apps by default
  [x] It has implicit toMiddlewareApp
- [ ] It supports callbacks on use
+ [x] It supports callbacks on use
  [x] It has explicit toMiddlewareApp
  [x] It should initialize apps once
  [x] It should throw an exception if the fluent interface is misused
@@ -31,6 +38,17 @@ Prack_Lint
 
 Prack_Lint_InputWrapper
  [x] It should delegate method rewind to the underlying IO object
+
+Prack_Logger
+ [x] It should log to rack errors
+
+Prack_MethodOverride
+ [x] It should not affect GET requests
+ [x] It should modify REQUEST METHOD for POST requests when  method parameter is set
+ [x] It should modify REQUEST METHOD for POST requests when X HTTP Method Override is set
+ [x] It should not modify REQUEST METHOD if the method is unknown
+ [x] It should not modify REQUEST METHOD when  method is nil
+ [x] It should store the original REQUEST METHOD prior to overriding
 
 Prack_Mock_Request
  [x] It should return a Prack Mock Response

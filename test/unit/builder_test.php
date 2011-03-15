@@ -174,28 +174,41 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_supports_callbacks_on_use()
 	{
-		// it "supports blocks on use" do
-		//   app = Rack::Builder.new do
-		//     use Rack::ShowExceptions
-		//     use Rack::Auth::Basic do |username, password|
-		//       'secret' == password
-		//     end
-		// 
-		//     run lambda { |env| [Prb::_Numeric( 200 ), {}, ['Hi Boss']] }
-		//   end
-		// 
-		//   response = Rack::MockRequest.new(app).get("/")
-		//   response.should.be.client_error
-		//   response.status.should.equal 401
-		// 
-		//   # with auth...
-		//   response = Rack::MockRequest.new(app).get("/",
-		//       'HTTP_AUTHORIZATION' => 'Basic ' + ["joe:secret"].pack("m*"))
-		//   response.status.should.equal 200
-		//   response.body.to_s.should.equal 'Hi Boss'
-		// end
-		$this->markTestSkipped( 'pending HTTP Basic Auth implementation' );
+		$callback       = array( $this, 'onBuild' );
+		$middleware_app = Prack_Builder::domain( $callback );
+		
+		$response = Prack_Mock_Request::with( $middleware_app )->get( Prb::_String( '/' ) );
+		$this->assertTrue( $response->isClientError() );
+		$this->assertEquals( 401, $response->getStatus()->raw() );
+		
+		# with auth...
+		$response = Prack_Mock_Request::with( $middleware_app )->get(
+		  Prb::_String( '/' ),
+		  Prb::_Hash( array(
+		    'HTTP_AUTHORIZATION' => Prb::_String( 'Basic ' )->concat( Prb::_String( 'joe:secret' )->base64Encode() )
+		  ) )
+		);
+		
+		$this->assertEquals( 200, $response->getStatus()->raw() );
+		$this->assertEquals( 'Hi Boss', $response->getBody()->toS()->raw() );
 	} // It supports callbacks on use
+	
+	// TODO: Document!
+	public function onBuild( $builder )
+	{
+		$callback = create_function( '$username,$password', 'return "secret" == $password->raw();' );
+		$builder
+		  ->using( 'Prack_ShowExceptions' )->build()
+		  ->using( 'Prack_Auth_Basic' )->withArgs( null )->withCallback( $callback )->build()
+		  ->run(
+		      new Prack_Test_Echo(
+		        Prb::_Numeric( 200 ),
+		        Prb::_Hash(),
+		        Prb::_Array( array( Prb::_String( 'Hi Boss' ) ) )
+		      )
+		    )
+		->toMiddlewareApp(); // Just for style, here. Optional.
+	}
 	
 	/**
 	 * It has explicit toMiddlewareApp

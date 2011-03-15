@@ -30,6 +30,7 @@ Progress
 Working and Shippable
 ---------------------
 
+* Auth_Basic: Basic HTTP authentication
 * MethodOverride: allows HTTP request method override via hidden form input or HTTP header
 * Logger: Adds a logger to the environment for downstream apps to use
 * Builder: Fluent interface for building middleware stacks in a domain
@@ -66,7 +67,7 @@ To Do
 * Multipart-form-data processing
 * Prack Attack (Rack Lobster analog)
 * E-tag generation
-* Actual implementation of HTTP auth (basic, digest, etc.) and other essential middleware
+* Actual implementation of HTTP auth (digest)
 * Everything else in Ruby Rack :)
 
 
