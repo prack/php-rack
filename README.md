@@ -30,6 +30,7 @@ Progress
 Working and Shippable
 ---------------------
 
+* Auth_Digest: HTTP digest authentication
 * Auth_Basic: Basic HTTP authentication
 * MethodOverride: allows HTTP request method override via hidden form input or HTTP header
 * Logger: Adds a logger to the environment for downstream apps to use

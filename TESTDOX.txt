@@ -7,6 +7,23 @@ Prack_Auth_Basic
  [x] It should return 400 Bad Request if different auth scheme used
  [x] It takes realm as an optional constructor arg
 
+Prack_Auth_Digest
+ [x] It should challenge when no credentials are specified
+ [x] It should return application output if correct credentials given
+ [x] It should return application output if correct credentials given  hashed passwords 
+ [x] It should rechallenge if incorrect username given
+ [x] It should rechallenge if incorrect password given
+ [x] It should rechallenge with stale parameter if nonce is stale
+ [x] It should return 400 Bad Request if incorrect qop given
+ [x] It should return 400 Bad Request if incorrect URI given
+ [x] It should return 400 Bad Request if different auth scheme used
+ [x] It should not require credentials for unprotected path
+ [x] It should challenge when no credentials are specified for protected path
+ [x] It should return application output if correct credentials given for protected path
+ [x] It should return application output if correct credentials given for POST
+ [x] It should return application output if correct credentials given for PUT  using method override of POST 
+ [x] It takes realm as optional constructor arg
+
 Prack_Builder
  [x] It supports mapping
  [x] It doesn t dupe env even when mapping
