@@ -22,7 +22,7 @@ class Prack_Auth_Basic_Request extends Prack_Auth_Abstract_Request
 	// TODO: Document!
 	public function username()
 	{
-		return $this->credentials->first();
+		return $this->credentials()->first();
 	}
 }
 
