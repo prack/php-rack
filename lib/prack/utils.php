@@ -88,9 +88,15 @@ class Prack_Utils
 	}
 	
 	// TODO: Document!
-  # Performs URI escaping so that you can construct proper
-  # query strings faster.  Use this rather than the cgi.rb
-  # version since it's faster.  (Stolen from Camping).
+	public function bytesize( $string )
+	{
+		return Prb::_Numeric( $string->length() );
+	}
+	
+	// TODO: Document!
+	# Performs URI escaping so that you can construct proper
+	# query strings faster.  Use this rather than the cgi.rb
+	# version since it's faster.  (Stolen from Camping).
 	public function escape( $string )
 	{
 		static $callback = null;

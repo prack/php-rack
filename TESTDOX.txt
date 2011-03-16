@@ -37,6 +37,19 @@ Prack_Builder
  [x] It should throw an exception if run is called in the middle of a middleware app specification
  [x] It should throw an exception if run is called with other than Prack Interface MiddlewareApp
 
+Prack_ConditionalGet
+ [x] It should set a 304 status and truncate body when If Modified Since hits
+ [x] It should set a 304 status and truncate body when If None Match hits
+ [x] It should not affect non GET HEAD requests
+
+Prack_ContentLength
+ [x] It should set Content Length on String bodies if none is set
+ [x] It should set Content Length on Array bodies if none is set
+ [x] It should not set Content Length on variable length bodies
+ [x] It should not change Content Length if it is already set
+ [x] It should not set Content Length on 304 responses
+ [x] It should not set Content Length when Transfer Encoding is chunked
+
 Prack_ETag
  [x] It should set ETag if none is set
  [x] It should not change ETag if it is already set

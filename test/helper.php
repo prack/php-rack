@@ -43,23 +43,15 @@ class Prack_Test_Echo
 	// TODO: Document!
 	function __construct( $status = null, $headers = null, $body = null, $eval = null )
 	{
-		$status = is_null( $status ) ? Prb::_Numeric( 200 ) : $status;
-		if ( !( $status instanceof Prb_Numeric ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $status must be Prb_Numeric' );
-		
+		$status  = is_null( $status ) ? Prb::_Numeric( 200 ) : $status;
 		$headers = is_null( $headers )
 		  ? Prb::_Hash( array(
 		      'Content-Type' => Prb::_String( 'test/plain' )
 		    ) )
 		  : $headers;
-		if ( !( $headers instanceof Prb_Hash ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $headers must be Prb_Hash' );
-		
 		$body = is_null( $body )
 		  ? Prb::_Array( array( Prb::_String() ) )
 		  : $body;
-		if ( !( $body instanceof Prb_Interface_Stringable ) && !( $body instanceof Prb_Interface_Enumerable ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $body must be either Prb_Interface_Stringable or Prb_Interface_Enumerable' );
 		
 		$eval = is_null( $eval ) ? '' : $eval;
 		if ( !is_string( $eval ) )
