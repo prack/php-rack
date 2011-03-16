@@ -37,6 +37,10 @@ Prack_Builder
  [x] It should throw an exception if run is called in the middle of a middleware app specification
  [x] It should throw an exception if run is called with other than Prack Interface MiddlewareApp
 
+Prack_ETag
+ [x] It should set ETag if none is set
+ [x] It should not change ETag if it is already set
+
 Prack_Lint
  [x] It should pass valid request
  [x] It should notice fatal errors

@@ -30,6 +30,7 @@ Progress
 Working and Shippable
 ---------------------
 
+* ETag: checksums a page's contents
 * Auth_Digest: HTTP digest authentication
 * Auth_Basic: Basic HTTP authentication
 * MethodOverride: allows HTTP request method override via hidden form input or HTTP header
@@ -60,6 +61,7 @@ Nothing to list here. See above for things which aren't quite feature complete, 
 To Do
 -----
 
+* Consider an MD5 implementation that doesn't require a whole string to be in-memory
 * Documentation on when Prack uses PHP primitives vs. Prb wrappers
 * Prack\_Apache\_Compat to make apache's mod_php (mostly) compatible with the Rack specfication
 * Rack config
@@ -67,8 +69,6 @@ To Do
 * Cookies
 * Multipart-form-data processing
 * Prack Attack (Rack Lobster analog)
-* E-tag generation
-* Actual implementation of HTTP auth (digest)
 * Everything else in Ruby Rack :)
 
 
