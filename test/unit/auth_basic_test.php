@@ -143,6 +143,6 @@ class Prack_Auth_BasicTest extends PHPUnit_Framework_TestCase
 	public function It_takes_realm_as_an_optional_constructor_arg()
 	{
 		$middleware_app = Prack_Auth_Basic::with( $this->unprotectedMiddlewareApp(), $this->realm() );
-		$this->assertEquals( $this->realm(), $middleware_app->getRealm() );
+		$this->assertEquals( $this->realm(), $middleware_app->realm() );
 	} // It takes realm as an optional constructor arg
 }

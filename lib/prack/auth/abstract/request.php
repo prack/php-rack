@@ -3,12 +3,11 @@
 // TODO: Document!
 abstract class Prack_Auth_Abstract_Request
 {
-	private $env;
-	
-	private $parts;
-	private $scheme;
-	private $params;
-	private $authorization_key;
+	protected $env;
+	protected $parts;
+	protected $scheme;
+	protected $params;
+	protected $authorization_key;
 	
 	// TODO: Document!
 	static function authorizationKeys()

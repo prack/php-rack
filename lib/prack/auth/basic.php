@@ -71,6 +71,6 @@ class Prack_Auth_Basic extends Prack_Auth_Abstract_Handler
 	// TODO: Document!
 	protected function challenge()
 	{
-		return Prb::_String( 'Basic realm="%s"' )->sprintf( $this->getRealm() );
+		return Prb::_String( 'Basic realm="%s"' )->sprintf( $this->realm() );
 	}
 }

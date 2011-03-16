@@ -14,7 +14,7 @@ abstract class Prack_Auth_Abstract_Handler
 	}
 	
 	// TODO: Document!
-	public function getRealm()
+	public function realm()
 	{
 		return $this->realm;
 	}
