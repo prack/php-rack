@@ -36,7 +36,7 @@ class Prack_ContentLength
 			if ( is_null( $callback ) )
 			  $callback = create_function(
 			    '$accumulator, $part',
-			    'return Prb::_Numeric( $accumulator->raw() + Prack_Utils::singleton()->bytesize( $part )->raw() );'
+			    'return Prb::_Numeric( $accumulator->raw() + Prack_Utils::singleton()->bytesize( $part ) );'
 			);
 			
 			$length = $body->toAry()->inject( Prb::_Numeric( 0 ), $callback );

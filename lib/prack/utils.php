@@ -90,7 +90,7 @@ class Prack_Utils
 	// TODO: Document!
 	public function bytesize( $string )
 	{
-		return Prb::_Numeric( $string->length() );
+		return $string->length();
 	}
 	
 	// TODO: Document!
