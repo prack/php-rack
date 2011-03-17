@@ -1,36 +1,5 @@
 <?php
 
-// TODO: Document!
-class Prack_Mock_FatalWarner
-  implements Prb_Interface_WritableStreamlike
-{
-	// TODO: Document!
-	public function puts()
-	{
-		$args = func_get_args();
-		throw new Prack_Exception_Mock_Response_FatalWarning( $args[ 0 ]->raw() );
-	}
-	
-	// TODO: Document!
-	public function write( $warning )
-	{
-		throw new Prack_Exception_Mock_Response_FatalWarning( $warning->raw() );
-	}
-	
-	// TODO: Document!
-	public function flush()
-	{
-		// No-op.
-		return true;
-	}
-	
-	// TODO: Document!
-	public function string()
-	{
-		return Prb::_String();
-	}
-}
-
 # Rack::MockResponse provides useful helpers for testing your apps.
 # Usually, you don't create the MockResponse on your own, but use
 # MockRequest.
