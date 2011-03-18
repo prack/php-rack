@@ -30,22 +30,22 @@ Progress
 Working and Shippable
 ---------------------
 
-* File: serve static files via Prack
-* ContentLength: ensures a response has a proper Content-Length header
-* ConditionalGet: uses Etags and HTTP headers to respond without body if appropriate
-* ETag: checksums a page's contents
-* Auth_Digest: HTTP digest authentication
 * Auth_Basic: Basic HTTP authentication
-* MethodOverride: allows HTTP request method override via hidden form input or HTTP header
-* Logger: Adds a logger to the environment for downstream apps to use
+* Auth_Digest: HTTP digest authentication
 * Builder: Fluent interface for building middleware stacks in a domain
-* URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
+* ConditionalGet: uses Etags and HTTP headers to respond without body if appropriate
+* ContentLength: ensures a response has a proper Content-Length header
+* ETag: checksums a page's contents
+* File: serve static files via Prack
+* Logger: Adds a logger to the environment for downstream apps to use
+* MethodOverride: allows HTTP request method override via hidden form input or HTTP header
+* Mime: a default and configurable set of MIME types
 * Mock_Request: Fake requests for testing
 * Mock_Response: Fake responses for testing, delegates some methods
 * RewindableInput: Adds rewindability to any stream
 * ShowExceptions: Catches uncaught exceptions and show them as pretty HTML with context
+* URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
 * Utils_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
-* Mime: a default and configurable set of MIME types
 * Interfaces: MiddlewareApp
 
 Working perfectly, but not feature-complete
