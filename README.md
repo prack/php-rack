@@ -33,6 +33,7 @@ Working and Shippable
 * Auth_Basic: Basic HTTP authentication
 * Auth_Digest: HTTP digest authentication
 * Builder: Fluent interface for building middleware stacks in a domain
+* Cascade: Chains a request to a list of middleware apps, accepting the first viable response
 * ConditionalGet: uses Etags and HTTP headers to respond without body if appropriate
 * ContentLength: ensures a response has a proper Content-Length header
 * ETag: checksums a page's contents
