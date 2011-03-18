@@ -13,7 +13,7 @@ class Prack_Mime
 	}
 	
 	// TODO: Document!
-	public function mimeTypes()
+	static function mimeTypes()
 	{
 		static $mimeTypes = null;
 		
