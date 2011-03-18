@@ -85,7 +85,7 @@ class Prack_File
 		else
 		{
 			$body = Prb::_Array( array(
-			  Prb_IO_File::withfilete( $this->path )->read()
+			  Prb_IO::withFile( $this->path )->read()
 			) );
 			$size = Prack_Utils::singleton()->bytesize( $body->first() );
 		}
