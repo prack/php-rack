@@ -32,7 +32,7 @@ Working and Shippable
 
 * Auth_Basic: Basic HTTP authentication
 * Auth_Digest: HTTP digest authentication
-* Builder: Fluent interface for building middleware stacks in a domain
+* Builder: Fluent interface for building middleware app stacks in a domain
 * Cascade: Chains a request to a list of middleware apps, accepting the first viable response
 * ConditionalGet: uses Etags and HTTP headers to respond without body if appropriate
 * ContentLength: ensures a response has a proper Content-Length header
@@ -45,6 +45,7 @@ Working and Shippable
 * Mock_Request: Fake requests for testing
 * Mock_Response: Fake responses for testing, delegates some methods
 * RewindableInput: Adds rewindability to any stream
+* Runtime: records the runtime of a partial or full stack of middleware apps
 * ShowExceptions: Catches uncaught exceptions and show them as pretty HTML with context
 * URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
 * Utils_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
