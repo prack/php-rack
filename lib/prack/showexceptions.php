@@ -91,7 +91,7 @@ class Prack_ShowExceptions
 		try
 		{
 			$lineno = $frame->lineno - 1;
-			$lines  = Prb_IO::withFile( $frame->filename, Prb_IO_File::NO_CREATE_READ )->readlines();
+			$lines  = Prb_IO::withFile( Prb::_String( $frame->filename ), Prb_IO_File::NO_CREATE_READ )->readlines();
 			
 			$frame->pre_context_lineno  = max( $lineno - self::CONTEXT, 0 );
 			$frame->pre_context         = $lines->slice( $frame->pre_context_lineno, $lineno, true );

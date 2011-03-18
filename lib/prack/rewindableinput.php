@@ -117,7 +117,7 @@ class Prack_RewindableInput
 	// TODO: Document!
 	private function makeRewindable()
 	{
-		$this->rewindable_io = Prb_IO::withTempfile( 'rack-rewindable-input' );
+		$this->rewindable_io = Prb_IO::withTempfile( Prb::_String( 'prack-rewindable-input' ) );
 		$this->rewindable_io->chmod( 0000 );
 		
 		if ( $this->filesystemHasPosixSemantics() )
