@@ -196,7 +196,7 @@ class Prack_Lint
 	// TODO: Document!
 	public function call( $env )
 	{
-		$clone = clone( $this );
+		$clone = clone $this;
 		return $clone->_call( $env );
 	}
 	
