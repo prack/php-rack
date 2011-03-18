@@ -30,6 +30,7 @@ Progress
 Working and Shippable
 ---------------------
 
+* File: serve static files via Prack
 * ContentLength: ensures a response has a proper Content-Length header
 * ConditionalGet: uses Etags and HTTP headers to respond without body if appropriate
 * ETag: checksums a page's contents
