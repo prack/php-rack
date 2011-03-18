@@ -36,6 +36,7 @@ Working and Shippable
 * Cascade: Chains a request to a list of middleware apps, accepting the first viable response
 * ConditionalGet: uses Etags and HTTP headers to respond without body if appropriate
 * ContentLength: ensures a response has a proper Content-Length header
+* ContentType: ensures a response has a proper Content-Type header
 * ETag: checksums a page's contents
 * File: serve static files via Prack
 * Logger: Adds a logger to the environment for downstream apps to use
