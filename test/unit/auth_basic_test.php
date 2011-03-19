@@ -1,6 +1,6 @@
 <?php
 
-
+// TODO: Document!
 class Prack_Auth_BasicTest extends PHPUnit_Framework_TestCase 
 {
 	// TODO: Document!
