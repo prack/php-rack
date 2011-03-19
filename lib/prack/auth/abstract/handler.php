@@ -9,7 +9,7 @@ abstract class Prack_Auth_Abstract_Handler
 	function __construct( $middleware_app, $realm = null, $callback = null )
 	{
 		$this->middleware_app = $middleware_app;
-		$this->realm          = $realm;
+		$this->realm          = isset( $realm ) ? $realm : Prb::_String();
 		$this->callback       = $callback;
 	}
 	
