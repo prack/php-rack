@@ -45,8 +45,8 @@ abstract class Prack_Auth_Abstract_Request
 			$auth_key    = $this->authorizationKey() ? $this->authorizationKey()->raw() : null;
 			$auth_header = $this->env->contains( $auth_key )
 			  ? $this->env->get( $auth_key )
-			  : Prack::_String();
-			$this->parts = $this->env->get( $auth_key )->split( '/ /', 2 );
+			  : Prb::_String();
+			$this->parts = $auth_header->split( '/ /', 2 );
 		}
 			
 		return $this->parts;
