@@ -23,7 +23,7 @@ class Prack_ModPHP_Compat
 	}
 	
 	// TODO: Document!
-	public function rackEnvFrom( $server )
+	public function extractEnv( $server )
 	{
 		$env = Prb::_Hash();
 		
@@ -44,6 +44,13 @@ class Prack_ModPHP_Compat
 			  )
 			);
 		}
+		
+		$env->set( 'rack.version',      Prack::version()                              );
+		$env->set( 'rack.input',        Prb_IO::withStream( fopen( 'php://stdin'  ) ) );
+		$env->set( 'rack.errors',       Prb_IO::withStream( fopen( 'php://stderr' ) ) );
+		$env->set( 'rack.multithread',  false                                         );
+		$env->set( 'rack.multiprocess', false                                         );
+		$env->set( 'rack.run_once',     true                                          );
 		
 		$env->set( 'SCRIPT_NAME', Prb::_String() );
 		$env->set( 'PATH_INFO',   Prb::_String( $server[ 'REDIRECT_X_PRACK_PATHINFO' ] ) );
@@ -68,9 +75,6 @@ class Prack_ModPHP_Compat
 		if ( $body instanceof Prb_Interface_Stringable )
 			$body = Prb::_Array( array( $body->toS() ) );
 		
-		if ( $headers->contains( 'X-Runtime' ) )
-			echo "<h3>Run time: {$headers->get( "X-Runtime" )->raw()}</h3>";
-		
 		$body->each( $callback );
 	}
 	
@@ -83,20 +87,6 @@ class Prack_ModPHP_Compat
 /*
 <?php
 	class Middleware_RackCompliance extends Prack_App {
-		protected $environment = array();
-		
-		const HTTPAUTHORIZATION = 'HTTP_AUTHORIZATION';
-		
-		// Required server variables:
-		// Note: There will also be any number of HTTP_* header variables set.
-		const REQUESTMETHOD     = 'REQUEST_METHOD' ;
-		const SCRIPTNAME        = 'SCRIPT_NAME'    ;
-		const PATHINFO          = 'PATH_INFO'      ;
-		const QUERYSTRING       = 'QUERY_STRING'   ;
-		const SERVERNAME        = 'SERVER_NAME'    ;
-		const SERVERPORT        = 'SERVER_PORT'    ;
-		const CONTENTTYPE       = 'CONTENT_TYPE'   ; // Special case.
-		
 		// Required Rack-specific variables:
 		
 		// Additional Rack-specific variables:
@@ -115,13 +105,6 @@ class Prack_ModPHP_Compat
 			$env[self::PATHINFO]          = $env['SCRIPT_URL'];
 			
 			// Rack variables:
-			$env[self::RACK_VERSION]      = array(1, 1);
-			$env[self::RACK_URLSCHEME]    = self::urlScheme($server_variables['SCRIPT_URI']);
-			$env[self::RACK_INPUT]        = fopen('php://input',  'r');
-			$env[self::RACK_ERRORS]       = fopen('php://stderr', 'w');
-			$env[self::RACK_MULTITHREAD]  = false;
-			$env[self::RACK_MULTIPROCESS] = false;
-			$env[self::RACK_RUNONCE]      = false;
 			
 			if (isset($env['CONTENT_TYPE_OVERRIDE']) && !empty($env['REDIRECT_OLD_CONTENT_TYPE'])) {
 				$env[self::CONTENTTYPE] = $env['REDIRECT_OLD_CONTENT_TYPE'];

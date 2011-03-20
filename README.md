@@ -59,24 +59,22 @@ Working perfectly, but not feature-complete
 * Response: Actual response, delegates some methods (pending: cookie management)
 * Utils: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending: multipart, cookies, encoding selection)
 
-Works, but doesn't conform to Ruby Rack Spec
---------------------------------------------
+Works, but isn't properly/entirely tested
+-----------------------------------------
 
-Nothing to list here. See above for things which aren't quite feature complete, but conform to the Ruby spec in their implementation so far.
+* ModPHP_Compat: jiggers $\_SERVER into an acceptable request environment for Prack
 
 To Do
 -----
 
 * Consider an MD5 implementation that doesn't require a whole string to be in-memory
 * Documentation on when Prack uses PHP primitives vs. Prb wrappers
-* Prack\_Apache\_Compat to make apache's mod_php (mostly) compatible with the Rack specfication
 * Rack config
 * Sessions
 * Cookies
 * Multipart-form-data processing
 * Prack Attack (Rack Lobster analog)
 * Everything else in Ruby Rack :)
-
 
 Running Tests
 =============
@@ -108,99 +106,7 @@ stupidly easy to implement:
 I put this interface in place for 5.2-compatibility, but when 5.3 is implemented,
 I will revisit whether to drop it so we can also include lambdas as first-class middleware apps.
 
-Prack_Builder is the what you use to set up an application stack:
-
-	require 'autoload.php' // This must be required relative to where you've placed
-	                       // Prack in your website document root.
-	
-	// Let's construct a simple domain using a few middleware apps, outside-in,
-	// finally running a hypothetical middleware app of class 'EchoServer' :
-	$domain =
-	  Prack_Builder::domain()
-	    ->using( 'Prack_Apache_Compat' )->build()
-	    ->using( 'Prack_Lint' )->build()
-	    ->using( 'HTTPAuthentication' )->withCallback( array( 'SomeMiddlewareConfigClass', 'authenticate' ) )->build()
-	    ->run( new EchoServer() )
-	->toMiddlewareApp();
-	
-	list( $status, $headers, $body ) = $domain->call( $env )->raw();
-
-Note: Prack_Builder supports nested mapping, just like Ruby Rack.
-
-All requests to your site will be routed through Prack\_Apache\_Compat, then Prack_Lint, then
-HTTPAuthentication, ending up finally in EchoServer, which is responsible for returning the
-Rack-spec-compliant response back up through the stack. (Whew.)
-
-Unfortunately, Apache isn't a rack-compliant server, and since I haven't written a mod\_php\_rack yet,
-the 'Prack\_Apache_Compat' middleware is necessary. It reads the $\_SERVER (and possibly $\_ENV)
-superglobals to clobber together an $env which conforms (mostly) to the Rack specification. This
-isn't a problem in the test environment, since Prack\_Mock_Request implements a fake env generator.
-
-This is also why Prack\_Apache_Compat is still unimplemented. :P
-
-The above stack assumes the existence of several classes. Here's a look at a hypothetical
-HTTPAuthenticate middleware app:
-
-	// A skeleton of what a middleware app would look like:
-	class HTTPAuthentication
-	  implements Prack_Interface_MiddlewareApp
-	{
-		private $app;       // The middleware app this middleware app encompasses,
-		                    //   aka. the next middleware app in the stack.
-		private $callback;  // Internal middleware app state: the callback to invoke when
-		                    // this middleware app is 'called' in series. It's up to this
-		                    // middleware app to decide when and how to invoke this.
-		
-		// Once you've specified your stack with builder, this will be invoked automatically
-		// when the toMiddlewareApp method is called on your domain. (It constructs the stack.)
-		function __construct( $app, $callback )
-		{
-			$this->app      = $app;
-			$this->callback = $callback;
-		}
-		
-		public function call( $env )
-		{
-			$auth_header = $env->get( 'HTTP_AUTHORIZATION' );
-			
-			// ... process credentials into:
-			$username = 'admin';  /* username should obviously be extracted from the request. */
-			$password = 'secret'; /* same for password. derp. */
-			
-			if ( is_callable( $this->callback ) ) // an array of class, method should eval to true
-				$authorized = call_user_func( $callback, $username, $password );
-			else
-				throw new Prb_Exception_Callback( "Can't call http auth callback." );
-			
-			if ( !$authorized )
-				return Prb::_Array( array(
-				  Prb::_Numeric( 401 ),
-				  Prb::_Hash( array( 'WWW-Authenticate' => /* header */ ) ),
-				  Prb::_String( 'Unauthorized' );
-				) );
-			
-			// And finally, if they're authorized, forward the request to the enclosed app,
-			// returning its value as an Prb_Array of:
-			//   1.              (Prb_Numeric)$status
-			//   2.                 (Prb_Hash)$headers
-			//   3. (Prb_Interface_Enumerable)$body    // Body can also be Prb_Interface_Stringable
-			list( $status, $headers, $body ) = $this->app->call( $env )->raw();
-			
-			// Modify $status, $headers, or $body as you see fit here.
-			
-			return Prb::_Array( array( $status, $headers, $body ) );
-		}
-	}
-
-The middleware configuration class might look like this:
-
-	class SomeMiddlewareConfigClass
-	{
-		static function authenticate( $username, $password )
-		{
-			return ( $username == 'admin' && $password == 'secret' );
-		}
-	}
+See Prack's [sandbox](http://github.com/prack/sandbox) for a working demo app!
 
 If all this confuses you, grok the [Rack spec](http://rack.rubyforge.org/doc/SPEC.html "Rack Interface Specification").
 Prack works exactly the same way, even in the environment variable names it uses.
