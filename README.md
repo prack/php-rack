@@ -30,39 +30,39 @@ Progress
 Working and Shippable
 ---------------------
 
-* Auth_Basic: Basic HTTP authentication
-* Auth_Digest: HTTP digest authentication
-* Builder: Fluent interface for building middleware app stacks in a domain
-* Cascade: Chains a request to a list of middleware apps, accepting the first viable response
-* ConditionalGet: uses Etags and HTTP headers to respond without body if appropriate
-* ContentLength: ensures a response has a proper Content-Length header
-* ContentType: ensures a response has a proper Content-Type header
-* ETag: checksums a page's contents
-* File: serve static files via Prack
-* Logger: Adds a logger to the environment for downstream apps to use
-* MethodOverride: allows HTTP request method override via hidden form input or HTTP header
-* Mime: a default and configurable set of MIME types
-* Mock_Request: Fake requests for testing
-* Mock_Response: Fake responses for testing, delegates some methods
-* RewindableInput: Adds rewindability to any stream
-* Runtime: records the runtime of a partial or full stack of middleware apps
-* ShowExceptions: Catches uncaught exceptions and show them as pretty HTML with context
-* URLMap: Used by Builder to map middleware (stacks) to a URL endpoints
-* Utils_HeaderHash: A case-insensitive, multiple-value supporting assoc array wrapper
-* Interfaces: MiddlewareApp
+* <tt>Auth_Basic</tt>: Basic HTTP authentication
+* <tt>Auth_Digest</tt>: HTTP digest authentication
+* <tt>Builder</tt>: Fluent interface for building middleware app stacks in a domain
+* <tt>Cascade</tt>: Chains a request to a list of middleware apps, accepting the first viable response
+* <tt>ConditionalGet</tt>: uses Etags and HTTP headers to respond without body if appropriate
+* <tt>ContentLength</tt>: ensures a response has a proper Content-Length header
+* <tt>ContentType</tt>: ensures a response has a proper Content-Type header
+* <tt>ETag</tt>: checksums a page's contents
+* <tt>File</tt>: serve static files via Prack
+* <tt>Logger</tt>: Adds a logger to the environment for downstream apps to use
+* <tt>MethodOverride</tt>: allows HTTP request method override via hidden form input or HTTP header
+* <tt>Mime</tt>: a default and configurable set of MIME types
+* <tt>Mock_Request</tt>: Fake requests for testing
+* <tt>Mock_Response</tt>: Fake responses for testing, delegates some methods
+* <tt>RewindableInput</tt>: Adds rewindability to any stream
+* <tt>Runtime</tt>: records the runtime of a partial or full stack of middleware apps
+* <tt>ShowExceptions</tt>: Catches uncaught exceptions and show them as pretty HTML with context
+* <tt>URLMap</tt>: Used by Builder to map middleware (stacks) to a URL endpoints
+* <tt>Utils_HeaderHash</tt>: A case-insensitive, multiple-value supporting assoc array wrapper
+* <tt>Interfaces</tt>: MiddlewareApp
 
 Working perfectly, but not feature-complete
 -------------------------------------------
 
-* Lint: Ensures response sanity. (pending: sessions)
-* Request: Actual request (pending: multipart form data)
-* Response: Actual response, delegates some methods (pending: cookie management)
-* Utils: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending: multipart, cookies, encoding selection)
+* <tt>Lint</tt>: Ensures response sanity. (pending</tt>: sessions)
+* <tt>Request</tt>: Actual request (pending</tt>: multipart form data)
+* <tt>Response</tt>: Actual response, delegates some methods (pending</tt>: cookie management)
+* <tt>Utils</tt>: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending</tt>: multipart, cookies, encoding selection)
 
 Works, but isn't properly/entirely tested
 -----------------------------------------
 
-* ModPHP_Compat: jiggers $\_SERVER into an acceptable request environment for Prack
+* <tt>ModPHP_Compat</tt>: jiggers <tt>$\_SERVER</tt> into an acceptable request environment for Prack
 
 To Do
 -----
@@ -84,9 +84,11 @@ method names as descriptive and consistent as possible, so please check them
 out as documentation until the project matures a bit more.
 
 To run tests:
+<pre>
 	git clone https://github.com/prack/php-rack.git
 	cd Prack
 	phpunit
+</pre>
 
 Of course, you must have PHPUnit installed, preferably alongside XDebug. I'm using
 PHPUnit 3.5.
@@ -95,8 +97,8 @@ PHPUnit 3.5.
 Getting started
 ===============
 
-All Prack applications must conform to the Prack\_Interface_MiddlewareApp interface, which is
-stupidly easy to implement:
+All Prack applications must conform to the <tt>Prack\_Interface_MiddlewareApp</tt> interface,
+which is stupidly easy to implement:
 
 	interface Prack_Interface_MiddlewareApp
 	{
@@ -105,6 +107,15 @@ stupidly easy to implement:
 
 I put this interface in place for 5.2-compatibility, but when 5.3 is implemented,
 I will revisit whether to drop it so we can also include lambdas as first-class middleware apps.
+
+<tt>call</tt> MUST return a <tt>Prb_Array</tt> as its response with the following items, in this order</tt>:
+
+<pre>
+1. Prb_Numeric                                          (status)
+2. Prb_Hash                                             (headers)
+3. Prb_Interface_Enumerable OR Prb_Interface_Stringable (body)
+</pre>
+
 
 See Prack's [sandbox](http://github.com/prack/sandbox) for a working demo app!
 
@@ -115,7 +126,7 @@ Prack works exactly the same way, even in the environment variable names it uses
 Things I'm would love guidance on/help with
 ===========================================
 
-* The Prack_Lint implementation and tests is very... pragmatic. The outcome is the same as Rack's,
+* The <tt>Prack_Lint</tt> implementation and tests is very... pragmatic. The outcome is the same as Rack's,
 but the code isn't pretty. If any awesome PHP coders could take a look, I'd be eternally grateful.
 * What about string encoding in PHP vs. Ruby? I'm not sure how to handle this, so I'm ignoring it
 on account of the fact that PHP strings have no intrinsic encoding. I'm assuming they'll just
