@@ -78,21 +78,18 @@ class Prack_File
 	public function serving()
 	{
 		if ( $size = filesize( $this->path->raw() ) )
-		{
 			$body = $this;
-			$size = Prb::_Numeric( $size );
-		}
 		else
 		{
 			$body = Prb::_Array( array(
-			  Prb_IO::withFile( $this->path )->read()
+			  Prb_IO::withFile( $this->path, Prb_IO_File::NO_CREATE_READ )->read()
 			) );
 			$size = Prack_Utils::singleton()->bytesize( $body->first() );
 		}
 		
 		$pathinfo  = pathinfo( $this->path->raw() );
 		$extension = isset( $pathinfo[ 'extension' ] )
-		  ? Prb::_String( '.'.$pathinfo[ 'extension' ] )
+		  ? '.'.$pathinfo[ 'extension' ]
 		  : null;
 		
 		return Prb::_Array( array(
@@ -100,7 +97,7 @@ class Prack_File
 		  Prb::_Hash( array(
 		    'Last-Modified'  => Prb::_Time( filemtime( $this->path->raw() ) )->httpdate(),
 		    'Content-Type'   => Prack_Mime::mimeType( $extension, Prb::_String( 'text/plain' ) ),
-		    'Content-Length' => $size->toS()
+		    'Content-Length' => Prb::_Numeric( $size )->toS()
 		  ) ),
 		  $body
 		) );

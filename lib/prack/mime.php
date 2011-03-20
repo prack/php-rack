@@ -19,7 +19,7 @@ class Prack_Mime
 		
 		if ( is_null( $mimeTypes ) )
 		{
-			$mimeTypes = Prb::_Array( array(
+			$mimeTypes = Prb::_Hash( array(
 			  ".3gp"     => Prb::_String( "video/3gpp"                                      ),
 			  ".a"       => Prb::_String( "application/octet-stream"                        ),
 			  ".ai"      => Prb::_String( "application/postscript"                          ),
