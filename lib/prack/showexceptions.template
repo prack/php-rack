@@ -251,28 +251,26 @@
 -->
 
   <h3 id="env-info">Prack ENV</h3>
-    <table class="req">
-      <thead>
+  <table class="req">
+    <thead>
+      <tr>
+        <th>Variable</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+        <?php
+          $callback = create_function( '$k,$v', 'return Prb::_String( $k );' );
+          $sorted   = $environment->sortBy( $callback );
+          foreach( $sorted->raw() as $key => $val ):
+        ?>
         <tr>
-          <th>Variable</th>
-          <th>Value</th>
+          <td><?php echo $se->h( $key ); ?></td>
+          <td class="code"><div><?php echo print_r( $val, true ); ?></div></td>
         </tr>
-      </thead>
-      <tbody>
-          <?php
-            $callback = create_function( '$k,$v', 'return Prb::_String( $k );' );
-            $sorted   = $environment->sortBy( $callback );
-            foreach( $sorted->raw() as $key => $val ):
-          ?>
-          <tr>
-            <td><?php echo $se->h( $key ); ?></td>
-            <td class="code"><div><?php echo print_r( $val, true ); ?></div></td>
-          </tr>
-          <?php endforeach; ?>
-      </tbody>
-    </table>
-  </h3>
-		
+        <?php endforeach; ?>
+    </tbody>
+  </table>
 </div>
 
 <div id="explanation">
