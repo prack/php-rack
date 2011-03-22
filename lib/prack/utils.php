@@ -24,12 +24,12 @@ class Prack_Utils
 		
 		if ( is_null( $html_escapes ) )
 		{
-			$html_escapes = Prb::_Hash( array(
-				'&'  => Prb::_String( "&amp;"  ),
-				'<'  => Prb::_String( "&lt;"   ),
-				'>'  => Prb::_String( "&gt;"   ),
-				'\'' => Prb::_String( "&#39;"  ),
-				'"'  => Prb::_String( "&quot;" )
+			$html_escapes = Prb::Hsh( array(
+				'&'  => Prb::Str( "&amp;"  ),
+				'<'  => Prb::Str( "&lt;"   ),
+				'>'  => Prb::Str( "&gt;"   ),
+				'\'' => Prb::Str( "&#39;"  ),
+				'"'  => Prb::Str( "&quot;" )
 			) );
 		}
 		
@@ -44,13 +44,13 @@ class Prack_Utils
 		if ( is_null( $html_escapes_pattern ) )
 		{
 			$callback = create_function(
-			  '$i', 'return Prb::_String( preg_quote( $i->raw() ) );'
+			  '$i', 'return Prb::Str( preg_quote( $i->raw() ) );'
 			);
 			
 			$html_escapes_pattern =
 			  $this->HTMLEscapes()
 			       ->keys()->map( $callback )
-			       ->join( Prb::_String( '|' ) );
+			       ->join( Prb::Str( '|' ) );
 			$html_escapes_pattern =
 			  "/{$html_escapes_pattern->raw()}/";
 		}
@@ -81,7 +81,7 @@ class Prack_Utils
 			$swneb = range( 100, 199 );
 			array_push( $swneb, 204 );
 			array_push( $swneb, 304 );
-			$swneb = Prb::_Array( $swneb );
+			$swneb = Prb::Ary( $swneb );
 		}
 		
 		return $swneb;
@@ -108,7 +108,7 @@ class Prack_Utils
 		
 		return $string->toS()
 		  ->gsub( '/([^ a-zA-Z0-9_.-]+)/', $callback )
-		  ->tr( Prb::_String( ' ' ), Prb::_String( '+' ) );
+		  ->tr( Prb::Str( ' ' ), Prb::Str( '+' ) );
 	}
 	
 	// TODO: Document!
@@ -123,7 +123,7 @@ class Prack_Utils
 			);
 		
 		return $string->toS()
-		  ->tr( Prb::_String( '+' ), Prb::_String( ' ' ) )
+		  ->tr( Prb::Str( '+' ), Prb::Str( ' ' ) )
 		  ->gsub( '/((?:%[0-9a-fA-F]{2})+)/', $callback );
 	}
 	
@@ -137,10 +137,10 @@ class Prack_Utils
   # parameter (which defaults to '&;').
 	public function parseQuery( $query_string, $delimiter = null )
 	{
-		$this->params = Prb::_Hash();
+		$this->params = Prb::Hsh();
 		
 		if ( is_null( $query_string ) )
-			$query_string = Prb::_String();
+			$query_string = Prb::Str();
 		
 		$callback = array( $this, 'onParseQuery' );
 		$query_string->split( isset( $delimiter ) ? "/[{$d}] */" : self::DEFAULT_SEP )
@@ -167,7 +167,7 @@ class Prack_Utils
 			if ( $current instanceof Prb_Array )
 				$this->params->concat( $key, $value );
 			else
-				$this->params->set( $key, Prb::_Array( $current, $value ) );
+				$this->params->set( $key, Prb::Ary( $current, $value ) );
 		}
 		else
 			$this->params->set( $key, $value );
@@ -176,10 +176,10 @@ class Prack_Utils
 	// TODO: Document!
 	public function parseNestedQuery( $query_string, $delimiter = null )
 	{
-		$this->params = Prb::_Hash();
+		$this->params = Prb::Hsh();
 		
 		if ( is_null( $query_string ) )
-			$query_string = Prb::_String();
+			$query_string = Prb::Str();
 		
 		$callback = array( $this, 'onParseNestedQuery' );
 		$query_string->split( isset( $delimiter ) ? "/[{$d}] */" : self::DEFAULT_SEP )
@@ -212,7 +212,7 @@ class Prack_Utils
 			return; // end of recursion
 		
 		$key   = $match_one[ 0 ];
-		$after = Prb::_String( $match_two[ 0 ] );
+		$after = Prb::Str( $match_two[ 0 ] );
 		
 		if ( $after->isEmpty() )
 			$params->set( $key, isset( $value ) ? $value : null );
@@ -220,7 +220,7 @@ class Prack_Utils
 		else if ( $after->raw() == '[]' )
 		{
 			if ( !$params->contains( $key ) )
-				$params->set( $key, Prb::_Array() );
+				$params->set( $key, Prb::Ary() );
 			
 			$operand = $params->get( $key );
 			if ( !( $operand instanceof Prb_Array ) )
@@ -235,10 +235,10 @@ class Prack_Utils
 		else if ( $after->match( '/^\[\]\[([^\[\]]+)\]$/m', $matches ) || $after->match( '/^\[\](.+)$/m', $matches ) )
 		{
 			// $matches reassigned here:
-			$child_key = Prb::_String( $matches[ 1 ][ 0 ] );
+			$child_key = Prb::Str( $matches[ 1 ][ 0 ] );
 			
 			if ( !$params->contains( $key ) )
-				$params->set( $key, Prb::_Array() );
+				$params->set( $key, Prb::Ary() );
 			
 			$operand = $params->get( $key );
 			if ( !( $operand instanceof Prb_Array ) )
@@ -251,12 +251,12 @@ class Prack_Utils
 			if ( $last_param instanceof Prb_Hash && !$last_param->contains( $child_key->raw() ) )
 				$this->normalizeParams( $last_param, $child_key, $value );
 			else
-				$operand->concat( $this->normalizeParams( Prb::_Hash(), $child_key, $value ) );
+				$operand->concat( $this->normalizeParams( Prb::Hsh(), $child_key, $value ) );
 		}
 		else
 		{
 			if ( !$params->contains( $key ) )
-				$params->set( $key, Prb::_Hash() );
+				$params->set( $key, Prb::Hsh() );
 			
 			$operand = $params->get( $key );
 			if ( !( $operand instanceof Prb_Hash ) )
@@ -276,7 +276,7 @@ class Prack_Utils
 	{
 		$callback = array( $this, 'onBuildQuery' );
 		return $params->map( $callback )
-		              ->join( Prb::_String( '&' ) );
+		              ->join( Prb::Str( '&' ) );
 	}
 	
 	// TODO: Document!
@@ -289,13 +289,13 @@ class Prack_Utils
 			return $this->buildQuery( $value->collect( $callback ) );
 		}
 		
-		return Prb::_String( "{$this->escape( Prb::_String( $key ) )->raw()}={$this->escape( $value )->raw()}" );
+		return Prb::Str( "{$this->escape( Prb::Str( $key ) )->raw()}={$this->escape( $value )->raw()}" );
 	}
 	
 	// TODO: Document!
 	public function onBuildQueryArrayIteration( $item )
 	{
-		return Prb::_Array( array( $this->obq_k, $item ) );
+		return Prb::Ary( array( $this->obq_k, $item ) );
 	}
 	
 	// TODO: Document!
@@ -313,7 +313,7 @@ class Prack_Utils
 			if ( isset( $prefix ) )
 				array_push( $this->obnq_p, $prefix );
 			$callback = array( $this, 'onBuildNestedQueryHashIteration' );
-			$result   = $value->map( $callback )->join( Prb::_String( '&' ) );
+			$result   = $value->map( $callback )->join( Prb::Str( '&' ) );
 			array_pop( $this->obnq_p );
 			return $result;
 		}
@@ -322,7 +322,7 @@ class Prack_Utils
 			if ( isset( $prefix ) )
 				array_push( $this->obnq_p, $prefix );
 			$callback = array( $this, 'onBuildNestedQueryArrayIteration' );
-			$result   = $value->map( $callback )->join( Prb::_String( '&' ) );
+			$result   = $value->map( $callback )->join( Prb::Str( '&' ) );
 			array_pop( $this->obnq_p );
 			return $result;
 		}
@@ -330,16 +330,16 @@ class Prack_Utils
 		{
 			if ( is_null( $prefix ) )
 				throw new Prb_Exception_Argument( 'value must be a Prb_Hash' );
-			return Prb::_String( $prefix."={$this->escape( $value )->raw()}" );
+			return Prb::Str( $prefix."={$this->escape( $value )->raw()}" );
 		}
 		
-		return Prb::_String( $prefix );
+		return Prb::Str( $prefix );
 	}
 	
 	// TODO: Document!
 	public function onBuildNestedQueryHashIteration( $key, $value )
 	{
-		$escaped_key = $this->escape( Prb::_String( $key ) )->raw();
+		$escaped_key = $this->escape( Prb::Str( $key ) )->raw();
 		if ( empty( $this->obnq_p ) )
 			$prefix = $escaped_key;
 		else

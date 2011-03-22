@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_Mock_FatalWarner
-  implements Prb_Interface_WritableStreamlike
+  implements Prb_I_WritableStreamlike
 {
 	// TODO: Document!
 	public function puts()
@@ -27,6 +27,6 @@ class Prack_Mock_FatalWarner
 	// TODO: Document!
 	public function string()
 	{
-		return Prb::_String();
+		return Prb::Str();
 	}
 }

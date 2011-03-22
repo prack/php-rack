@@ -14,7 +14,7 @@
 #
 # Your application's +call+ should end returning Response#finish.
 class Prack_Response
-  implements Prb_Interface_Enumerable
+  implements Prb_I_Enumerable
 {
 	const DELEGATE = 'Prack_DelegateFor_Response';
 	
@@ -31,8 +31,8 @@ class Prack_Response
 		static $default_headers = null;
 		
 		if ( is_null( $default_headers ) )
-			$default_headers = Prb::_Hash( 
-				array( 'Content-Type' => Prb::_String( 'text/html' )
+			$default_headers = Prb::Hsh( 
+				array( 'Content-Type' => Prb::Str( 'text/html' )
 			) );
 		
 		return $default_headers;
@@ -47,11 +47,11 @@ class Prack_Response
 	// TODO: Document!
 	function __construct( $body = null, $status = null, $headers = null, $on_build = null )
 	{
-		$body = is_null( $body ) ? Prb::_Array() : $body;
-		if ( !( $body instanceof Prb_Interface_Stringable ) && !( $body instanceof Prb_Interface_Enumerable ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $body must be Prb_Interface_Stringable or Prb_Interface_Enumerable' );
+		$body = is_null( $body ) ? Prb::Ary() : $body;
+		if ( !( $body instanceof Prb_I_Stringable ) && !( $body instanceof Prb_I_Enumerable ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: __construct $body must be Prb_I_Stringable or Prb_I_Enumerable' );
 		
-		$status = is_null( $status ) ? Prb::_Numeric( 200 ) : $status->toN();
+		$status = is_null( $status ) ? Prb::Num( 200 ) : $status->toN();
 		if ( !( $status instanceof Prb_Numeric ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: __construct $status must be Prb_Numeric' );
 		
@@ -65,12 +65,12 @@ class Prack_Response
 		$this->callback     = null;
 		$this->after_finish = null;
 		$this->length       = 0;
-		$this->body         = Prb::_Array();
+		$this->body         = Prb::Ary();
 		
 		// Wrap the body if applicable so it has an interface.
-		if ( $body instanceof Prb_Interface_Stringable )
+		if ( $body instanceof Prb_I_Stringable )
 			$this->write( $body->toS() );
-		else if ( $body instanceof Prb_Interface_Enumerable )
+		else if ( $body instanceof Prb_I_Enumerable )
 			$body->each( $this->writer );
 		
 		if ( is_callable( $on_build ) )
@@ -101,7 +101,7 @@ class Prack_Response
 	{
 		$this->length += $buffer->length();
 		call_user_func( $this->writer, $buffer );
-		$this->set( 'Content-Length', Prb::_String( (string)$this->length ) );
+		$this->set( 'Content-Length', Prb::Str( (string)$this->length ) );
 		return $buffer;
 	}
 	
@@ -135,10 +135,10 @@ class Prack_Response
 	// TODO: Document!
 	public function redirect( $target, $status = null )
 	{
-		if ( !( $target instanceof Prb_Interface_Stringable ) )
-			throw new Prb_Exception_Type( 'redirect $target must be Prack_Interface_Stringable' );
+		if ( !( $target instanceof Prb_I_Stringable ) )
+			throw new Prb_Exception_Type( 'redirect $target must be Prack_I_Stringable' );
 		
-		$status = is_null( $status ) ? Prb::_Numeric( 302 ) : $status;
+		$status = is_null( $status ) ? Prb::Num( 302 ) : $status;
 		if ( !( $status instanceof Prb_Numeric ) )
 			throw new Prb_Exception_Type( 'redirect $status must be Prb_Numeric' );
 		
@@ -154,14 +154,14 @@ class Prack_Response
 		if ( in_array( (int)$this->status->raw(), array( 204, 304 ) ) )
 		{
 			$this->header->delete( 'Content-Type' );
-			return Prb::_Array( array(
+			return Prb::Ary( array(
 			  $this->status,
 			  $this->header->toHash(),
-			  Prb::_Array()
+			  Prb::Ary()
 			) );
 		}
 		
-		return Prb::_Array( array( $this->status, $this->header->toHash(), $this ) );
+		return Prb::Ary( array( $this->status, $this->header->toHash(), $this ) );
 	}
 	
 	// TODO: Document!

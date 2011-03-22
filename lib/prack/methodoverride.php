@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_MethodOverride
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $middleware_app;
 	
@@ -16,13 +16,13 @@ class Prack_MethodOverride
 		
 		if ( is_null( $http_methods ) )
 		{
-			$http_methods = Prb::_Array( array(
-			  Prb::_String( 'GET'     ),
-			  Prb::_String( 'HEAD'    ),
-			  Prb::_String( 'PUT'     ),
-			  Prb::_String( 'POST'    ),
-			  Prb::_String( 'DELETE'  ),
-			  Prb::_String( 'OPTIONS' )
+			$http_methods = Prb::Ary( array(
+			  Prb::Str( 'GET'     ),
+			  Prb::Str( 'HEAD'    ),
+			  Prb::Str( 'PUT'     ),
+			  Prb::Str( 'POST'    ),
+			  Prb::Str( 'DELETE'  ),
+			  Prb::Str( 'OPTIONS' )
 			) );
 		}
 		
@@ -50,7 +50,7 @@ class Prack_MethodOverride
 			$method  = $request->POST()->contains( self::METHOD_OVERRIDE_PARAM_KEY )
 			  ? $request->POST()->get( self::METHOD_OVERRIDE_PARAM_KEY   )
 			  : $env->get( self::HTTP_METHOD_OVERRIDE_HEADER );
-			$method = isset( $method ) ? $method->toS()->upcase() : Prb::_String();
+			$method = isset( $method ) ? $method->toS()->upcase() : Prb::Str();
 			if ( self::httpMethods()->contains( $method ) )
 			{
 				$env->set( 'rack.methodoverride.original_method', $env->get( 'REQUEST_METHOD' ) );

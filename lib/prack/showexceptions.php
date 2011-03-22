@@ -9,7 +9,7 @@
 # Be careful when you use this on public-facing sites as it could
 # reveal information helpful to attackers.
 class Prack_ShowExceptions
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	const CONTEXT = 7;
 	
@@ -44,11 +44,11 @@ class Prack_ShowExceptions
 		{ 
 			$backtrace = $this->pretty( $env, $e );
 			
-			return Prb::_Array( array(
-			  Prb::_Numeric( 500 ),
-			  Prb::_Hash( array(
-			    'Content-Type'   => Prb::_String( 'text/html' ),
-			    'Content-Length' => Prb::_String( (string)( $backtrace->join()->size() ) )
+			return Prb::Ary( array(
+			  Prb::Num( 500 ),
+			  Prb::Hsh( array(
+			    'Content-Type'   => Prb::Str( 'text/html' ),
+			    'Content-Length' => Prb::Str( (string)( $backtrace->join()->size() ) )
 			  ) ),
 			  $backtrace
 			) );
@@ -60,11 +60,11 @@ class Prack_ShowExceptions
 	public function pretty( $env, $exception )
 	{
 		$request = new Prack_Request( $env );
-		$path    = Prb::_String( $request->scriptName()->raw() . $request->pathInfo()->raw() )->squeeze( '/' );
+		$path    = Prb::Str( $request->scriptName()->raw() . $request->pathInfo()->raw() )->squeeze( '/' );
 		
 		// Gather up the frames by iterating over them.
 		$callback    = array( $this, 'collectFrames' );
-		$frames      = Prb::_Array( $exception->getTrace() )->collect( $callback )->compact();
+		$frames      = Prb::Ary( $exception->getTrace() )->collect( $callback )->compact();
 		$environment = $env;
 		
 		ob_start();
@@ -72,7 +72,7 @@ class Prack_ShowExceptions
 			include $this->template;
 		$result = ob_get_clean();
 		
-		return Prb::_Array( array( Prb::_String( $result ) ) );
+		return Prb::Ary( array( Prb::Str( $result ) ) );
 	}
 	
 	// TODO: Document!
@@ -91,7 +91,7 @@ class Prack_ShowExceptions
 		try
 		{
 			$lineno = $frame->lineno - 1;
-			$lines  = Prb_IO::withFile( Prb::_String( $frame->filename ), Prb_IO_File::NO_CREATE_READ )->readlines();
+			$lines  = Prb_IO::withFile( Prb::Str( $frame->filename ), Prb_IO_File::NO_CREATE_READ )->readlines();
 			
 			$frame->pre_context_lineno  = max( $lineno - self::CONTEXT, 0 );
 			$frame->pre_context         = $lines->slice( $frame->pre_context_lineno, $lineno, true );
@@ -107,7 +107,7 @@ class Prack_ShowExceptions
 	// TODO: Document!
 	public function h( $item )
 	{
-		$item = $item instanceof Prb_String ? $item : Prb::_String( (string)$item );
+		$item = $item instanceof Prb_String ? $item : Prb::Str( (string)$item );
 		return Prack_Utils::singleton()->escapeHtml( $item );
 	}
 }

@@ -9,7 +9,7 @@ abstract class Prack_Auth_Abstract_Handler
 	function __construct( $middleware_app, $realm = null, $callback = null )
 	{
 		$this->middleware_app = $middleware_app;
-		$this->realm          = isset( $realm ) ? $realm : Prb::_String();
+		$this->realm          = isset( $realm ) ? $realm : Prb::Str();
 		$this->callback       = $callback;
 	}
 	
@@ -31,27 +31,27 @@ abstract class Prack_Auth_Abstract_Handler
 		if ( is_null( $www_authenticate ) )
 			$www_authenticate = $this->challenge();
 		
-		return Prb::_Array( array(
-		  Prb::_Numeric( 401 ),
-		  Prb::_Hash( array(
-		    'Content-Type'     => Prb::_String( 'text/plain' ),
-		    'Content-Length'   => Prb::_String( '0' ),
+		return Prb::Ary( array(
+		  Prb::Num( 401 ),
+		  Prb::Hsh( array(
+		    'Content-Type'     => Prb::Str( 'text/plain' ),
+		    'Content-Length'   => Prb::Str( '0' ),
 		    'WWW-Authenticate' => $www_authenticate->toS()
 		  ) ),
-		  Prb::_Array()
+		  Prb::Ary()
 		) );
 	}
 	
 	// TODO: Document!
 	protected function badRequest()
 	{
-		return Prb::_Array( array(
-		  Prb::_Numeric( 400 ),
-		  Prb::_Hash( array(
-		    'Content-Type'     => Prb::_String( 'text/plain' ),
-		    'Content-Length'   => Prb::_String( '0' )
+		return Prb::Ary( array(
+		  Prb::Num( 400 ),
+		  Prb::Hsh( array(
+		    'Content-Type'     => Prb::Str( 'text/plain' ),
+		    'Content-Length'   => Prb::Str( '0' )
 		  ) ),
-		  Prb::_Array()
+		  Prb::Ary()
 		) );
 	}
 }

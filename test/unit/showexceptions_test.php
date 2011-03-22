@@ -18,7 +18,7 @@ class Prack_ShowExceptionsTest extends PHPUnit_Framework_TestCase
 		);
 		
 		// Implicit test: should not encounter an exception.
-		$mock_response = $mock_request->get( Prb::_String( '/' ) );
+		$mock_response = $mock_request->get( Prb::Str( '/' ) );
 		
 		$this->assertTrue( $mock_response->isServerError() );
 		$this->assertEquals( 500, $mock_response->getStatus()->raw() );

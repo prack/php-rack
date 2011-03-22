@@ -13,7 +13,7 @@ class Prack_Auth_Digest_Nonce
 	static function privateKey()
 	{
 		if ( is_null( self::$private_key ) )
-			self::$private_key = Prb::_String();
+			self::$private_key = Prb::Str();
 		
 		return self::$private_key;
 	}
@@ -44,7 +44,7 @@ class Prack_Auth_Digest_Nonce
 	{
 		$split = $string->base64Decode()->split( '/ /', 2 );
 		return Prack_Auth_Digest_Nonce::with(
-		  Prb::_Time( $split->get( 0 )->toN()->raw() ),
+		  Prb::Time( $split->get( 0 )->toN()->raw() ),
 		  $split->get( 1 )
 		);
 	}
@@ -59,7 +59,7 @@ class Prack_Auth_Digest_Nonce
 	function __construct( $time = null, $given_digest = null )
 	{
 		if ( is_null( $time ) )
-			$time = Prb::_Time();
+			$time = Prb::Time();
 		
 		$this->timestamp    = $time->getSeconds();
 		$this->given_digest = $given_digest;
@@ -68,21 +68,21 @@ class Prack_Auth_Digest_Nonce
 	// TODO: Document!
 	public function toS()
 	{
-		return Prb::_Array( array(
+		return Prb::Ary( array(
 		  $this->timestamp->toS(),
 		  $this->digest()
-		) )->join( Prb::_String( ' ' ) )
+		) )->join( Prb::Str( ' ' ) )
 		   ->base64Encode();
 	}
 	
 	// TODO: Document!
 	public function digest()
 	{
-		return Prb::_String( md5(
-		  Prb::_Array( array(
+		return Prb::Str( md5(
+		  Prb::Ary( array(
 		    $this->timestamp->toS(),
 		    self::privateKey()
-		  ) )->join( Prb::_String( ':' ) )->raw()
+		  ) )->join( Prb::Str( ':' ) )->raw()
 		) );
 	}
 	
@@ -96,7 +96,7 @@ class Prack_Auth_Digest_Nonce
 	public function isStale()
 	{
 		$tl = self::timeLimit();
-		return isset( $tl ) && ( $this->timestamp->raw() - Prb::_Time()->getSeconds()->raw() < $tl->raw() );
+		return isset( $tl ) && ( $this->timestamp->raw() - Prb::Time()->getSeconds()->raw() < $tl->raw() );
 	}
 	
 	// TODO: Document!

@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_Builder
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $path;
 	private $parent;
@@ -23,7 +23,7 @@ class Prack_Builder
 	{
 		$this->path   = $path;
 		$this->parent = $parent;
-		$this->stack  = Prb::_Array();
+		$this->stack  = Prb::Ary();
 		
 		$this->resetFluentInterface();
 		
@@ -46,7 +46,7 @@ class Prack_Builder
 		}
 		else
 		{
-			$this->stack->concat( Prb::_Hash() );
+			$this->stack->concat( Prb::Hsh() );
 			return $this->map( $path, $callback );
 		}
 		
@@ -59,8 +59,8 @@ class Prack_Builder
 		if ( $this->fi_class || $this->fi_args || $this->fi_callback )
 			throw new Prb_Exception_Argument( 'cannot run middleware app until previous is fully specified--for help, consult Prack_Builder documentation' );
 		
-		if ( !($middleware_app instanceof Prack_Interface_MiddlewareApp ) )
-			throw new Prb_Exception_Argument( 'run $middleware_map must be an instance of Prack_Interface_MiddlewareApp' );
+		if ( !($middleware_app instanceof Prack_I_MiddlewareApp ) )
+			throw new Prb_Exception_Argument( 'run $middleware_map must be an instance of Prack_I_MiddlewareApp' );
 		
 		$this->stack->concat( $middleware_app );
 		return is_null( $this->parent ) ? $this : $this->parent;
@@ -137,7 +137,7 @@ class Prack_Builder
 		if ( isset( $this->fi_callback ) && !is_callable( $this->fi_callback ) )
 			throw new Prb_Exception_Callback( 'callback specified in middleware app specification is not actually callable: ' );
 		
-		$this->specify( $this->fi_class, Prb::_Array( $this->fi_args ), $this->fi_callback );
+		$this->specify( $this->fi_class, Prb::Ary( $this->fi_args ), $this->fi_callback );
 		$this->resetFluentInterface();
 		
 		return $this;
@@ -153,7 +153,7 @@ class Prack_Builder
 	private function specify( $class, $args, $callback )
 	{
 		$this->stack->concat(
-		  Prb::_Array( array( $class, $args, $callback ) )
+		  Prb::Ary( array( $class, $args, $callback ) )
 		);
 	}
 	

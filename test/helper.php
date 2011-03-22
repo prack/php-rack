@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_Test_EnvSerializer
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	// TODO: Document!
 	public function call( $env )
@@ -19,12 +19,12 @@ class Prack_Test_EnvSerializer
 		}
 		
 		$status = $get_params->contains( 'status' ) ? $get_params->get( 'status' )->toN()
-		                                            : Prb::_Numeric( 200 );
+		                                            : Prb::Num( 200 );
 		
 		$response = new Prack_Response(
-		  Prb::_String( serialize( $env ) ),
+		  Prb::Str( serialize( $env ) ),
 		  $status,
-		  Prb::_Hash( array( 'Content-Type' => Prb::_String( 'text/yaml' ) ) )
+		  Prb::Hsh( array( 'Content-Type' => Prb::Str( 'text/yaml' ) ) )
 		);
 		
 		return $response->toA();
@@ -33,7 +33,7 @@ class Prack_Test_EnvSerializer
 
 // TODO: Document!
 class Prack_Test_Echo
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $status;
 	private $headers;
@@ -43,14 +43,14 @@ class Prack_Test_Echo
 	// TODO: Document!
 	function __construct( $status = null, $headers = null, $body = null, $eval = null )
 	{
-		$status  = is_null( $status ) ? Prb::_Numeric( 200 ) : $status;
+		$status  = is_null( $status ) ? Prb::Num( 200 ) : $status;
 		$headers = is_null( $headers )
-		  ? Prb::_Hash( array(
-		      'Content-Type' => Prb::_String( 'test/plain' )
+		  ? Prb::Hsh( array(
+		      'Content-Type' => Prb::Str( 'test/plain' )
 		    ) )
 		  : $headers;
 		$body = is_null( $body )
-		  ? Prb::_Array( array( Prb::_String() ) )
+		  ? Prb::Ary( array( Prb::Str() ) )
 		  : $body;
 		
 		$eval = is_null( $eval ) ? '' : $eval;
@@ -69,7 +69,7 @@ class Prack_Test_Echo
 		if ( $this->eval )
 			eval( $this->eval );
 		
-		return Prb::_Array( array( $this->status, $this->headers, $this->body ) );
+		return Prb::Ary( array( $this->status, $this->headers, $this->body ) );
 	}
 	
 	public function setEval( $eval )
@@ -88,6 +88,6 @@ class Prack_TestHelper
 		$out  = '';
 		for( $c = 0; $c < $length; $c++ )
 			$out .= (string)$aZ09[ mt_rand( 0, count( $aZ09 ) - 1 ) ];
-		return Prb::_String( $out );
+		return Prb::Str( $out );
 	}
 }

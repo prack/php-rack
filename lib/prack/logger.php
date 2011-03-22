@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_Logger
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $app;
 	private $level;

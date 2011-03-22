@@ -9,7 +9,7 @@ function prack_lint_assert( $expr, $message )
 
 // TODO: Document!
 class Prack_Lint_InputWrapper
-  implements Prb_Interface_ReadableStreamlike
+  implements Prb_I_ReadableStreamlike
 {
 	private $input;
 	private $on_each;
@@ -121,7 +121,7 @@ class Prack_Lint_InputWrapper
 
 // TODO: Document!
 class Prack_Lint_ErrorWrapper
-  implements Prb_Interface_WritableStreamlike
+  implements Prb_I_WritableStreamlike
 {
 	private $error;
 	
@@ -165,7 +165,7 @@ class Prack_Lint_ErrorWrapper
 }
 
 class Prack_Lint
-  implements Prack_Interface_MiddlewareApp, Prb_Interface_Enumerable
+  implements Prack_I_MiddlewareApp, Prb_I_Enumerable
 {
 	private $assert_option_active;
 	private $assert_option_warning;
@@ -215,7 +215,7 @@ class Prack_Lint
 		## and returns an Array of exactly three values:
 		list( $status, $headers, $this->body ) = $this->middleware_app->call( $env )->raw();
 		if ( is_array( $this->body ) )
-			$this->body = Prb::_Array( $this->body ); // Make body OO-enumerable
+			$this->body = Prb::Ary( $this->body ); // Make body OO-enumerable
 		
 		## The *status*,
 		$this->checkStatus( $status );
@@ -230,7 +230,7 @@ class Prack_Lint
 		
 		$this->popAssertOptions();
 		
-		return Prb::_Array( array( $status, $headers, $this ) );
+		return Prb::Ary( array( $status, $headers, $this ) );
 	}
 	
 	// TODO: Document!
@@ -253,7 +253,7 @@ class Prack_Lint
 		$this->bytes    = 0;
 		
 		## The Body must respond to +each+
-		prack_lint_assert( $this->body instanceof Prb_Interface_Enumerable,
+		prack_lint_assert( $this->body instanceof Prb_I_Enumerable,
 		                   'Response body must respond to each' );
 		
 		$this->body->each( array( $this, 'tabulate' ) );
@@ -368,8 +368,8 @@ class Prack_Lint
 				$session = new Prack_Utils_Session( $session );
 			
 			$as_string = print_r( $session, true );
-			prack_lint_assert( $session instanceof Prb_Interface_Session,
-			                   "session {$as_string} must conform to Prb_Interface_Session" );
+			prack_lint_assert( $session instanceof Prb_I_Session,
+			                   "session {$as_string} must conform to Prb_I_Session" );
 			*/
 		}
 		
@@ -378,8 +378,8 @@ class Prack_Lint
 		if ( $logger = $env->get( 'rack.logger' ) )
 		{
 			$as_string = print_r( $logger, true );
-			prack_lint_assert( $logger instanceof Prb_Interface_Logger,
-			                   "logger {$as_string} must conform to Prb_Interface_Logger" );
+			prack_lint_assert( $logger instanceof Prb_I_Logger,
+			                   "logger {$as_string} must conform to Prb_I_Logger" );
 		}
 		
 		## The server or the application can store their own data in the
@@ -489,7 +489,7 @@ class Prack_Lint
 		
 		## The input stream must respond to +gets+, +each+, +read+ and +rewind+.
 		$as_string = is_object( $input ) ? get_class( $input ) : gettype( $input );
-		prack_lint_assert( ( $input instanceof Prb_Interface_ReadableStreamlike ),
+		prack_lint_assert( ( $input instanceof Prb_I_ReadableStreamlike ),
 		                   "rack.input {$as_string} is not a readable streamlike" );
 	}
 	
@@ -499,7 +499,7 @@ class Prack_Lint
 	{
 		## The error stream must respond to +puts+, +write+ and +flush+.
 		$as_string = is_object( $error ) ? get_class( $error ) : gettype( $error );
-		prack_lint_assert( $error instanceof Prb_Interface_WritableStreamlike,
+		prack_lint_assert( $error instanceof Prb_I_WritableStreamlike,
 		                   "rack.errors {$as_string} is not a writable streamlike" );
 	}
 	
@@ -518,8 +518,8 @@ class Prack_Lint
 	{
 		## The header must respond to +each+, and yield values of key and value.
 		$header_type = is_object( $header ) ? get_class( $header ) : "primitive type ".gettype( $header );
-		prack_lint_assert( $header instanceof Prb_Interface_Enumerable,
-			                 "headers object should conform to Prb_Interface_Enumerable, but doesn't (got {$header_type} as headers)" );
+		prack_lint_assert( $header instanceof Prb_I_Enumerable,
+			                 "headers object should conform to Prb_I_Enumerable, but doesn't (got {$header_type} as headers)" );
 		
 		$header->each( array( $this, 'checkHeader' ) );
 	}

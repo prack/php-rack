@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_Runtime
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $middleware_app;
 	private $header_name;
@@ -25,13 +25,13 @@ class Prack_Runtime
 	// TODO: Document!
 	public function call( $env )
 	{
-		$start_time = Prb::_Time()->raw();
+		$start_time = Prb::Time()->raw();
 		list( $status, $headers, $body ) = $this->middleware_app->call( $env )->raw();
-		$request_time = Prb::_Time( Prb::_Time()->raw() - $start_time );
+		$request_time = Prb::Time( Prb::Time()->raw() - $start_time );
 		
 		if ( !$headers->contains( $this->header_name ) )
-			$headers->set( $this->header_name, Prb::_String( '%0.6f' )->sprintf( $request_time ) );
+			$headers->set( $this->header_name, Prb::Str( '%0.6f' )->sprintf( $request_time ) );
 		
-		return Prb::_Array( array( $status, $headers, $body ) );
+		return Prb::Ary( array( $status, $headers, $body ) );
 	}
 }

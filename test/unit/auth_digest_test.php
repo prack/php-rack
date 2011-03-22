@@ -44,20 +44,20 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	// TODO: Document!
 	public function realm()
 	{
-		return Prb::_String( 'WallysWorld' );
+		return Prb::Str( 'WallysWorld' );
 	}
 	
 	// TODO: Document!
 	public function unprotectedMiddlewareApp()
 	{
 		return new Prack_Test_Echo(
-			Prb::_Numeric( 0 ),
-			Prb::_Hash(),
-			Prb::_Array(),
-			' $this->status  = Prb::_Numeric( 200 );
-			  $this->headers = Prb::_Hash( array( "Content-Type" => Prb::_String( "text/plain" ) ) );
-				$remote_user   = $env->contains( \'REMOTE_USER\' ) ? $env->get( \'REMOTE_USER\' ) : Prb::_String();
-			  $this->body    = Prb::_Array( array( Prb::_String( "Hi {$remote_user->raw()}" ) ) ); '
+			Prb::Num( 0 ),
+			Prb::Hsh(),
+			Prb::Ary(),
+			' $this->status  = Prb::Num( 200 );
+			  $this->headers = Prb::Hsh( array( "Content-Type" => Prb::Str( "text/plain" ) ) );
+				$remote_user   = $env->contains( \'REMOTE_USER\' ) ? $env->get( \'REMOTE_USER\' ) : Prb::Str();
+			  $this->body    = Prb::Ary( array( Prb::Str( "Hi {$remote_user->raw()}" ) ) ); '
 		);
 	}
 	
@@ -66,12 +66,12 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = create_function(
 		  '$username',
-		  'return Prb::_Hash( array( "Alice" => Prb::_String( "correct-password" ) ) )->get( $username->raw() );'
+		  'return Prb::Hsh( array( "Alice" => Prb::Str( "correct-password" ) ) )->get( $username->raw() );'
 		);
 		
 		$middleware_app = Prack_Auth_Digest_MD5::with( $this->unprotectedMiddlewareApp(), null, $callback );
 		$middleware_app->setRealm( $this->realm() );
-		$middleware_app->setOpaque( Prb::_String( 'this-should-be-secret' ) );
+		$middleware_app->setOpaque( Prb::Str( 'this-should-be-secret' ) );
 		
 		return $middleware_app;
 	}
@@ -83,7 +83,7 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		
 		$middleware_app = Prack_Auth_Digest_MD5::with( $this->unprotectedMiddlewareApp(), null, $callback );
 		$middleware_app->setRealm( $this->realm() );
-		$middleware_app->setOpaque( Prb::_String( 'this-should-be-secret' ) );
+		$middleware_app->setOpaque( Prb::Str( 'this-should-be-secret' ) );
 		$middleware_app->setPasswordsHashed( true );
 		
 		return $middleware_app;
@@ -93,7 +93,7 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	public function onHashedPasswords( $username )
 	{
 		return isset( $username ) && $username->raw() == 'Alice'
-		  ? Prb::_String( md5( "Alice:".$this->realm()->raw().":correct-password" ) )
+		  ? Prb::Str( md5( "Alice:".$this->realm()->raw().":correct-password" ) )
 		  : null;
 	}
 	
@@ -101,7 +101,7 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	public function partiallyProtectedMiddlewareApp()
 	{
 		return Prack_URLMap::with(
-		  Prb::_Hash( array(
+		  Prb::Hsh( array(
 		    '/'          => $this->unprotectedMiddlewareApp(),
 		    '/protected' => $this->protectedMiddlewareApp()
 		  ) )
@@ -124,7 +124,7 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	public function request( $method, $path, $headers = null, $callback = null )
 	{
 		if ( is_null( $headers ) )
-			$headers = Prb::_Hash();
+			$headers = Prb::Hsh();
 		
 		$response = $this->request->request( $method, $path, $headers );
 		
@@ -138,9 +138,9 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	public function requestWithDigestAuth( $method, $path, $username, $password, $options = null, $callback = null )
 	{
 		if ( is_null( $options ) )
-			$options = Prb::_Hash();
+			$options = Prb::Hsh();
 		
-		$request_options = Prb::_Hash();
+		$request_options = Prb::Hsh();
 		
 		if ( $options->contains( 'input' ) )
 			$request_options->set( 'input', $options->delete( 'input' ) );
@@ -157,11 +157,11 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		
 		$params = Prack_Auth_Digest_Params::parse( $challenge );
 		
-		$params->set( 'username', $username );
-		$params->set( 'nc',       Prb::_String( '00000001'      ) );
-		$params->set( 'cnonce',   Prb::_String( 'nonsensenonce' ) );
-		$params->set( 'uri',      $path                           );
-		$params->set( 'method',   $method                         );
+		$params->set( 'username', $username                   );
+		$params->set( 'nc',       Prb::Str( '00000001'      ) );
+		$params->set( 'cnonce',   Prb::Str( 'nonsensenonce' ) );
+		$params->set( 'uri',      $path                       );
+		$params->set( 'method',   $method                     );
 		
 		$params->update( $options );
 		$params->set( 'response', Prack_Auth_Digest_MockRequest::with( $params )->response( $password ) );
@@ -170,8 +170,8 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		  $method,
 		  $path,
 		  $request_options->merge(
-		    Prb::_Hash( array(
-		      'HTTP_AUTHORIZATION' => Prb::_String( 'Digest ' )->concat( $params->toS() )
+		    Prb::Hsh( array(
+		      'HTTP_AUTHORIZATION' => Prb::Str( 'Digest ' )->concat( $params->toS() )
 		    ) )
 		  ),
 		  $callback
@@ -204,7 +204,7 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	public function It_should_challenge_when_no_credentials_are_specified()
 	{
 		$callback = array( $this, 'assertDigestAuthChallenge' );
-		$this->request( Prb::_String( 'GET' ), Prb::_String( '/' ), null, $callback );
+		$this->request( Prb::Str( 'GET' ), Prb::Str( '/' ), null, $callback );
 	} // It should challenge when no credentials are specified
 	
 	/**
@@ -216,10 +216,10 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'onCorrectCredentials' );
 		$this->requestWithDigestAuth(
-		  Prb::_String( 'GET'   ),
-		  Prb::_String( '/'     ),
-		  Prb::_String( 'Alice' ),
-		  Prb::_String( 'correct-password' ),
+		  Prb::Str( 'GET'   ),
+		  Prb::Str( '/'     ),
+		  Prb::Str( 'Alice' ),
+		  Prb::Str( 'correct-password' ),
 		  null,
 		  $callback
 		);
@@ -243,10 +243,10 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		$callback = array( $this, 'onCorrectCredentials' );
 		
 		$this->requestWithDigestAuth(
-		  Prb::_String( 'GET'   ),
-		  Prb::_String( '/'     ),
-		  Prb::_String( 'Alice' ),
-		  Prb::_String( 'correct-password' ),
+		  Prb::Str( 'GET'   ),
+		  Prb::Str( '/'     ),
+		  Prb::Str( 'Alice' ),
+		  Prb::Str( 'correct-password' ),
 		  null,
 		  $callback
 		);
@@ -261,10 +261,10 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'assertDigestAuthChallenge' );
 		$this->requestWithDigestAuth(
-		  Prb::_String( 'GET'   ),
-		  Prb::_String( '/'     ),
-		  Prb::_String( 'Bob'   ),
-		  Prb::_String( 'correct-password' ),
+		  Prb::Str( 'GET'   ),
+		  Prb::Str( '/'     ),
+		  Prb::Str( 'Bob'   ),
+		  Prb::Str( 'correct-password' ),
 		  null,
 		  $callback
 		);
@@ -279,10 +279,10 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'assertDigestAuthChallenge' );
 		$this->requestWithDigestAuth(
-		  Prb::_String( 'GET'   ),
-		  Prb::_String( '/'     ),
-		  Prb::_String( 'Bob'   ),
-		  Prb::_String( 'wrong-password' ),
+		  Prb::Str( 'GET'   ),
+		  Prb::Str( '/'     ),
+		  Prb::Str( 'Bob'   ),
+		  Prb::Str( 'wrong-password' ),
 		  null,
 		  $callback
 		);
@@ -296,16 +296,16 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	public function It_should_rechallenge_with_stale_parameter_if_nonce_is_stale()
 	{
 		$callback = array( $this, 'assertDigestAuthChallenge' );
-		Prack_Auth_Digest_Nonce::setTimeLimit( Prb::_Numeric( 1 ) );
+		Prack_Auth_Digest_Nonce::setTimeLimit( Prb::Num( 1 ) );
 		
 		try
 		{
 			$this->requestWithDigestAuth(
-			  Prb::_String( 'GET'   ),
-			  Prb::_String( '/'     ),
-			  Prb::_String( 'Bob'   ),
-			  Prb::_String( 'correct-password' ),
-			  Prb::_Hash( array( 'wait' => Prb::_Numeric( 2 ) ) ),
+			  Prb::Str( 'GET'   ),
+			  Prb::Str( '/'     ),
+			  Prb::Str( 'Bob'   ),
+			  Prb::Str( 'correct-password' ),
+			  Prb::Hsh( array( 'wait' => Prb::Num( 2 ) ) ),
 			  $callback
 			);
 		}
@@ -325,11 +325,11 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		$callback = array( $this, 'assertBadRequest' );
 		
 		$this->requestWithDigestAuth(
-		  Prb::_String( 'GET'   ),
-		  Prb::_String( '/'     ),
-		  Prb::_String( 'Alice' ),
-		  Prb::_String( 'correct-password' ),
-		  Prb::_Hash( array( 'qop' => Prb::_String( 'auth-int' ) ) ),
+		  Prb::Str( 'GET'   ),
+		  Prb::Str( '/'     ),
+		  Prb::Str( 'Alice' ),
+		  Prb::Str( 'correct-password' ),
+		  Prb::Hsh( array( 'qop' => Prb::Str( 'auth-int' ) ) ),
 		  $callback
 		);
 	} // It should return 400 Bad Request if incorrect qop given
@@ -344,11 +344,11 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		$callback = array( $this, 'assertBadRequest' );
 		
 		$this->requestWithDigestAuth(
-		  Prb::_String( 'GET'   ),
-		  Prb::_String( '/'     ),
-		  Prb::_String( 'Alice' ),
-		  Prb::_String( 'correct-password' ),
-		  Prb::_Hash( array( 'uri' => Prb::_String( '/foo' ) ) ),
+		  Prb::Str( 'GET'   ),
+		  Prb::Str( '/'     ),
+		  Prb::Str( 'Alice' ),
+		  Prb::Str( 'correct-password' ),
+		  Prb::Hsh( array( 'uri' => Prb::Str( '/foo' ) ) ),
 		  $callback
 		);
 	} // It should return 400 Bad Request if incorrect URI given
@@ -363,9 +363,9 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		$callback = array( $this, 'assertBadRequest' );
 		
 		$this->request(
-		  Prb::_String( 'GET'   ),
-		  Prb::_String( '/'     ),
-		  Prb::_Hash( array( 'HTTP_AUTHORIZATION' => Prb::_String( 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==' ) ) ),
+		  Prb::Str( 'GET'   ),
+		  Prb::Str( '/'     ),
+		  Prb::Hsh( array( 'HTTP_AUTHORIZATION' => Prb::Str( 'Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==' ) ) ),
 		  $callback
 		);
 	} // It should return 400 Bad Request if different auth scheme used
@@ -381,8 +381,8 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		$callback      = array( $this, 'onUnprotectedPath' );
 		
 		$this->request(
-		  Prb::_String( 'GET'   ),
-		  Prb::_String( '/'     ),
+		  Prb::Str( 'GET'   ),
+		  Prb::Str( '/'     ),
 		  null,
 		  $callback
 		);
@@ -405,8 +405,8 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		$callback      = array( $this, 'assertDigestAuthChallenge' );
 		
 		$this->request(
-		  Prb::_String( 'GET'        ),
-		  Prb::_String( '/protected' ),
+		  Prb::Str( 'GET'        ),
+		  Prb::Str( '/protected' ),
 		  null,
 		  $callback
 		);
@@ -421,10 +421,10 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'onCorrectCredentials' );
 		$this->requestWithDigestAuth(
-		  Prb::_String( 'GET'        ),
-		  Prb::_String( '/protected' ),
-		  Prb::_String( 'Alice'      ),
-		  Prb::_String( 'correct-password' ),
+		  Prb::Str( 'GET'        ),
+		  Prb::Str( '/protected' ),
+		  Prb::Str( 'Alice'      ),
+		  Prb::Str( 'correct-password' ),
 		  null,
 		  $callback
 		);
@@ -439,10 +439,10 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'onCorrectCredentials' );
 		$this->requestWithDigestAuth(
-		  Prb::_String( 'POST'       ),
-		  Prb::_String( '/protected' ),
-		  Prb::_String( 'Alice'      ),
-		  Prb::_String( 'correct-password' ),
+		  Prb::Str( 'POST'       ),
+		  Prb::Str( '/protected' ),
+		  Prb::Str( 'Alice'      ),
+		  Prb::Str( 'correct-password' ),
 		  null,
 		  $callback
 		);
@@ -458,11 +458,11 @@ class Prack_Auth_DigestTest extends PHPUnit_Framework_TestCase
 		$this->request = Prack_Mock_Request::with( $this->protectedMiddlewareAppWithMethodOverride() );
 		$callback      = array( $this, 'onCorrectCredentials' );
 		$this->requestWithDigestAuth(
-		  Prb::_String( 'POST'       ),
-		  Prb::_String( '/protected' ),
-		  Prb::_String( 'Alice'      ),
-		  Prb::_String( 'correct-password' ),
-		  Prb::_Hash( array( 'input' => Prb::_String( '_method=put' ) ) ),
+		  Prb::Str( 'POST'       ),
+		  Prb::Str( '/protected' ),
+		  Prb::Str( 'Alice'      ),
+		  Prb::Str( 'correct-password' ),
+		  Prb::Hsh( array( 'input' => Prb::Str( '_method=put' ) ) ),
 		  $callback
 		);
 	} // It should return application output if correct credentials given for PUT (using method override of POST)

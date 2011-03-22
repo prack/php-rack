@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_Auth_Digest_MD5 extends Prack_Auth_Abstract_Handler
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $opaque;
 	private $passwords_hashed;
@@ -14,7 +14,7 @@ class Prack_Auth_Digest_MD5 extends Prack_Auth_Abstract_Handler
 		static $qop = null;
 		
 		if ( is_null( $qop ) )
-			$qop = Prb::_String( 'auth' );
+			$qop = Prb::Str( 'auth' );
 		
 		return $qop;
 	}
@@ -50,7 +50,7 @@ class Prack_Auth_Digest_MD5 extends Prack_Auth_Abstract_Handler
 		if ( $this->isValid( $auth ) )
 		{
 			if ( $auth->nonce()->isStale() )
-				return $this->unauthorized( $this->challenge( Prb::_Hash( array( 'stale' => true ) ) ) );
+				return $this->unauthorized( $this->challenge( Prb::Hsh( array( 'stale' => true ) ) ) );
 			else
 				$env->set( 'REMOTE_USER', $auth->username() );
 			
@@ -64,7 +64,7 @@ class Prack_Auth_Digest_MD5 extends Prack_Auth_Abstract_Handler
 	private function params( $hash = null )
 	{
 		if ( is_null( $hash ) )
-			$hash = Prb::_Hash();
+			$hash = Prb::Hsh();
 		
 		$this->hash = $hash;
 		
@@ -102,9 +102,9 @@ class Prack_Auth_Digest_MD5 extends Prack_Auth_Abstract_Handler
 	public function challenge( $hash = null )
 	{
 		if ( is_null( $hash ) )
-			$hash = Prb::_Hash();
+			$hash = Prb::Hsh();
 		
-		return Prb::_String( "Digest {$this->params( $hash )->toS()->raw()}" );
+		return Prb::Str( "Digest {$this->params( $hash )->toS()->raw()}" );
 	}
 	
 	// TODO: Document!
@@ -140,7 +140,7 @@ class Prack_Auth_Digest_MD5 extends Prack_Auth_Abstract_Handler
 	// TODO: Document!
 	private function md5( $data )
 	{
-		return Prb::_String( md5( $data->raw() ) );
+		return Prb::Str( md5( $data->raw() ) );
 	}
 	
 	// TODO: Document!
@@ -150,29 +150,29 @@ class Prack_Auth_Digest_MD5 extends Prack_Auth_Abstract_Handler
 	private function KD( $secret, $data )
 	{
 		return $this->H(
-		  Prb::_Array( array(
+		  Prb::Ary( array(
 		    $secret, $data
-		  ) )->join( Prb::_String( ':' ) )
+		  ) )->join( Prb::Str( ':' ) )
 		);
 	}
 	
 	// TODO: Document!
 	private function A1( $auth, $password )
 	{
-		return Prb::_Array( array(
+		return Prb::Ary( array(
 		  $auth->username(),
 		  $auth->realm(),
 		  $password
-		) )->join( Prb::_String( ':' ) );
+		) )->join( Prb::Str( ':' ) );
 	}
 	
 	// TODO: Document!
 	private function A2( $auth )
 	{
-		return Prb::_Array( array(
+		return Prb::Ary( array(
 		  $auth->method(),
 		  $auth->uri(),
-		) )->join( Prb::_String( ':' ) );
+		) )->join( Prb::Str( ':' ) );
 	}
 	
 	// TODO: Document!
@@ -184,13 +184,13 @@ class Prack_Auth_Digest_MD5 extends Prack_Auth_Abstract_Handler
 		
 		return $this->KD(
 		  $password_hash,
-		  Prb::_Array( array(
+		  Prb::Ary( array(
 		    $auth->nonce(),
 		    $auth->nc(),
 		    $auth->cnonce(),
 		    self::qop(),
 		    $this->H( $this->A2( $auth ) )
-		  ) )->join( Prb::_String( ':' ) )
+		  ) )->join( Prb::Str( ':' ) )
 		);
 	}
 	

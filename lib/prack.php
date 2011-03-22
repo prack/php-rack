@@ -5,7 +5,7 @@ global $g_prack_f_sep;
 global $g_prack_o_sep;
 
 if ( is_null( $g_prack_f_sep ) )
-	$g_prack_f_sep = Prb::_String( PHP_EOL );
+	$g_prack_f_sep = Prb::Str( PHP_EOL );
 
 // TODO: Document!
 class Prack

@@ -25,10 +25,10 @@ class Prack_ModPHP_Compat
 	// TODO: Document!
 	public function extractEnv( $server )
 	{
-		$env = Prb::_Hash();
+		$env = Prb::Hsh();
 		
 		foreach ( $server as $variable => $value )
-			$env->set( $variable, Prb::_String( $value ) );
+			$env->set( $variable, Prb::Str( $value ) );
 		
 		// Undoing PHP's stupid auto-processing of credentials.
 		$auth_user = $env->delete( 'PHP_AUTH_USER' );
@@ -37,10 +37,10 @@ class Prack_ModPHP_Compat
 		{
 			$env->set(
 			  'X_HTTP_AUTHORIZATION',
-			  Prb::_String( 'Basic ' )->concat(
-			    Prb::_Array( array(
+			  Prb::Str( 'Basic ' )->concat(
+			    Prb::Ary( array(
 			      $auth_user, $auth_pass
-			    ) )->join( Prb::_String( ':' ) )->base64Encode()
+			    ) )->join( Prb::Str( ':' ) )->base64Encode()
 			  )
 			);
 		}
@@ -52,8 +52,8 @@ class Prack_ModPHP_Compat
 		$env->set( 'rack.multiprocess', false                                         );
 		$env->set( 'rack.run_once',     true                                          );
 		
-		$env->set( 'SCRIPT_NAME', Prb::_String() );
-		$env->set( 'PATH_INFO',   Prb::_String( $server[ 'REDIRECT_X_PRACK_PATHINFO' ] ) );
+		$env->set( 'SCRIPT_NAME', Prb::Str() );
+		$env->set( 'PATH_INFO',   Prb::Str( $server[ 'REDIRECT_X_PRACK_PATHINFO' ] ) );
 		
 		return $env;
 	}
@@ -72,8 +72,8 @@ class Prack_ModPHP_Compat
 		
 		$callback = array( $this, 'onRender' );
 		
-		if ( $body instanceof Prb_Interface_Stringable )
-			$body = Prb::_Array( array( $body->toS() ) );
+		if ( $body instanceof Prb_I_Stringable )
+			$body = Prb::Ary( array( $body->toS() ) );
 		
 		$body->each( $callback );
 	}

@@ -13,16 +13,16 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_retain_header_case()
 	{
 		$headerhash = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array(
-		    'Content-MD5' => Prb::_String( 'd5ff4e2a0 ...' )
+		  Prb::Hsh( array(
+		    'Content-MD5' => Prb::Str( 'd5ff4e2a0 ...' )
 		  ) )
 		);
 		
-		$headerhash->set( 'ETag', Prb::_String( 'Boo!' ) );
+		$headerhash->set( 'ETag', Prb::Str( 'Boo!' ) );
 		
-		$expected = Prb::_Hash( array(
-		  'Content-MD5' => Prb::_String( 'd5ff4e2a0 ...' ),
-		  'ETag'        => Prb::_String( 'Boo!' )
+		$expected = Prb::Hsh( array(
+		  'Content-MD5' => Prb::Str( 'd5ff4e2a0 ...' ),
+		  'ETag'        => Prb::Str( 'Boo!' )
 		) );
 		
 		$this->assertEquals( $expected, $headerhash->toHash() );
@@ -36,8 +36,8 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_check_existence_of_keys_case_insensitively()
 	{
 		$headerhash = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array(
-		    'Content-MD5' => Prb::_String( 'd5ff4e2a0 ...' )
+		  Prb::Hsh( array(
+		    'Content-MD5' => Prb::Str( 'd5ff4e2a0 ...' )
 		  ) )
 		);
 		
@@ -53,17 +53,17 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_merge_case_insensitively()
 	{
 		$left = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 
-		    'ETag'           => Prb::_String( 'HELLO' ),
-		    'content-length' => Prb::_String( '123'   )
+		  Prb::Hsh( array( 
+		    'ETag'           => Prb::Str( 'HELLO' ),
+		    'content-length' => Prb::Str( '123'   )
 		  ) )
 		);
 		
 		$expected = $right = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 
-		    'Etag'           => Prb::_String( 'WORLD' ),
-		    'Content-Length' => Prb::_String( '321'   ),
-		    'Foo'            => Prb::_String( 'BAR'   )
+		  Prb::Hsh( array( 
+		    'Etag'           => Prb::Str( 'WORLD' ),
+		    'Content-Length' => Prb::Str( '321'   ),
+		    'Foo'            => Prb::Str( 'BAR'   )
 		  ) )
 		);
 		
@@ -80,16 +80,16 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_overwrite_case_insensitively_and_assume_the_new_key_s_case()
 	{
 		$headerhash = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 'Foo-Bar' => Prb::_String( 'baz' ) ) )
+		  Prb::Hsh( array( 'Foo-Bar' => Prb::Str( 'baz' ) ) )
 		);
 		
-		$headerhash->set( 'foo-bar', Prb::_String( 'bizzle' ) );
+		$headerhash->set( 'foo-bar', Prb::Str( 'bizzle' ) );
 		
 		$this->assertEquals( 'bizzle', $headerhash->get( 'FOO-BAR' )->raw() );
 		$this->assertEquals( 1, $headerhash->length() );
 		$this->assertEquals(
-		  Prb::_Hash( array(
-		    'foo-bar' => Prb::_String( 'bizzle' )
+		  Prb::Hsh( array(
+		    'foo-bar' => Prb::Str( 'bizzle' )
 		  ) ),
 		  $headerhash->toHash()
 		);
@@ -103,7 +103,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_be_converted_to_real_Prb_Hash()
 	{
 		$headerhash = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) )
+		  Prb::Hsh( array( 'foo' => Prb::Str( 'bar' ) ) )
 		);
 		$this->assertEquals( 'Prb_Hash', get_class( $headerhash->toHash() ) );
 	} // It should be converted to real Prb_Hash
@@ -116,13 +116,13 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_convert_values_to_Prb_String_when_converting_to_Prb_Hash()
 	{
 		$headerhash = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array(
-		    'foo' => Prb::_Array( array(
-		      Prb::_String( 'bar' ), Prb::_String( 'baz' )
+		  Prb::Hsh( array(
+		    'foo' => Prb::Ary( array(
+		      Prb::Str( 'bar' ), Prb::Str( 'baz' )
 		    ) )
 		  ) )
 		);
-		$this->assertEquals( array( 'foo' => Prb::_String( "bar\nbaz" ) ), $headerhash->toHash()->raw() );
+		$this->assertEquals( array( 'foo' => Prb::Str( "bar\nbaz" ) ), $headerhash->toHash()->raw() );
 	} // It should convert values to Prb_String when converting to Prb_Hash
 	
 	/**
@@ -133,9 +133,9 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_replace_correctly()
 	{
 		$headerhash  = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 'Foo-Bar' => Prb::_String( 'baz' ) ) )
+		  Prb::Hsh( array( 'Foo-Bar' => Prb::Str( 'baz' ) ) )
 		);
-		$replacement = Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) );
+		$replacement = Prb::Hsh( array( 'foo' => Prb::Str( 'bar' ) ) );
 		$headerhash->replace( $replacement );
 		$this->assertEquals( 'bar', $headerhash->get( 'foo' )->raw() );
 	} // It should replace correctly
@@ -148,7 +148,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_be_able_to_delete_the_given_key_case_sensitively()
 	{
 		$headerhash = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) )
+		  Prb::Hsh( array( 'foo' => Prb::Str( 'bar' ) ) )
 		);
 		$headerhash->delete( 'foo' );
 		$this->assertNull( $headerhash->get( 'foo' ) );
@@ -163,7 +163,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_return_the_deleted_value_when_delete_is_called_on_an_existing_key()
 	{
 		$headerhash = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) )
+		  Prb::Hsh( array( 'foo' => Prb::Str( 'bar' ) ) )
 		);
 		$this->assertEquals( 'bar', $headerhash->delete( 'Foo' )->raw() );
 	} // It should return the deleted value when delete is called on an existing key
@@ -176,7 +176,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_return_null_when_delete_is_called_on_a_non_existant_key()
 	{
 		$headerhash = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) )
+		  Prb::Hsh( array( 'foo' => Prb::Str( 'bar' ) ) )
 		);
 		$this->assertNull( $headerhash->delete( 'Hello' ) );
 	} // It should return null when delete is called on a non-existant key
@@ -189,7 +189,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_avoid_unnecessary_object_creation_if_possible()
 	{
 		$one = Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) )
+		  Prb::Hsh( array( 'foo' => Prb::Str( 'bar' ) ) )
 		);
 		$two = Prack_Utils_HeaderHash::using( $one );
 		
@@ -204,7 +204,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 	public function It_should_create_an_object_with_an_array_otherwise()
 	{
 		$this->assertNotNull( Prack_Utils_HeaderHash::using(
-		  Prb::_Hash( array( 'foo' => Prb::_String( 'bar' ) ) )
+		  Prb::Hsh( array( 'foo' => Prb::Str( 'bar' ) ) )
 		) );
 	} // It should create an object with an array otherwise
 	
@@ -221,9 +221,9 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 		  'Prack_Utils_HeaderHash',
 		  null,                               // non-stubbed methods
 		  array(                              // constructor arguments
-		    Prb::_Hash( array(
-		      'foo' => Prb::_Array( array( Prb::_String( 'foo' ) ) ),
-		      'bar' => Prb::_Array( array( Prb::_String( 'bar' ) ) )
+		    Prb::Hsh( array(
+		      'foo' => Prb::Ary( array( Prb::Str( 'foo' ) ) ),
+		      'bar' => Prb::Ary( array( Prb::Str( 'bar' ) ) )
 		    ) )
 		  )
 		);
@@ -246,7 +246,7 @@ class Prack_Utils_HeaderHashTest extends PHPUnit_Framework_TestCase
 		$headerhash_mock = $this->getMock(
 		  'Prack_Utils_HeaderHash',
 		  array( 'contains' ),                // non-stubbed methods
-		  array( Prb::_Hash() )             // constructor arguments
+		  array( Prb::Hsh() )             // constructor arguments
 		);
 		
 		$headerhash_mock->expects( $this->exactly( 2 ) )

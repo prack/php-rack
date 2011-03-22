@@ -34,7 +34,7 @@ class Prack_Auth_Basic_Request extends Prack_Auth_Abstract_Request
 #
 # See also: <tt>example/protectedlobster.rb</tt>
 class Prack_Auth_Basic extends Prack_Auth_Abstract_Handler
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	// TODO: Document!
 	static function with( $middleware_app, $realm = null, $callback = null )
@@ -71,6 +71,6 @@ class Prack_Auth_Basic extends Prack_Auth_Abstract_Handler
 	// TODO: Document!
 	protected function challenge()
 	{
-		return Prb::_String( 'Basic realm="%s"' )->sprintf( $this->realm() );
+		return Prb::Str( 'Basic realm="%s"' )->sprintf( $this->realm() );
 	}
 }

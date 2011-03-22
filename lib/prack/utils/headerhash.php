@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_Utils_HeaderHash extends Prb_Hash
-  implements Prb_Interface_Enumerable
+  implements Prb_I_Enumerable
 {
 	private $names;
 	private $on_each;
@@ -10,7 +10,7 @@ class Prack_Utils_HeaderHash extends Prb_Hash
 	// TODO: Document!
 	static function using( $headers )
 	{
-		$headers = is_null( $headers ) ? Prb::_Hash() : $headers;
+		$headers = is_null( $headers ) ? Prb::Hsh() : $headers;
 		if ( !( $headers instanceof Prb_Hash ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: $headers is not a Prb_Hash or any subclass in method using ' );
 			
@@ -24,7 +24,7 @@ class Prack_Utils_HeaderHash extends Prb_Hash
 	{
 		parent::__construct( $headers->raw() );
 		
-		$this->names = Prb::_Hash();
+		$this->names = Prb::Hsh();
 		
 		foreach ( $headers->raw() as $key => $value )
 			$this->set( $key, $value );
@@ -53,7 +53,7 @@ class Prack_Utils_HeaderHash extends Prb_Hash
 	// TODO: Document!
 	public function toHash()
 	{
-		$distilled = Prb::_Hash();
+		$distilled = Prb::Hsh();
 		
 		foreach ( $this->array as $key => $value )
 			$distilled->set( $key, $this->distill( $value ) );
@@ -133,7 +133,7 @@ class Prack_Utils_HeaderHash extends Prb_Hash
 	private function distill( $value )
 	{
 		if ( is_object( $value ) && method_exists( $value, 'toAry' ) )
-			return $value->toAry()->join( Prb::_String( "\n" ) );
+			return $value->toAry()->join( Prb::Str( "\n" ) );
 		else if ( $value instanceof Prb_String )
 			return $value;
 		throw new Prb_Exception_Type( 'FAILSAFE: distill argument must be an object and respond to toAry' );

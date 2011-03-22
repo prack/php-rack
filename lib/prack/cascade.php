@@ -5,7 +5,7 @@
 # first response that is not 404 (or in a list of configurable
 # status codes).
 class Prack_Cascade
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $middleware_apps;
 	private $has_app;
@@ -17,7 +17,7 @@ class Prack_Cascade
 		static $not_found = null;
 		
 		if ( is_null( $not_found ) )
-			$not_found = Prb::_Array( array( Prb::_Numeric( 404 ), Prb::_Hash(), Prb::_Array() ) );
+			$not_found = Prb::Ary( array( Prb::Num( 404 ), Prb::Hsh(), Prb::Ary() ) );
 		
 		return $not_found;
 	}
@@ -32,16 +32,16 @@ class Prack_Cascade
 	public function __construct( $middleware_apps, $catch = null )
 	{
 		$catch = is_null( $catch )
-		  ? Prb::_Array( array( Prb::_Numeric( 404 ) ) )
+		  ? Prb::Ary( array( Prb::Num( 404 ) ) )
 		  : $catch;
 		
-		$this->middleware_apps = Prb::_Array();
-		$this->has_app         = Prb::_Hash();
+		$this->middleware_apps = Prb::Ary();
+		$this->has_app         = Prb::Hsh();
 		
 		foreach ( $middleware_apps->raw() as $middleware_app )
 			$this->add( $middleware_app );
 		
-		$this->catch = Prb::_Hash();
+		$this->catch = Prb::Hsh();
 		foreach ( $catch->raw() as $status )
 			$this->catch->set( $status->toS()->raw(), true );
 	}

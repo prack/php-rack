@@ -13,7 +13,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	function setUp()
 	{
 		$this->rewindable_input = Prack_RewindableInput::with(
-			Prb_IO::withString( Prb::_String( 'hello world' ) )
+			Prb_IO::withString( Prb::Str( 'hello world' ) )
 		);
 	}
 	
@@ -33,7 +33,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_creatable_without_a_string()
 	{
-		$this->rewindable_input = Prb_IO::withString( Prb::_String() );
+		$this->rewindable_input = Prb_IO::withString( Prb::Str() );
 		$this->assertEquals( '', $this->rewindable_input->read()->raw() );
 	} // It should be creatable without a string
 	
@@ -86,7 +86,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_length_and_buffer()
 	{
-		$buffer = Prb::_String();
+		$buffer = Prb::Str();
 		$result = $this->rewindable_input->read( 1, $buffer );
 		$this->assertEquals( 'h', $result->raw() );
 		$this->assertSame( $buffer, $result );
@@ -99,7 +99,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_null_and_buffer()
 	{
-		$buffer = Prb::_String();
+		$buffer = Prb::Str();
 		$result = $this->rewindable_input->read( null, $buffer );
 		$this->assertEquals( 'hello world', $result->raw() );
 		$this->assertSame( $buffer, $result );
@@ -148,9 +148,9 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'eachCallback' );
 		
-		$this->lines = Prb::_Array();
+		$this->lines = Prb::Ary();
 		$this->rewindable_input->each( $callback );
-		$this->assertEquals( array( Prb::_String( 'hello world' ) ), $this->lines->raw() );
+		$this->assertEquals( array( Prb::Str( 'hello world' ) ), $this->lines->raw() );
 		
 		$this->rewindable_input->close();
 		try

@@ -9,7 +9,7 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 		static $docroot = null;
 		
 		if ( is_null( $docroot ) )
-			$docroot = Prb::_String( join( DIRECTORY_SEPARATOR, array( dirname( __FILE__ ) ) ) );
+			$docroot = Prb::Str( join( DIRECTORY_SEPARATOR, array( dirname( __FILE__ ) ) ) );
 		
 		return $docroot;
 	}
@@ -23,7 +23,7 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Mock_Request::with(
 		  Prack_File::with( self::docroot() )
-		)->get( Prb::_String( '/cgi/test' ), null, Prb::_Hash( array( 'lint' => true ) ) );
+		)->get( Prb::Str( '/cgi/test' ), null, Prb::Hsh( array( 'lint' => true ) ) );
 		
 		$this->assertTrue( $response->isOK() );
 		$this->assertTrue( $response->match( '/ruby/' ) );
@@ -38,12 +38,12 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Mock_Request::with(
 		  Prack_File::with( self::docroot() )
-		)->get( Prb::_String( '/cgi/test' ), null, Prb::_Hash( array( 'lint' => true ) ) );
+		)->get( Prb::Str( '/cgi/test' ), null, Prb::Hsh( array( 'lint' => true ) ) );
 		
-		$path = Prb::_String( join( DIRECTORY_SEPARATOR, array( self::docroot()->raw(), '/cgi/test' ) ) );
+		$path = Prb::Str( join( DIRECTORY_SEPARATOR, array( self::docroot()->raw(), '/cgi/test' ) ) );
 		
 		$this->assertTrue( $response->isOK() );
-		$this->assertEquals( Prb::_Time( filemtime( $path->raw() ) )->httpdate(), $response->get( 'Last-Modified' ) );
+		$this->assertEquals( Prb::Time( filemtime( $path->raw() ) )->httpdate(), $response->get( 'Last-Modified' ) );
 	} // It should set Last-Modified header
 	
 	/**
@@ -55,7 +55,7 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Mock_Request::with(
 		  Prack_File::with( self::docroot() )
-		)->get( Prb::_String( '/cgi/%74%65%73%74' ), null, Prb::_Hash( array( 'lint' => true ) ) );
+		)->get( Prb::Str( '/cgi/%74%65%73%74' ), null, Prb::Hsh( array( 'lint' => true ) ) );
 		
 		$this->assertTrue( $response->isOK() );
 		$this->assertTrue( $response->match( '/ruby/' ) );
@@ -70,7 +70,7 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Mock_Request::with(
 		  Prack_File::with( self::docroot() )
-		)->get( Prb::_String( '/cgi/../test' ), null, Prb::_Hash( array( 'lint' => true ) ) );
+		)->get( Prb::Str( '/cgi/../test' ), null, Prb::Hsh( array( 'lint' => true ) ) );
 		
 		$this->assertTrue( $response->isForbidden() );
 	} // It should not allow directory traversal
@@ -84,7 +84,7 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Mock_Request::with(
 		  Prack_File::with( self::docroot() )
-		)->get( Prb::_String( '/%2E%2E/README' ), null, Prb::_Hash( array( 'lint' => true ) ) );
+		)->get( Prb::Str( '/%2E%2E/README' ), null, Prb::Hsh( array( 'lint' => true ) ) );
 		
 		$this->assertTrue( $response->isForbidden() );
 	} // It should not allow directory traversal with encoded periods
@@ -98,7 +98,7 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Mock_Request::with(
 		  Prack_File::with( self::docroot() )
-		)->get( Prb::_String( '/cgi/blubb' ), null, Prb::_Hash( array( 'lint' => true ) ) );
+		)->get( Prb::Str( '/cgi/blubb' ), null, Prb::Hsh( array( 'lint' => true ) ) );
 		
 		$this->assertTrue( $response->isNotFound() );
 	} // It should 404 if it can't find the file
@@ -112,7 +112,7 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 	{
 		$response = Prack_Mock_Request::with(
 		  Prack_File::with( self::docroot() )
-		)->get( Prb::_String( '/cgi' ), null, Prb::_Hash( array( 'lint' => true ) ) );
+		)->get( Prb::Str( '/cgi' ), null, Prb::Hsh( array( 'lint' => true ) ) );
 		
 		$this->assertTrue( $response->isNotFound() );
 	} // It should detect Prb_Exception_System
@@ -124,10 +124,10 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_return_bodies_that_respond_to_toPath()
 	{
-		$env = Prack_Mock_Request::envFor( Prb::_String( '/cgi/test' ) );
+		$env = Prack_Mock_Request::envFor( Prb::Str( '/cgi/test' ) );
 		list( $status, $headers, $body ) = Prack_File::with( self::docroot() )->call( $env )->raw();
 		
-		$path = Prb::_String( join( DIRECTORY_SEPARATOR, array( self::docroot()->raw(), '/cgi/test' ) ) );
+		$path = Prb::Str( join( DIRECTORY_SEPARATOR, array( self::docroot()->raw(), '/cgi/test' ) ) );
 		
 		$this->assertEquals( 200, $status->raw() );
 		$this->assertTrue( method_exists( $body, 'toPath' ) );

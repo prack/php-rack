@@ -185,7 +185,7 @@
       </thead>
       <tbody>
           <?php
-            $callback = create_function( '$k,$v', 'return Prb::_String( $k );' );
+            $callback = create_function( '$k,$v', 'return Prb::Str( $k );' );
             $sorted   = $request->GET()->sortBy( $callback );
             foreach( $sorted->raw() as $key => $val ):
           ?>
@@ -211,7 +211,7 @@
       </thead>
       <tbody>
           <?php
-            $callback = create_function( '$k,$v', 'return Prb::_String( $k );' );
+            $callback = create_function( '$k,$v', 'return Prb::Str( $k );' );
             $sorted   = $request->POST()->sortBy( $callback );
             foreach( $sorted->raw() as $key => $val ):
           ?>
@@ -260,7 +260,7 @@
     </thead>
     <tbody>
         <?php
-          $callback = create_function( '$k,$v', 'return Prb::_String( $k );' );
+          $callback = create_function( '$k,$v', 'return Prb::Str( $k );' );
           $sorted   = $environment->sortBy( $callback );
           foreach( $sorted->raw() as $key => $val ):
         ?>

@@ -1,7 +1,7 @@
 <?php
 
 // TODO: Document!
-interface Prack_Interface_MiddlewareApp
+interface Prack_I_MiddlewareApp
 {
 	public function call( $env );
 }

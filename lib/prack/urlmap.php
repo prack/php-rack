@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_URLMap
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	const ENTRY_ELEMENT_COUNT = 4;
 	
@@ -25,10 +25,10 @@ class Prack_URLMap
 	{
 		$callback       = array( $this, 'onRemap' );
 		$proxy_callback = create_function( '$h,$l,$m,$a', '
-		  return Prb::_Array( array (
-		    isset( $h ) ? Prb::_Numeric( -$h->length() )
-		                : Prb::_Numeric( -PHP_INT_MAX  ),
-		    Prb::_Numeric( -$l->length() )
+		  return Prb::Ary( array (
+		    isset( $h ) ? Prb::Num( -$h->length() )
+		                : Prb::Num( -PHP_INT_MAX  ),
+		    Prb::Num( -$l->length() )
 		  ) );
 		');
 		$result = $hash_map->map( $callback );
@@ -40,12 +40,12 @@ class Prack_URLMap
 	// TODO: Document!
 	public function onRemap( $location, $middleware_app )
 	{
-		$location = Prb::_String( $location );
+		$location = Prb::Str( $location );
 		
 		if ( $location->match( '/\Ahttps?:\/\/(.*?)(\/.*)/', $matches ) )
 		{
-			$host     = Prb::_String( $matches[ 1 ][ 0 ] );
-			$location = Prb::_String( $matches[ 2 ][ 0 ] );
+			$host     = Prb::Str( $matches[ 1 ][ 0 ] );
+			$location = Prb::Str( $matches[ 2 ][ 0 ] );
 		}
 		else
 			$host = null;
@@ -53,11 +53,11 @@ class Prack_URLMap
 		if ( $location->slice( 0 )->raw() != '/' )
 			throw new Prb_Exception_Argument( 'paths need to start with /' );
 		
-		$location   = $location->chomp( Prb::_String( '/' ) );
+		$location   = $location->chomp( Prb::Str( '/' ) );
 		$normalized = preg_replace( '/\//', '\/+', preg_quote( $location->raw() ) );
 		$pattern    = "/\A{$normalized}(.*)/";
 		
-		return Prb::_Array( array(
+		return Prb::Ary( array(
 		  $host, $location, $pattern, $middleware_app
 		) );
 	}
@@ -105,9 +105,9 @@ class Prack_URLMap
 				//   PATH_INFO   => '/foo'
 				// Note that any query string won't make it into PATH_INFO because the web server will put it in QUERY_STRING.
 				$env->mergeInPlace(
-				  Prb::_Hash( array(
-				    'SCRIPT_NAME' => Prb::_String( $env_script_name->raw().$mapping_location->raw() ),
-				    'PATH_INFO'   => Prb::_String( $matches[ 1 ][ 0 ] )
+				  Prb::Hsh( array(
+				    'SCRIPT_NAME' => Prb::Str( $env_script_name->raw().$mapping_location->raw() ),
+				    'PATH_INFO'   => Prb::Str( $matches[ 1 ][ 0 ] )
 				  ) )
 				);
 				
@@ -116,7 +116,7 @@ class Prack_URLMap
 				
 				$return->get( 1 )
 				  ->mergeInPlace(
-				    Prb::_Hash( array( 
+				    Prb::Hsh( array( 
 				      'PATH_INFO'   => $env_path,
 				      'SCRIPT_NAME' => $env_script_name
 				    ) )
@@ -125,22 +125,22 @@ class Prack_URLMap
 				return $return;
 			}
 			
-			return Prb::_Array( array(
-			  Prb::_Numeric( 404 ),
-			  Prb::_Hash( array(
-			    'Content-Type' => Prb::_String( 'text/html' ),
-			    'X-Cascade'    => Prb::_String( 'pass' ),
-			  ) )->mergeInPlace( Prb::_Hash( array( 
+			return Prb::Ary( array(
+			  Prb::Num( 404 ),
+			  Prb::Hsh( array(
+			    'Content-Type' => Prb::Str( 'text/html' ),
+			    'X-Cascade'    => Prb::Str( 'pass' ),
+			  ) )->mergeInPlace( Prb::Hsh( array( 
 			    'PATH_INFO'   => $env_path,
 			    'SCRIPT_NAME' => $env_script_name
 			  ) ) ),
-			  Prb::_Array( array( Prb::_String( "Not Found: {$env_path->raw()}" ) ) )
+			  Prb::Ary( array( Prb::Str( "Not Found: {$env_path->raw()}" ) ) )
 			) );
 		}
 		catch ( Exception $e )
 		{
 			$env->mergeInPlace(
-			  Prb::_Hash( array(
+			  Prb::Hsh( array(
 			    'PATH_INFO'   => $env_path,
 			    'SCRIPT_NAME' => $env_script_name
 			  ) )

@@ -89,16 +89,16 @@ class Prack_Mock_Request
 		
 		$parts = array_filter( $parts, 'strlen' );
 		
-		return Prb::_Hash( $parts );
+		return Prb::Hsh( $parts );
 	}
 	
 	// TODO: Document!
 	static function envFor( $url = null, $options = null )
 	{
-		$url = is_null( $url ) ? Prb::_String() : $url;
+		$url = is_null( $url ) ? Prb::Str() : $url;
 		if ( !( $url instanceof Prb_String ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: envFor $url must be Prb_String' );
-		$options = is_null( $options ) ? Prb::_Hash() : $options;
+		$options = is_null( $options ) ? Prb::Hsh() : $options;
 		if ( !( $options instanceof Prb_Hash ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: envFor $options must be Prb_Hash' );
 		
@@ -118,32 +118,32 @@ class Prack_Mock_Request
 		// Request method, uppercased ('GET' by default):
 		$env[ 'REQUEST_METHOD' ] =
 		  $options->contains( 'method' ) ? $options->delete( 'method' )->upcase()
-		                                 : Prb::_String( 'GET' );
+		                                 : Prb::Str( 'GET' );
 		
 		$env[ 'rack.url_scheme' ] =
-		  $components->contains( 'scheme' ) ? Prb::_String( $components->get( 'scheme' ) )
-		                                    : Prb::_String( 'http' );
+		  $components->contains( 'scheme' ) ? Prb::Str( $components->get( 'scheme' ) )
+		                                    : Prb::Str( 'http' );
 		$env[ 'HTTPS' ] =
-		  $env[ 'rack.url_scheme' ]->raw() == 'https' ? Prb::_String( 'on' )
-		                                              : Prb::_String( 'off' );
+		  $env[ 'rack.url_scheme' ]->raw() == 'https' ? Prb::Str( 'on' )
+		                                              : Prb::Str( 'off' );
 		$default_port =
-		  $env[ 'rack.url_scheme' ]->raw() == 'https' ? Prb::_String( '443' )
-		                                              : Prb::_String( '80'  );
+		  $env[ 'rack.url_scheme' ]->raw() == 'https' ? Prb::Str( '443' )
+		                                              : Prb::Str( '80'  );
 		
-		$env[ 'SERVER_NAME' ] = $components->contains( 'host' ) ? Prb::_String( $components->get( 'host' ) )
-		                                                        : Prb::_String( 'example.org' );
-		$env[ 'SERVER_PORT' ] = $components->contains( 'port' ) ? Prb::_String( $components->get( 'port' ) )
+		$env[ 'SERVER_NAME' ] = $components->contains( 'host' ) ? Prb::Str( $components->get( 'host' ) )
+		                                                        : Prb::Str( 'example.org' );
+		$env[ 'SERVER_PORT' ] = $components->contains( 'port' ) ? Prb::Str( $components->get( 'port' ) )
 		                                                        : $default_port;
 		
 		// Script name, path info, query string:
-		$path_info        = Prb::_String( $components->get( 'path' ) );
+		$path_info        = Prb::Str( $components->get( 'path' ) );
 		$path_info_viable = !$path_info->isEmpty();
 		
 		$env[ 'SCRIPT_NAME'  ] = $options->contains( 'script_name' ) ? $options->delete( 'script_name' )
-		                                                             : Prb::_String();
+		                                                             : Prb::Str();
 		$env[ 'PATH_INFO'    ] = $path_info_viable                   ? $path_info
-		                                                             : Prb::_String( '/' );
-		$env[ 'QUERY_STRING' ] = Prb::_String( (string)$components->get( 'query' ) );
+		                                                             : Prb::Str( '/' );
+		$env[ 'QUERY_STRING' ] = Prb::Str( (string)$components->get( 'query' ) );
 		$env[ 'rack.errors'  ] = $options->delete( 'fatal' ) == true ? new Prack_Mock_FatalWarner()
 		                                                             : new Prb_IO_String();
 		
@@ -162,7 +162,7 @@ class Prack_Mock_Request
 			}
 			else if ( !$options->contains( 'input' ) )
 			{
-				$options->set( 'CONTENT_TYPE', Prb::_String( 'application/x-www-form-urlencoded' ) );
+				$options->set( 'CONTENT_TYPE', Prb::Str( 'application/x-www-form-urlencoded' ) );
 				if ( $params instanceof Prb_Hash )
 				{
 					// FIXME: Implement multipart form data processing.
@@ -177,12 +177,12 @@ class Prack_Mock_Request
 		}
 		
 		if ( !$options->contains( 'input' ) )
-			$options->set( 'input', Prb::_String() );
+			$options->set( 'input', Prb::Str() );
 		
 		$input = $options->delete( 'input' );
-		if ( $input instanceof Prb_Interface_Stringable )
+		if ( $input instanceof Prb_I_Stringable )
 			$rack_input = Prb_IO::withString( $input->toS() );
-		else if ( $input instanceof Prb_Interface_ReadableStreamlike )
+		else if ( $input instanceof Prb_I_ReadableStreamlike )
 			$rack_input = $input;
 		else
 		{
@@ -193,19 +193,19 @@ class Prack_Mock_Request
 		$env[ 'rack.input' ] = $rack_input;
 		
 		if ( !isset( $env[ 'CONTENT_LENGTH' ] ) )
-			$env[ 'CONTENT_LENGTH' ] = Prb::_String( (string)$rack_input->length() );
+			$env[ 'CONTENT_LENGTH' ] = Prb::Str( (string)$rack_input->length() );
 		
 		foreach ( $options->raw() as $field => $value )
 			$env[ $field ] = $value;
 		
-		return Prb::_Hash( $env );
+		return Prb::Hsh( $env );
 	}
 	
 	// TODO: Document!
 	function __construct( $middleware_app )
 	{
-		if ( !( $middleware_app instanceof Prack_Interface_MiddlewareApp ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $middleware_app not a Prack_Interface_MiddlewareApp' );
+		if ( !( $middleware_app instanceof Prack_I_MiddlewareApp ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: __construct $middleware_app not a Prack_I_MiddlewareApp' );
 		
 		$this->middleware_app = $middleware_app;
 	}
@@ -213,35 +213,35 @@ class Prack_Mock_Request
 	// TODO: Document!
 	public function get( $uri, $options = null )
 	{
-		return $this->request( Prb::_String( 'GET' ), $uri, $options );
+		return $this->request( Prb::Str( 'GET' ), $uri, $options );
 	}
 	
 	// TODO: Document!
 	public function post( $uri, $options = null )
 	{
-		return $this->request( Prb::_String( 'POST' ), $uri, $options );
+		return $this->request( Prb::Str( 'POST' ), $uri, $options );
 	}
 	
 	// TODO: Document!
 	public function put( $uri, $options = null )
 	{
-		return $this->request( Prb::_String( 'PUT' ), $uri, $options );
+		return $this->request( Prb::Str( 'PUT' ), $uri, $options );
 	}
 	
 	// TODO: Document!
 	public function delete( $uri, $options = null )
 	{
-		return $this->request( Prb::_String( 'DELETE' ), $uri, $options );
+		return $this->request( Prb::Str( 'DELETE' ), $uri, $options );
 	}
 	
 	// TODO: Document!
 	public function request( $method, $uri = null, $options = null )
 	{
-		$uri = is_null( $uri ) ? Prb::_String() : $uri;
+		$uri = is_null( $uri ) ? Prb::Str() : $uri;
 		if ( !( $uri instanceof Prb_String ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: mock request $uri must be Prb_String' );
 		
-		$options = is_null( $options ) ? Prb::_Hash() : $options;
+		$options = is_null( $options ) ? Prb::Hsh() : $options;
 		if ( !( $options instanceof Prb_Hash ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: mock request $options must be Prb_Hash' );
 		
@@ -251,7 +251,7 @@ class Prack_Mock_Request
 			$middleware_app = $this->middleware_app;
 		
 		$options = $options->merge(
-			Prb::_Hash( array( 'method' => $method ) )
+			Prb::Hsh( array( 'method' => $method ) )
 		);
 		
 		$env    = self::envFor( $uri, $options );

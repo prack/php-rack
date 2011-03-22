@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_MethodOverrideTest_ReqMaker
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $app;
 	
@@ -23,8 +23,8 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 	public function It_should_not_affect_GET_requests()
 	{
 		$env = Prack_Mock_Request::envFor(
-		  Prb::_String( '/?_method=delete' ),
-		  Prb::_Hash( array( 'method' => Prb::_String( 'GET' ) ) )
+		  Prb::Str( '/?_method=delete' ),
+		  Prb::Hsh( array( 'method' => Prb::Str( 'GET' ) ) )
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
 		$request        = $middleware_app->call( $env );
@@ -39,10 +39,10 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 	public function It_should_modify_REQUEST_METHOD_for_POST_requests_when__method_parameter_is_set()
 	{
 		$env = Prack_Mock_Request::envFor(
-		  Prb::_String( '/' ),
-		  Prb::_Hash( array(
-		    'method' => Prb::_String( 'POST' ),
-		    'input'  => Prb::_String( '_method=put' )
+		  Prb::Str( '/' ),
+		  Prb::Hsh( array(
+		    'method' => Prb::Str( 'POST' ),
+		    'input'  => Prb::Str( '_method=put' )
 		  ) )
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
@@ -58,10 +58,10 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 	public function It_should_modify_REQUEST_METHOD_for_POST_requests_when_X_HTTP_Method_Override_is_set()
 	{
 		$env = Prack_Mock_Request::envFor(
-		  Prb::_String( '/' ),
-		  Prb::_Hash( array(
-		    'method'                      => Prb::_String( 'POST' ),
-		    'HTTP_X_HTTP_METHOD_OVERRIDE' => Prb::_String( 'PUT'  )
+		  Prb::Str( '/' ),
+		  Prb::Hsh( array(
+		    'method'                      => Prb::Str( 'POST' ),
+		    'HTTP_X_HTTP_METHOD_OVERRIDE' => Prb::Str( 'PUT'  )
 		  ) )
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
@@ -77,10 +77,10 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 	public function It_should_not_modify_REQUEST_METHOD_if_the_method_is_unknown()
 	{
 		$env = Prack_Mock_Request::envFor(
-		  Prb::_String( '/' ),
-		  Prb::_Hash( array(
-		    'method' => Prb::_String( 'POST' ),
-		    'input'  => Prb::_String( '_method=foo' )
+		  Prb::Str( '/' ),
+		  Prb::Hsh( array(
+		    'method' => Prb::Str( 'POST' ),
+		    'input'  => Prb::Str( '_method=foo' )
 		  ) )
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
@@ -96,10 +96,10 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 	public function It_should_not_modify_REQUEST_METHOD_when__method_is_nil()
 	{
 		$env = Prack_Mock_Request::envFor(
-		  Prb::_String( '/' ),
-		  Prb::_Hash( array(
-		    'method' => Prb::_String( 'POST' ),
-		    'input'  => Prb::_String( 'foo=bar' )
+		  Prb::Str( '/' ),
+		  Prb::Hsh( array(
+		    'method' => Prb::Str( 'POST' ),
+		    'input'  => Prb::Str( 'foo=bar' )
 		  ) )
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );
@@ -115,10 +115,10 @@ class Prack_MethodOverrideTest extends PHPUnit_Framework_TestCase
 	public function It_should_store_the_original_REQUEST_METHOD_prior_to_overriding()
 	{
 		$env = Prack_Mock_Request::envFor(
-		  Prb::_String( '/' ),
-		  Prb::_Hash( array(
-		    'method' => Prb::_String( 'POST' ),
-		    'input'  => Prb::_String( '_method=options' )
+		  Prb::Str( '/' ),
+		  Prb::Hsh( array(
+		    'method' => Prb::Str( 'POST' ),
+		    'input'  => Prb::Str( '_method=options' )
 		  ) )
 		);
 		$middleware_app = Prack_MethodOverride::with( new Prack_MethodOverrideTest_ReqMaker() );

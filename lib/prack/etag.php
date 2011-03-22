@@ -3,7 +3,7 @@
 // TODO: Document!
 # Automatically sets the ETag header on all String bodies
 class Prack_ETag
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $middleware_app;
 	
@@ -27,17 +27,17 @@ class Prack_ETag
 		if ( !$headers->hasKey( 'ETag' ) )
 		{
 			list( $digest, $body ) = $this->digestBody( $body )->raw();
-			$headers->set( 'ETag', Prb::_String( "\"{$digest->raw()}\"" ) );
+			$headers->set( 'ETag', Prb::Str( "\"{$digest->raw()}\"" ) );
 		}
 		
-		return Prb::_Array( array( $status, $headers, $body ) );
+		return Prb::Ary( array( $status, $headers, $body ) );
 	}
 	
 	// TODO: Document!
 	private function digestBody( $body )
 	{
-		$this->buffer = Prb::_String();
-		$this->parts  = Prb::_Array();
+		$this->buffer = Prb::Str();
+		$this->parts  = Prb::Ary();
 		
 		static $callback = null;
 		if ( is_null( $callback ) )
@@ -45,7 +45,7 @@ class Prack_ETag
 		
 		$body->each( $callback );
 		
-		return Prb::_Array( array( Prb_String::md5( $this->buffer ), $this->parts ) );
+		return Prb::Ary( array( Prb_String::md5( $this->buffer ), $this->parts ) );
 	}
 	
 	// TODO: Document!

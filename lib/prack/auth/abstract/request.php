@@ -15,10 +15,10 @@ abstract class Prack_Auth_Abstract_Request
 		static $authorization_keys = null;
 		
 		if ( is_null( $authorization_keys ) )
-			$authorization_keys = Prb::_Array( array(
-			  Prb::_String( 'HTTP_AUTHORIZATION'   ),
-			  Prb::_String( 'X-HTTP_AUTHORIZATION' ),
-			  Prb::_String( 'X_HTTP_AUTHORIZATION' )
+			$authorization_keys = Prb::Ary( array(
+			  Prb::Str( 'HTTP_AUTHORIZATION'   ),
+			  Prb::Str( 'X-HTTP_AUTHORIZATION' ),
+			  Prb::Str( 'X_HTTP_AUTHORIZATION' )
 			) );
 		
 		return $authorization_keys;
@@ -45,7 +45,7 @@ abstract class Prack_Auth_Abstract_Request
 			$auth_key    = $this->authorizationKey() ? $this->authorizationKey()->raw() : null;
 			$auth_header = $this->env->contains( $auth_key )
 			  ? $this->env->get( $auth_key )
-			  : Prb::_String();
+			  : Prb::Str();
 			$this->parts = $auth_header->split( '/ /', 2 );
 		}
 			

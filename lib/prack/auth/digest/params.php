@@ -27,7 +27,7 @@ class Prack_Auth_Digest_Params extends Prb_Hash
 	// TODO: Document!
 	static function dequote( $string )
 	{
-		$return = $string->match( '/\A"(.*)"\Z/', $matches ) ? Prb::_String( $matches[ 1 ][ 0 ] ) : $string;
+		$return = $string->match( '/\A"(.*)"\Z/', $matches ) ? Prb::Str( $matches[ 1 ][ 0 ] ) : $string;
 		
 		static $callback = null;
 		if ( is_null( $callback ) )
@@ -55,9 +55,9 @@ class Prack_Auth_Digest_Params extends Prb_Hash
 		
 		if ( is_null( $unquoted ) )
 		{
-			$unquoted = Prb::_Array( array(
-				Prb::_String( 'nc'    ),
-				Prb::_String( 'stale' ),
+			$unquoted = Prb::Ary( array(
+				Prb::Str( 'nc'    ),
+				Prb::Str( 'stale' ),
 			) );
 		}
 		
@@ -92,14 +92,14 @@ class Prack_Auth_Digest_Params extends Prb_Hash
 		if ( is_null( $callback ) )
 			$callback = array( $this, 'onToS' );
 		
-		return $this->inject( Prb::_Array(), $callback )->join( Prb::_String( ', ' ) );
+		return $this->inject( Prb::Ary(), $callback )->join( Prb::Str( ', ' ) );
 	}
 	
 	// TODO: Document!
 	public function onToS( $parts, $key, $value )
 	{
 		$parts->concat(
-		  Prb::_String( "{$key}=" )->concat( self::unquoted()->contains( $key ) ? $value->toS() : $this->quote( $value ) )
+		  Prb::Str( "{$key}=" )->concat( self::unquoted()->contains( $key ) ? $value->toS() : $this->quote( $value ) )
 		);
 		return $parts;
 	}
@@ -111,8 +111,8 @@ class Prack_Auth_Digest_Params extends Prb_Hash
 		if ( is_null( $callback ) )
 			$callback = create_function( '$m', 'return "\\{$m}";' );
 		
-		return Prb::_String( '"' )
+		return Prb::Str( '"' )
 		  ->concat( $string->gsub( '/[\\\"]/', $callback ) )
-		  ->concat( Prb::_String( '"' ) );
+		  ->concat( Prb::Str( '"' ) );
 	}
 }

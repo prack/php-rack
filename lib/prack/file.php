@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_File
-  implements Prack_Interface_MiddlewareApp, Prb_Interface_Enumerable
+  implements Prack_I_MiddlewareApp, Prb_I_Enumerable
 {
 	private $root;
 	private $path;
@@ -32,10 +32,10 @@ class Prack_File
 	{
 		$this->path_info = Prack_Utils::singleton()->unescape( $env->get( 'PATH_INFO' ) );
 		
-		if ( $this->path_info->contains( Prb::_String( '..' ) ) )
+		if ( $this->path_info->contains( Prb::Str( '..' ) ) )
 			return $this->forbidden();
 		
-		$this->path = Prb::_String( join(
+		$this->path = Prb::Str( join(
 		  DIRECTORY_SEPARATOR,
 		  array( $this->root->raw(), $this->path_info->raw() )
 		) );
@@ -57,15 +57,15 @@ class Prack_File
 	// TODO: Document!
 	public function forbidden()
 	{
-		$body = Prb::_String( "Forbidden\n" );
-		return Prb::_Array( array(
-		  Prb::_Numeric( 403 ),
-		  Prb::_Hash( array(
-		    'Content-Type'   => Prb::_String( 'text/plain' ),
-		    'Content-Length' => Prb::_Numeric( $body->size() )->toS(),
-		    'X-Cascade'      => Prb::_String( 'pass' )
+		$body = Prb::Str( "Forbidden\n" );
+		return Prb::Ary( array(
+		  Prb::Num( 403 ),
+		  Prb::Hsh( array(
+		    'Content-Type'   => Prb::Str( 'text/plain' ),
+		    'Content-Length' => Prb::Num( $body->size() )->toS(),
+		    'X-Cascade'      => Prb::Str( 'pass' )
 		  ) ),
-		  Prb::_Array( array( $body ) )
+		  Prb::Ary( array( $body ) )
 		) );
 	}
 	
@@ -81,7 +81,7 @@ class Prack_File
 			$body = $this;
 		else
 		{
-			$body = Prb::_Array( array(
+			$body = Prb::Ary( array(
 			  Prb_IO::withFile( $this->path, Prb_IO_File::NO_CREATE_READ )->read()
 			) );
 			$size = Prack_Utils::singleton()->bytesize( $body->first() );
@@ -92,12 +92,12 @@ class Prack_File
 		  ? '.'.$pathinfo[ 'extension' ]
 		  : null;
 		
-		return Prb::_Array( array(
-		  Prb::_Numeric( 200 ),
-		  Prb::_Hash( array(
-		    'Last-Modified'  => Prb::_Time( filemtime( $this->path->raw() ) )->httpdate(),
-		    'Content-Type'   => Prack_Mime::mimeType( $extension, Prb::_String( 'text/plain' ) ),
-		    'Content-Length' => Prb::_Numeric( $size )->toS()
+		return Prb::Ary( array(
+		  Prb::Num( 200 ),
+		  Prb::Hsh( array(
+		    'Last-Modified'  => Prb::Time( filemtime( $this->path->raw() ) )->httpdate(),
+		    'Content-Type'   => Prack_Mime::mimeType( $extension, Prb::Str( 'text/plain' ) ),
+		    'Content-Length' => Prb::Num( $size )->toS()
 		  ) ),
 		  $body
 		) );
@@ -106,15 +106,15 @@ class Prack_File
 		// TODO: Document!
 	public function notFound()
 	{
-		$body = Prb::_String( "File not found: {$this->path_info->raw()}\n" );
-		return Prb::_Array( array(
-		  Prb::_Numeric( 404 ),
-		  Prb::_Hash( array(
-		    'Content-Type'   => Prb::_String( 'text/plain' ),
-		    'Content-Length' => Prb::_Numeric( $body->size() )->toS(),
-		    'X-Cascade'      => Prb::_String( 'pass' )
+		$body = Prb::Str( "File not found: {$this->path_info->raw()}\n" );
+		return Prb::Ary( array(
+		  Prb::Num( 404 ),
+		  Prb::Hsh( array(
+		    'Content-Type'   => Prb::Str( 'text/plain' ),
+		    'Content-Length' => Prb::Num( $body->size() )->toS(),
+		    'X-Cascade'      => Prb::Str( 'pass' )
 		  ) ),
-		  Prb::_Array( array( $body ) )
+		  Prb::Ary( array( $body ) )
 		) );
 	}
 	

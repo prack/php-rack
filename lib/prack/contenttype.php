@@ -8,7 +8,7 @@
 #
 # When no content type argument is provided, "text/html" is assumed.
 class Prack_ContentType
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $middleware_app;
 	private $content_type;
@@ -24,7 +24,7 @@ class Prack_ContentType
 	{
 		$this->middleware_app = $middleware_app;
 		$this->content_type = is_null( $content_type )
-		  ? Prb::_String( 'text/html' )
+		  ? Prb::Str( 'text/html' )
 		  : $content_type;
 	}
 	
@@ -38,6 +38,6 @@ class Prack_ContentType
 		  ? true
 		  : $headers->set( 'Content-Type', $this->content_type );
 		
-		return Prb::_Array( array( $status, $headers, $body ) );
+		return Prb::Ary( array( $status, $headers, $body ) );
 	}
 }

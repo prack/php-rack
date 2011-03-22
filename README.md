@@ -97,10 +97,10 @@ PHPUnit 3.5.
 Getting started
 ===============
 
-All Prack applications must conform to the <tt>Prack\_Interface_MiddlewareApp</tt> interface,
+All Prack applications must conform to the <tt>Prack\_I_MiddlewareApp</tt> interface,
 which is stupidly easy to implement:
 
-	interface Prack_Interface_MiddlewareApp
+	interface Prack_I_MiddlewareApp
 	{
 		public function call( $env ); // $env is a Prb_Hash
 	}
@@ -113,7 +113,7 @@ I will revisit whether to drop it so we can also include lambdas as first-class 
 <pre>
 1. Prb_Numeric                                          (status)
 2. Prb_Hash                                             (headers)
-3. Prb_Interface_Enumerable OR Prb_Interface_Stringable (body)
+3. Prb_I_Enumerable OR Prb_I_Stringable (body)
 </pre>
 
 

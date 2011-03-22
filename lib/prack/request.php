@@ -26,8 +26,8 @@ class Prack_Request
 			$attr        = $matches[ 2 ][ 0 ];
 			$attr_viable = ( isset( $attr ) && strlen( $attr ) > 0 );
 			
-			return Prb::_Array( array(
-				Prb::_String( $key ), (float)( $attr_viable ? $attr : 1.0 )
+			return Prb::Ary( array(
+				Prb::Str( $key ), (float)( $attr_viable ? $attr : 1.0 )
 			) );
 		}
 		
@@ -44,9 +44,9 @@ class Prack_Request
 		
 		if ( is_null( $form_data_media_types ) )
 		{
-			$form_data_media_types = Prb::_Array( array(
-				Prb::_String( 'application/x-www-form-urlencoded' ),
-				Prb::_String( 'multipart/form-data'               )
+			$form_data_media_types = Prb::Ary( array(
+				Prb::Str( 'application/x-www-form-urlencoded' ),
+				Prb::Str( 'multipart/form-data'               )
 			) );
 		}
 		
@@ -63,9 +63,9 @@ class Prack_Request
 		
 		if ( is_null( $parseable_data_media_types ) )
 		{
-			$parseable_data_media_types = Prb::_Array( array(
-				Prb::_String( 'multipart/related' ),
-				Prb::_String( 'multipart/mixed'   )
+			$parseable_data_media_types = Prb::Ary( array(
+				Prb::Str( 'multipart/related' ),
+				Prb::Str( 'multipart/mixed'   )
 			) );
 		}
 		
@@ -111,7 +111,7 @@ class Prack_Request
 			return null;
 		
 		$components = preg_split( '/\s*[;,]\s*/', $content_type->raw(), 2 );
-		return Prb::_String( strtolower( $components[ 0 ] ) );
+		return Prb::Str( strtolower( $components[ 0 ] ) );
 	}
 	
 	// TODO: Document!
@@ -124,7 +124,7 @@ class Prack_Request
 	{
 		$content_type = $this->contentType();
 		if ( is_null( $content_type ) )
-			return Prb::_Array();
+			return Prb::Ary();
 		
 		$components = preg_split( '/\s*[;,]\s*/', $content_type->raw() );
 		array_shift( $components );  // Ditch the MIME type.
@@ -132,11 +132,11 @@ class Prack_Request
 		$function   = create_function( '$s', '$split = preg_split( \'/=/\', $s, 2 ); return array( $split[0], $split[1] );' );
 		$components = array_map( $function, $components );
 		
-		$mediaTypeParams = Prb::_Hash();
+		$mediaTypeParams = Prb::Hsh();
 		foreach ( $components as $component )
 			$mediaTypeParams->set(
 				strtolower( $component[ 0 ] ),
-				Prb::_String( $component[ 1 ] )
+				Prb::Str( $component[ 1 ] )
 			);
 		
 		return $mediaTypeParams;
@@ -158,7 +158,7 @@ class Prack_Request
 		if ( $forwarded = $this->env->get( 'HTTP_X_FORWARDED_HOST' ) )
 		{
 			$forwarded = preg_split( '/,\s?/', $forwarded->raw(), 2 );
-			return Prb::_String( end( $forwarded ) );
+			return Prb::Str( end( $forwarded ) );
 		}
 		
 		if ( $this->env->contains( 'HTTP_HOST' ) )
@@ -171,13 +171,13 @@ class Prack_Request
 		                                              : '';
 		$port = $this->env->contains( 'SERVER_PORT' ) ? $this->env->get( 'SERVER_PORT' )->raw()
 		                                              : '';
-		return Prb::_String( "{$host}:{$port}" );
+		return Prb::Str( "{$host}:{$port}" );
 	}
 	
 	// TODO: Document!
 	public function host()
 	{
-		return Prb::_String( preg_replace( '/:\d+$/', '', $this->hostWithPort()->raw() ) );
+		return Prb::Str( preg_replace( '/:\d+$/', '', $this->hostWithPort()->raw() ) );
 	}
 	
 	// TODO: Document!
@@ -298,7 +298,7 @@ class Prack_Request
 			{
 				// FIXME: Implement preg_replace on Prb_String
 				$form_vars = $this->env->get( 'rack.input' )->read();
-				$form_vars = Prb::_String( preg_replace( '/\0\z/', '', $form_vars->raw() ) );
+				$form_vars = Prb::Str( preg_replace( '/\0\z/', '', $form_vars->raw() ) );
 				
 				$this->env->set( 'rack.request.form_vars', $form_vars );
 				$this->env->set( 'rack.request.form_hash', $this->parseQuery( $form_vars ) );
@@ -307,7 +307,7 @@ class Prack_Request
 			return $this->env->get( 'rack.request.form_hash' );
 		}
 		
-		return Prb::_Hash();
+		return Prb::Hsh();
 	}
 	
 	// TODO: Document!
@@ -349,7 +349,7 @@ class Prack_Request
 	# the referer of the client or '/'
 	public function referer()
 	{
-		return $this->env->contains( 'HTTP_REFERER' ) ? $this->env->get( 'HTTP_REFERER' ) : Prb::_String( '/' );
+		return $this->env->contains( 'HTTP_REFERER' ) ? $this->env->get( 'HTTP_REFERER' ) : Prb::Str( '/' );
 	}
 	
 	// TODO: Document!
@@ -368,7 +368,7 @@ class Prack_Request
 	public function cookies()
 	{
 		if ( !$this->env->contains( 'HTTP_COOKIE' ) )
-			return Prb::_Array();
+			return Prb::Ary();
 
 		if ( ( $cookie_string = $this->env->get( 'rack.request.cookie_string' ) ) && 
 		     $cookie_string == $this->env->get( 'HTTP_COOKIE' ) )
@@ -407,13 +407,13 @@ class Prack_Request
 			
 		$url .= $this->fullpath()->raw();
 		
-		return Prb::_String( $url );
+		return Prb::Str( $url );
 	}
 	
 	// TODO: Document!
 	public function path()
 	{
-		return Prb::_String( $this->scriptName()->raw().$this->pathInfo()->raw() );
+		return Prb::Str( $this->scriptName()->raw().$this->pathInfo()->raw() );
 	}
 	
 	// TODO: Document!
@@ -423,22 +423,22 @@ class Prack_Request
 		if ( empty( $query_string ) )
 			return $this->path();
 		
-		return Prb::_String( $this->path()->raw().'?'.$this->queryString()->raw() );
+		return Prb::Str( $this->path()->raw().'?'.$this->queryString()->raw() );
 	}
 	
 	// TODO: Document!
 	public function acceptEncoding()
 	{
 		$accept_encoding = $this->env->contains( 'HTTP_ACCEPT_ENCODING' ) ? $this->env->get( 'HTTP_ACCEPT_ENCODING' )
-		                                                                  : Prb::_String();
+		                                                                  : Prb::Str();
 		
 		// If there are no matches, preg_split returns an array with one empty string.
 		// This is absolutely fucking stupid, but hey.
 		$raw = preg_split( '/,\s*/', (string)$accept_encoding->raw() );
 		if ( $raw == array( '' ) )
-			return Prb::_Array();
+			return Prb::Ary();
 			
-		$candidates = Prb::_Array( $raw );
+		$candidates = Prb::Ary( $raw );
 		$callback   = array( 'Prack_Request', 'processAcceptEncodingCandidate' );
 		
 		return $candidates->collect( $callback );
@@ -451,8 +451,8 @@ class Prack_Request
 		{
 			$address = explode( ',', $address->raw() );
 			$address = preg_grep( '/\d\./', $address ); // FIXME: Implement grep on array wrapper
-			return isset( $address ) ? Prb::_String( reset( $address ) )
-			                         : Prb::_String( trim( $this->env->get( 'REMOTE_ADDR' )->raw() ) ); // FIXME Implement chomp/trim on String
+			return isset( $address ) ? Prb::Str( reset( $address ) )
+			                         : Prb::Str( trim( $this->env->get( 'REMOTE_ADDR' )->raw() ) ); // FIXME Implement chomp/trim on String
 		}
 		
 		return $this->env->get( 'REMOTE_ADDR' );

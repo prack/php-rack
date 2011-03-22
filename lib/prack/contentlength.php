@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_ContentLength
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $middleware_app;
 	
@@ -30,19 +30,19 @@ class Prack_ContentLength
 		     ( method_exists( $body, 'toAry' ) || method_exists( $body, 'toStr' ) ) )
 		{
 			if ( method_exists( $body, 'toStr' ) )
-				$body = Prb::_Array( array( $body ) );
+				$body = Prb::Ary( array( $body ) );
 			
 			static $callback = null;
 			if ( is_null( $callback ) )
 			  $callback = create_function(
 			    '$accumulator, $part',
-			    'return Prb::_Numeric( $accumulator->raw() + Prack_Utils::singleton()->bytesize( $part ) );'
+			    'return Prb::Num( $accumulator->raw() + Prack_Utils::singleton()->bytesize( $part ) );'
 			);
 			
-			$length = $body->toAry()->inject( Prb::_Numeric( 0 ), $callback );
+			$length = $body->toAry()->inject( Prb::Num( 0 ), $callback );
 			$headers->set( 'Content-Length', $length->toS() );
 		}
 		
-		return Prb::_Array( array( $status, $headers, $body ) );
+		return Prb::Ary( array( $status, $headers, $body ) );
 	}
 }

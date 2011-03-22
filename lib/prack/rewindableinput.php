@@ -2,7 +2,7 @@
 
 // TODO: Document!
 class Prack_RewindableInput 
-  implements Prb_Interface_ReadableStreamlike, Prb_Interface_LengthAware
+  implements Prb_I_ReadableStreamlike, Prb_I_LengthAware
 {
 	const CHUNK_SIZE = 4096; // 4KB chunk size for read
 	
@@ -117,7 +117,7 @@ class Prack_RewindableInput
 	// TODO: Document!
 	private function makeRewindable()
 	{
-		$this->rewindable_io = Prb_IO::withTempfile( Prb::_String( 'prack-rewindable-input' ) );
+		$this->rewindable_io = Prb_IO::withTempfile( Prb::Str( 'prack-rewindable-input' ) );
 		$this->rewindable_io->chmod( 0000 );
 		
 		if ( $this->filesystemHasPosixSemantics() )

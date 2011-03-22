@@ -14,7 +14,7 @@
 # Adapted from Michael Klishin's Merb implementation:
 # http://github.com/wycats/merb-core/tree/master/lib/merb-core/rack/middleware/conditional_get.rb
 class Prack_ConditionalGet
-  implements Prack_Interface_MiddlewareApp
+  implements Prack_I_MiddlewareApp
 {
 	private $middleware_app;
 	
@@ -33,7 +33,7 @@ class Prack_ConditionalGet
 	// TODO: Document!
 	public function call( $env )
 	{
-		if ( !( Prb::_Array( array( Prb::_String( 'GET' ), Prb::_String( 'HEAD' ) ) )
+		if ( !( Prb::Ary( array( Prb::Str( 'GET' ), Prb::Str( 'HEAD' ) ) )
 		          ->contains( $env->get( 'REQUEST_METHOD' ) ) ) )
 			return $this->middleware_app->call( $env );
 		
@@ -42,13 +42,13 @@ class Prack_ConditionalGet
 		$headers = Prack_Utils_HeaderHash::using( $headers );
 		if ( $this->etagMatches( $env, $headers ) || $this->isModifiedSince( $env, $headers ) )
 		{
-			$status = Prb::_Numeric( 304 );
+			$status = Prb::Num( 304 );
 			$headers->delete( 'Content-Type'   );
 			$headers->delete( 'Content-Length' );
-			$body = Prb::_Array();
+			$body = Prb::Ary();
 		}
 		
-		return Prb::_Array( array( $status, $headers, $body ) );
+		return Prb::Ary( array( $status, $headers, $body ) );
 	}
 	
 	// TODO: Document!
