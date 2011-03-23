@@ -32,6 +32,8 @@ class Prack_Static
 	function __construct( $middleware_app, $options = null )
 	{
 		$options = is_null( $options ) ? Prb::Hsh() : $options;
+		if ( !( $options instanceof Prb_Hash ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: __construct $options not a Prb_Hash' );
 		
 		$this->middleware_app = $middleware_app;
 		$this->urls           = $options->contains( 'urls' )
