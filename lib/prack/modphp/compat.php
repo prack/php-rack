@@ -45,12 +45,12 @@ class Prack_ModPHP_Compat
 			);
 		}
 		
-		$env->set( 'rack.version',      Prack::version()                              );
-		$env->set( 'rack.input',        Prb_IO::withStream( fopen( 'php://stdin'  ) ) );
-		$env->set( 'rack.errors',       Prb_IO::withStream( fopen( 'php://stderr' ) ) );
-		$env->set( 'rack.multithread',  false                                         );
-		$env->set( 'rack.multiprocess', false                                         );
-		$env->set( 'rack.run_once',     true                                          );
+		$env->set( 'rack.version',      Prack::version()                                     );
+		$env->set( 'rack.input',        Prb_IO::withStream( fopen( 'php://stdin',  'r+b' ) ) );
+		$env->set( 'rack.errors',       Prb_IO::withStream( fopen( 'php://stderr', 'w+b' ) ) );
+		$env->set( 'rack.multithread',  false                                                );
+		$env->set( 'rack.multiprocess', false                                                );
+		$env->set( 'rack.run_once',     true                                                 );
 		
 		$env->set( 'SCRIPT_NAME', Prb::Str() );
 		$env->set( 'PATH_INFO',   Prb::Str( $server[ 'REDIRECT_X_PRACK_PATHINFO' ] ) );
