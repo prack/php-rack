@@ -30,25 +30,26 @@ Progress
 Working and Shippable
 ---------------------
 
-* <tt>Auth_Basic</tt>: Basic HTTP authentication
-* <tt>Auth_Digest</tt>: HTTP digest authentication
-* <tt>Builder</tt>: Fluent interface for building middleware app stacks in a domain
-* <tt>Cascade</tt>: Chains a request to a list of middleware apps, accepting the first viable response
+* <tt>Auth_Basic</tt>: basic (login/password) HTTP authentication
+* <tt>Auth_Digest</tt>: digest (md5-based) HTTP authentication
+* <tt>Builder</tt>: fluent interface for building middleware app stacks in a domain
+* <tt>Cascade</tt>: chains a request to a list of middleware apps, accepting the first viable response
 * <tt>ConditionalGet</tt>: uses Etags and HTTP headers to respond without body if appropriate
 * <tt>ContentLength</tt>: ensures a response has a proper Content-Length header
 * <tt>ContentType</tt>: ensures a response has a proper Content-Type header
 * <tt>ETag</tt>: checksums a page's contents
 * <tt>File</tt>: serve static files via Prack
-* <tt>Logger</tt>: Adds a logger to the environment for downstream apps to use
+* <tt>Logger</tt>: adds a logger to the environment for downstream apps to use
 * <tt>MethodOverride</tt>: allows HTTP request method override via hidden form input or HTTP header
 * <tt>Mime</tt>: a default and configurable set of MIME types
-* <tt>Mock_Request</tt>: Fake requests for testing
-* <tt>Mock_Response</tt>: Fake responses for testing, delegates some methods
-* <tt>RewindableInput</tt>: Adds rewindability to any stream
+* <tt>Mock_Request</tt>: fake requests for testing
+* <tt>Mock_Response</tt>: fake responses for testing, delegates some methods
+* <tt>RewindableInput</tt>: adds rewindability to any stream
 * <tt>Runtime</tt>: records the runtime of a partial or full stack of middleware apps
-* <tt>ShowExceptions</tt>: Catches uncaught exceptions and show them as pretty HTML with context
-* <tt>URLMap</tt>: Used by Builder to map middleware (stacks) to a URL endpoints
-* <tt>Utils_HeaderHash</tt>: A case-insensitive, multiple-value supporting assoc array wrapper
+* <tt>ShowExceptions</tt>: catches uncaught exceptions and show them as pretty HTML with context
+* <tt>Static</tt>: static asset server
+* <tt>URLMap</tt>: used by Builder to map middleware (stacks) to a URL endpoints
+* <tt>Utils_HeaderHash</tt>: case-insensitive, multiple-value supporting assoc array wrapper
 * <tt>Interfaces</tt>: MiddlewareApp
 
 Working perfectly, but not feature-complete
