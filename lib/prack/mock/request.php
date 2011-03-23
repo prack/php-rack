@@ -106,9 +106,9 @@ class Prack_Mock_Request
 			'rack.version'      => Prack::version(),
 			'rack.input'        => new Prb_IO_String(),
 			'rack.errors'       => new Prb_IO_String(),
-			'rack.multithread'  => false,
-			'rack.multiprocess' => false,
-			'rack.run_once'     => true
+			'rack.multithread'  => Prb::Num( 0 ),
+			'rack.multiprocess' => Prb::Num( 0 ),
+			'rack.run_once'     => Prb::Num( 1 )
 		);
 		
 		$components = self::parseURL( $url->raw() );
