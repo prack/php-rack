@@ -25,8 +25,8 @@ class Prack_Mock_Response
 			throw new Prb_Exception_Type( 'FAILSAFE: mock request $headers must be Prb_Hash' );
 		
 		$body = is_null( $body ) ? Prb::Str() : $body;
-		if ( !( $body instanceof Prb_I_Stringable ) && !( $body instanceof Prb_I_Enumerable ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: mock request $body must be Prb_I_Stringable or Prb_I_Enumerable' );
+		if ( !( $body instanceof Prb_I_Stringlike ) && !( $body instanceof Prb_I_Enumerable ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: mock request $body must be Prb_I_Stringlike or Prb_I_Enumerable' );
 		
 		$errors = is_null( $errors ) ? Prb_IO::withString() : $errors;
 		if ( !( $errors instanceof Prb_I_WritableStreamlike ) )

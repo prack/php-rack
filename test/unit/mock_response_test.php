@@ -155,15 +155,15 @@ class Prack_Mock_ResponseTest extends PHPUnit_Framework_TestCase
 	} // It should throw an exception when an unknown method is called, on account of delegation
 	
 	/**
-	 * It should throw an exception if body is neither a Prb_I_Stringable or Prb_I_Enumerable
+	 * It should throw an exception if body is neither a Prb_I_Stringlike or Prb_I_Enumerable
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function It_should_throw_an_exception_if_body_is_neither_a_Prb_I_Stringable_or_Prb_I_Enumerable()
+	public function It_should_throw_an_exception_if_body_is_neither_a_Prb_I_Stringlike_or_Prb_I_Enumerable()
 	{
 		$this->setExpectedException( 'Prb_Exception_Type' );
 		new Prack_Mock_Response( 200, Prb::Hsh(), 3 );
-	} // It should throw an exception if body is neither a Prb_I_Stringable or Prb_I_Enumerable
+	} // It should throw an exception if body is neither a Prb_I_Stringlike or Prb_I_Enumerable
 	
 	/**
 	 * It should throw an exception if headers is not a Prb_Hash

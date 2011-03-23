@@ -180,7 +180,7 @@ class Prack_Mock_Request
 			$options->set( 'input', Prb::Str() );
 		
 		$input = $options->delete( 'input' );
-		if ( $input instanceof Prb_I_Stringable )
+		if ( $input instanceof Prb_I_Stringlike )
 			$rack_input = Prb_IO::withString( $input->toS() );
 		else if ( $input instanceof Prb_I_ReadableStreamlike )
 			$rack_input = $input;

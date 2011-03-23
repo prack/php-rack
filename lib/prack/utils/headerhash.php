@@ -132,7 +132,7 @@ class Prack_Utils_HeaderHash extends Prb_Hash
 	// TODO: Document!
 	private function distill( $value )
 	{
-		if ( is_object( $value ) && method_exists( $value, 'toAry' ) )
+		if ( is_object( $value ) && $value instanceof Prb_I_Arraylike )
 			return $value->toAry()->join( Prb::Str( "\n" ) );
 		else if ( $value instanceof Prb_String )
 			return $value;

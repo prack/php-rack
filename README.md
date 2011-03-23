@@ -113,7 +113,7 @@ I will revisit whether to drop it so we can also include lambdas as first-class 
 <pre>
 1. Prb_Numeric                                          (status)
 2. Prb_Hash                                             (headers)
-3. Prb_I_Enumerable OR Prb_I_Stringable (body)
+3. Prb_I_Enumerable OR Prb_I_Stringlike (body)
 </pre>
 
 

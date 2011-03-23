@@ -376,11 +376,11 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	} // It should throw an exception if headers is not a Prb_Hash
 	
 		/**
-	 * It should throw an exception if rack.input is neither Prb_I_Stringable nor Prb_I_ReadableStreamlike
+	 * It should throw an exception if rack.input is neither Prb_I_Stringlike nor Prb_I_ReadableStreamlike
 	 * @author Joshua Morris
 	 * @test
 	 */
-	public function It_should_throw_an_exception_if_rack_input_is_neither_Prb_I_Stringable_nor_Prb_I_ReadableStreamlike()
+	public function It_should_throw_an_exception_if_rack_input_is_neither_Prb_I_Stringlike_nor_Prb_I_ReadableStreamlike()
 	{
 		$this->setExpectedException( 'Prb_Exception_Type' );
 		
@@ -389,5 +389,5 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 			Prb::Str(),
 			Prb::Hsh( array( 'input' => Prb::Ary() ) )
 		);
-	} // It should throw an exception if rack.input is neither Prb_I_Stringable nor Prb_I_ReadableStreamlike
+	} // It should throw an exception if rack.input is neither Prb_I_Stringlike nor Prb_I_ReadableStreamlike
 }

@@ -72,7 +72,7 @@ class Prack_ModPHP_Compat
 		
 		$callback = array( $this, 'onRender' );
 		
-		if ( $body instanceof Prb_I_Stringable )
+		if ( $body instanceof Prb_I_Stringlike )
 			$body = Prb::Ary( array( $body->toS() ) );
 		
 		$body->each( $callback );

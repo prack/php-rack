@@ -48,8 +48,8 @@ class Prack_Response
 	function __construct( $body = null, $status = null, $headers = null, $on_build = null )
 	{
 		$body = is_null( $body ) ? Prb::Ary() : $body;
-		if ( !( $body instanceof Prb_I_Stringable ) && !( $body instanceof Prb_I_Enumerable ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $body must be Prb_I_Stringable or Prb_I_Enumerable' );
+		if ( !( $body instanceof Prb_I_Stringlike ) && !( $body instanceof Prb_I_Enumerable ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: __construct $body must be Prb_I_Stringlike or Prb_I_Enumerable' );
 		
 		$status = is_null( $status ) ? Prb::Num( 200 ) : $status->toN();
 		if ( !( $status instanceof Prb_Numeric ) )
@@ -68,7 +68,7 @@ class Prack_Response
 		$this->body         = Prb::Ary();
 		
 		// Wrap the body if applicable so it has an interface.
-		if ( $body instanceof Prb_I_Stringable )
+		if ( $body instanceof Prb_I_Stringlike )
 			$this->write( $body->toS() );
 		else if ( $body instanceof Prb_I_Enumerable )
 			$body->each( $this->writer );
@@ -135,7 +135,7 @@ class Prack_Response
 	// TODO: Document!
 	public function redirect( $target, $status = null )
 	{
-		if ( !( $target instanceof Prb_I_Stringable ) )
+		if ( !( $target instanceof Prb_I_Stringlike ) )
 			throw new Prb_Exception_Type( 'redirect $target must be Prack_I_Stringable' );
 		
 		$status = is_null( $status ) ? Prb::Num( 302 ) : $status;

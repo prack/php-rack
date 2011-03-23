@@ -27,9 +27,9 @@ class Prack_ContentLength
 		if ( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( $status->raw() ) &&
 		     !$headers->contains( 'Content-Length' ) &&
 		     !$headers->contains( 'Transfer-Encoding' ) &&
-		     ( method_exists( $body, 'toAry' ) || method_exists( $body, 'toStr' ) ) )
+		     ( $body instanceof Prb_I_Arraylike || $body instanceof Prb_I_Stringlike ) )
 		{
-			if ( method_exists( $body, 'toStr' ) )
+			if ( $body instanceof Prb_I_Stringlike )
 				$body = Prb::Ary( array( $body ) );
 			
 			static $callback = null;
