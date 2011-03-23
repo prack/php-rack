@@ -34,6 +34,7 @@ Working and Shippable
 * <tt>Auth_Digest</tt>: digest (md5-based) HTTP authentication
 * <tt>Builder</tt>: fluent interface for building middleware app stacks in a domain
 * <tt>Cascade</tt>: chains a request to a list of middleware apps, accepting the first viable response
+* <tt>CommonLogger</tt>: forward request to an app and log the request as Apache common log format
 * <tt>ConditionalGet</tt>: uses Etags and HTTP headers to respond without body if appropriate
 * <tt>ContentLength</tt>: ensures a response has a proper Content-Length header
 * <tt>ContentType</tt>: ensures a response has a proper Content-Type header
