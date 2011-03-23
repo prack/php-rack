@@ -45,8 +45,8 @@ class Prack_Mock_Response
 		
 		$this->body = Prb::Str();
 		
-		if ( $body instanceof Prb_Stringable )
-			$this->body = $body->toS();
+		if ( $body instanceof Prb_I_Stringlike )
+			$this->body = $body->toStr();
 		else if ( $body instanceof Prb_I_Enumerable )
 			$body->each( array( $this, 'onWrite' ) );
 		
