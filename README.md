@@ -71,9 +71,8 @@ Works, but isn't properly/entirely tested
 To Do
 -----
 
-* Consider an MD5 implementation that doesn't require a whole string to be in-memory
+* (maybe) an MD5 implementation that doesn't require a whole string to be in-memory
 * Documentation on when Prack uses PHP primitives vs. Prb wrappers
-* Rack config
 * Sessions
 * Cookies
 * Multipart-form-data processing
