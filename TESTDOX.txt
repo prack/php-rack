@@ -85,6 +85,10 @@ Prack_File
  [x] It should detect Prb Exception System
  [x] It should return bodies that respond to toPath
 
+Prack_Head
+ [x] It should pass GET  POST  PUT  DELETE  OPTIONS  TRACE requests
+ [x] It should remove body from HEAD requests
+
 Prack_Lint
  [x] It should pass valid request
  [x] It should notice fatal errors

@@ -41,6 +41,7 @@ Working and Shippable
 * <tt>ContentType</tt>: ensures a response has a proper Content-Type header
 * <tt>ETag</tt>: checksums a page's contents
 * <tt>File</tt>: serve static files via Prack
+* <tt>Head</tt>: removes body from response for requests using HEAD method
 * <tt>Logger</tt>: adds a logger to the environment for downstream apps to use
 * <tt>MethodOverride</tt>: allows HTTP request method override via hidden form input or HTTP header
 * <tt>Mime</tt>: a default and configurable set of MIME types
