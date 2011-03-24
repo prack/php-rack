@@ -54,6 +54,9 @@ Prack_ConditionalGet
  [x] It should set a 304 status and truncate body when If None Match hits
  [x] It should not affect non GET HEAD requests
 
+Prack_Config
+ [x] It should accept a callback that modifies the environment
+
 Prack_ContentLength
  [x] It should set Content Length on String bodies if none is set
  [x] It should set Content Length on Array bodies if none is set

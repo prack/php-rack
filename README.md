@@ -36,6 +36,7 @@ Working and Shippable
 * <tt>Cascade</tt>: chains a request to a list of middleware apps, accepting the first viable response
 * <tt>CommonLogger</tt>: forward request to an app and log the request as Apache common log format
 * <tt>ConditionalGet</tt>: uses Etags and HTTP headers to respond without body if appropriate
+* <tt>Config</tt>: allows environment configuration before running middleware apps
 * <tt>ContentLength</tt>: ensures a response has a proper Content-Length header
 * <tt>ContentType</tt>: ensures a response has a proper Content-Type header
 * <tt>ETag</tt>: checksums a page's contents
