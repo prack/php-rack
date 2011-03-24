@@ -35,7 +35,19 @@ Prack_Builder
  [x] It should throw an exception if the fluent interface is misused
  [x] It should throw an exception if the callback provided to a new builder isn t actually callable
  [x] It should throw an exception if run is called in the middle of a middleware app specification
- [x] It should throw an exception if run is called with other than Prack Interface MiddlewareApp
+ [x] It should throw an exception if run is called with other than Prack I MiddlewareApp
+
+Prack_Cascade
+ [x] It should dispatch onward on 404 by default
+ [x] It should dispatch onward on whatever is passed
+ [x] It should return 404 if empty
+ [x] It should append new app
+
+Prack_CommonLogger
+ [x] It should log to rack errors by default
+ [x] It should log to anything with write method
+ [x] It should log a dash for content length if header is missing
+ [x] It should log a dash for content length if header is zero
 
 Prack_ConditionalGet
  [x] It should set a 304 status and truncate body when If Modified Since hits
@@ -50,9 +62,25 @@ Prack_ContentLength
  [x] It should not set Content Length on 304 responses
  [x] It should not set Content Length when Transfer Encoding is chunked
 
+Prack_ContentType
+ [x] It should set Content Type to default text html if none is set
+ [x] It should set Content Type to chosen default if none is set
+ [x] It should not change Content Type if it is already set
+ [x] It should detect Content Type case insensitive
+
 Prack_ETag
  [x] It should set ETag if none is set
  [x] It should not change ETag if it is already set
+
+Prack_File
+ [x] It should serve files
+ [x] It should set Last Modified header
+ [x] It should serve files with URL encoded filenames
+ [x] It should not allow directory traversal
+ [x] It should not allow directory traversal with encoded periods
+ [x] It should 404 if it can t find the file
+ [x] It should detect Prb Exception System
+ [x] It should return bodies that respond to toPath
 
 Prack_Lint
  [x] It should pass valid request
@@ -103,7 +131,7 @@ Prack_Mock_Request
  [x] It should behave valid according to the Rack spec
  [x] It should throw an exception if uri is not a Prb String
  [x] It should throw an exception if options is not a Prb Hash
- [x] It should throw an exception if rack input is neither Prb Interface Stringable nor Prb Interface ReadableStreamlike
+ [x] It should throw an exception if rack input is neither Prb I Stringlike nor Prb I ReadableStreamlike
 
 Prack_Mock_Response
  [x] It should provide access to the HTTP status
@@ -113,7 +141,7 @@ Prack_Mock_Response
  [x] It should optionally make Rack errors fatal
  [x] It should optionally make Rack errors fatal  part 2 
  [x] It should throw an exception when an unknown method is called  on account of delegation
- [x] It should throw an exception if body is neither a Prb Interface Stringable or Prb Interface Enumerable
+ [x] It should throw an exception if body is neither a Prb I Stringlike or Prb I Enumerable
  [x] It should throw an exception if headers is not a Prb Hash
 
 Prack_Request
@@ -188,8 +216,19 @@ Prack_RewindableInput
  [x] It should buffer into a Prb IO Tempfile when data has been consumed for the first time
  [x] It should close the underlying tempfile upon calling close
 
+Prack_Runtime
+ [x] It sets X Runtime if none is set
+ [x] It doesn t set the X Runtime if it is already set
+ [x] It should allow a suffix to be set
+ [x] It should allow multiple timers to be set
+
 Prack_ShowExceptions
  [x] It catches exceptions
+
+Prack_Static
+ [x] It serves files
+ [x] It 404s if url root is known but it can t find the file
+ [x] It calls down the chain if url root is not known
 
 Prack_URLMap
  [x] It dispatches paths correctly
