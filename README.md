@@ -114,8 +114,8 @@ I will revisit whether to drop it so we can also include lambdas as first-class 
 <tt>call</tt> MUST return a <tt>Prb_Array</tt> as its response with the following items, in this order</tt>:
 
 <pre>
-1. Prb_Numeric                                          (status)
-2. Prb_Hash                                             (headers)
+1. Prb_Numeric                          (status)
+2. Prb_Hash                             (headers)
 3. Prb_I_Enumerable OR Prb_I_Stringlike (body)
 </pre>
 
