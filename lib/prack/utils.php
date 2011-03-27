@@ -3,9 +3,6 @@
 // TODO: Document!
 class Prack_Utils
 {
-	private $obq_p;
-	private $obnq_p;
-	
 	// TODO: Document!
 	static function singleton()
 	{
@@ -24,13 +21,13 @@ class Prack_Utils
 		
 		if ( is_null( $html_escapes ) )
 		{
-			$html_escapes = Prb::Hsh( array(
-				'&'  => Prb::Str( "&amp;"  ),
-				'<'  => Prb::Str( "&lt;"   ),
-				'>'  => Prb::Str( "&gt;"   ),
-				'\'' => Prb::Str( "&#39;"  ),
-				'"'  => Prb::Str( "&quot;" )
-			) );
+			$html_escapes = array(
+				'&'  => "&amp;",
+				'<'  => "&lt;",
+				'>'  => "&gt;",
+				'\'' => "&#39;",
+				'"'  => "&quot;"
+			);
 		}
 		
 		return $html_escapes;
@@ -61,14 +58,7 @@ class Prack_Utils
 	// TODO: Document!
 	public function escapeHTML( $string )
 	{
-		static $callback = null;
-		
-		if ( is_null( $callback ) )
-			$callback = create_function(
-			  '$i', 'return Prack_Utils::singleton()->HTMLEscapes()->get( $i[ 0 ] )->raw();'
-			);
-		
-		return $string->toS()->gsub( $this->HTMLEscapesPattern(), $callback )->raw();
+		return strtr( $string, self::HTMLEscapes() );
 	}
 	
 	// TODO: Document!
@@ -81,7 +71,6 @@ class Prack_Utils
 			$swneb = range( 100, 199 );
 			array_push( $swneb, 204 );
 			array_push( $swneb, 304 );
-			$swneb = Prb::Ary( $swneb );
 		}
 		
 		return $swneb;
@@ -90,7 +79,7 @@ class Prack_Utils
 	// TODO: Document!
 	public function bytesize( $string )
 	{
-		return $string->length();
+		return strlen( $string );
 	}
 	
 	// TODO: Document!
@@ -106,9 +95,9 @@ class Prack_Utils
 			  '$m', '$u=unpack(\'H*\',$m[0]); return \'%\'.strtoupper(implode(\'%\', str_split($u[1],2)));'
 			);
 		
-		return $string->toS()
-		  ->gsub( '/([^ a-zA-Z0-9_.-]+)/', $callback )
-		  ->tr( Prb::Str( ' ' ), Prb::Str( '+' ) );
+		$string = preg_replace_callback( '/([^ a-zA-Z0-9_.-]+)/', $callback, $string );
+		
+		return strtr( $string, ' ', '+' );
 	}
 	
 	// TODO: Document!
@@ -116,157 +105,83 @@ class Prack_Utils
 	public function unescape( $string )
 	{
 		static $callback = null;
-		
 		if ( is_null( $callback ) )
-			$callback = create_function(
-			  '$m', 'return pack( \'H*\', preg_replace( \'/%/\', \'\', $m[0] ) );'
-			);
+			$callback = create_function( '$m', 'return pack( \'H*\', preg_replace( \'/%/\', \'\', $m[0] ) );' );
 		
-		return $string->toS()
-		  ->tr( Prb::Str( '+' ), Prb::Str( ' ' ) )
-		  ->gsub( '/((?:%[0-9a-fA-F]{2})+)/', $callback );
+		$translated = strtr( $string, '+', ' ' );
+		return preg_replace_callback( '/((?:%[0-9a-fA-F]{2})+)/', $callback, $translated );
 	}
 	
 	const DEFAULT_SEP = '/[&;] */';
 	
-	// TODO: Document!
-  # Stolen from Mongrel, with some small modifications:
-  # Parses a query string by breaking it up at the '&'
-  # and ';' characters.  You can also use this to parse
-  # cookies by changing the characters used in the second
-  # parameter (which defaults to '&;').
+	/**
+	 * Parses a query string without recursing.
+	 *
+	 * Uses an optional delimiter string containing characters on which to split.
+	 * After splitting, escapes key value pairs and puts them in an array.
+	 *
+	 * @author Joshua Morris
+	 * @access public
+	 * @param $query_string string request query string
+	 * @param $delimiter string list of characters upon which to split query string
+	 * @return array shallow array of escaped keys and values from query string
+	 */
 	public function parseQuery( $query_string, $delimiter = null )
 	{
-		$this->params = Prb::Hsh();
+		$query_string = (string)$query_string;
+		$params       = array();
 		
-		if ( is_null( $query_string ) )
-			$query_string = Prb::Str();
-		
-		$callback = array( $this, 'onParseQuery' );
-		$query_string->split( isset( $delimiter ) ? "/[{$d}] */" : self::DEFAULT_SEP )
-		             ->each( $callback );
-		
-		return $this->params;
-	}
-	
-	// TODO: Document!
-	public function onParseQuery( $param )
-	{
-		static $callback = null;
-		
-		if ( is_null( $callback ) )
-		  $callback = create_function( '$x', 'return Prack_Utils::singleton()->unescape( $x );' );
-		
-		list( $key, $value ) = $param->split( '/=/', 2 )
-		                             ->map( $callback )->raw();
-		
-		$key = $key->raw();
-		
-		if ( $current = $this->params->get( $key ) )
+		$split = preg_split( isset( $delimiter ) ? $delimiter : self::DEFAULT_SEP, $query_string );
+		foreach( $split as $param )
 		{
-			if ( $current instanceof Prb_Array )
-				$this->params->concat( $key, $value );
+			static $callback = null;
+			if ( is_null( $callback ) )
+			  $callback = create_function( '$x', 'return Prack_Utils::singleton()->unescape( $x );' );
+		
+			@list( $key, $value ) = preg_split( '/=/', $param, 2 );
+			@list( $key, $value ) = array_map( $callback, array( $key, $value ) );
+		
+			if ( $current = @$params[ $key ] )
+			{
+				if ( is_array( $current ) )
+					array_push( $current, $key, $value );
+				else
+				  $params[ $key ] = array( $current, $value );
+			}
 			else
-				$this->params->set( $key, Prb::Ary( $current, $value ) );
+				$params[ $key ] = $value;
 		}
-		else
-			$this->params->set( $key, $value );
+		
+		return $params;
 	}
 	
-	// TODO: Document!
+	/**
+	 * Parse a query with nested values (recursively) into an array.
+	 *
+	 * This function splits parameters by the provided delimeter(s)--'&;' by default--
+	 * and normalizes each of the split parameters recursively via callback.
+	 *
+	 * With a different delimiter, this function can also be used to parse cookies.
+	 * This approach is used elsewhere in Prack_Utils.
+	 *
+	 * @author Joshua Morris
+	 * @access public
+	 * @param $query_string string the query string to be parsed
+	 * @param $delimiter string set of characters by which to split parameters
+	 * @return array possibly multidimensional array containing query values
+	 */
 	public function parseNestedQuery( $query_string, $delimiter = null )
 	{
-		$this->params = Prb::Hsh();
+		$params = array( 'type' => 'assoc', 'values' => array() );
+		$split  = preg_split( $delimiter ? "/[{$d}] */" : self::DEFAULT_SEP, (string)$query_string );
 		
-		if ( is_null( $query_string ) )
-			$query_string = Prb::Str();
-		
-		$callback = array( $this, 'onParseNestedQuery' );
-		$query_string->split( isset( $delimiter ) ? "/[{$d}] */" : self::DEFAULT_SEP )
-		             ->each( $callback );
-		
-		return $this->params;
-	}
-	
-	// TODO: Document!
-	public function onParseNestedQuery( $param )
-	{
-		$processed = $this->unescape( $param )->split( '/=/', 2 );
-		
-		$key   = $processed->get( 0 );
-		$value = $processed->get( 1 );
-		
-		$this->normalizeParams( $this->params, $key, $value );
-	}
-	
-	// TODO: Document!
-	public function normalizeParams( $params, $name, $value = null )
-	{
-		$name->match( '/\A[\[\]]*([^\[\]]+)\]?(.*)/', $matches );
-		
-		$match_one = $matches[ 1 ];
-		$match_two = $matches[ 2 ];
-		
-		// square-bracketed named group:
-		if ( !isset( $match_one[ 0 ] ) )
-			return; // end of recursion
-		
-		$key   = $match_one[ 0 ];
-		$after = Prb::Str( $match_two[ 0 ] );
-		
-		if ( $after->isEmpty() )
-			$params->set( $key, isset( $value ) ? $value : null );
-		
-		else if ( $after->raw() == '[]' )
+		foreach ( $split as $param )
 		{
-			if ( !$params->contains( $key ) )
-				$params->set( $key, Prb::Ary() );
-			
-			$operand = $params->get( $key );
-			if ( !( $operand instanceof Prb_Array ) )
-			{
-				$operand_type = is_object( $operand ) ? get_class( $operand ) : gettype( $operand );
-				throw new Prb_Exception_Type( "expected Prb_Array (got {$operand_type}) for param '{$key}'" );
-			}
-			
-			$operand->concat( $value );
+			$key_value = preg_split( '/=/', $this->unescape( $param ), 2 );
+			$this->normalizeParams( $params, @$key_value[ 0 ], @$key_value[ 1 ] );
 		}
 		
-		else if ( $after->match( '/^\[\]\[([^\[\]]+)\]$/m', $matches ) || $after->match( '/^\[\](.+)$/m', $matches ) )
-		{
-			// $matches reassigned here:
-			$child_key = Prb::Str( $matches[ 1 ][ 0 ] );
-			
-			if ( !$params->contains( $key ) )
-				$params->set( $key, Prb::Ary() );
-			
-			$operand = $params->get( $key );
-			if ( !( $operand instanceof Prb_Array ) )
-			{
-				$operand_type = is_object( $operand ) ? get_class( $operand ) : gettype( $operand );
-				throw new Prb_Exception_Type( "expected Prb_Array (got {$operand_type}) for param '{$key}'" );
-			}
-			
-			$last_param = $params->get( $key )->last();
-			if ( $last_param instanceof Prb_Hash && !$last_param->contains( $child_key->raw() ) )
-				$this->normalizeParams( $last_param, $child_key, $value );
-			else
-				$operand->concat( $this->normalizeParams( Prb::Hsh(), $child_key, $value ) );
-		}
-		else
-		{
-			if ( !$params->contains( $key ) )
-				$params->set( $key, Prb::Hsh() );
-			
-			$operand = $params->get( $key );
-			if ( !( $operand instanceof Prb_Hash ) )
-			{
-				$operand_type = is_object( $operand ) ? get_class( $operand ) : gettype( $operand );
-				throw new Prb_Exception_Type( "expected Prb_Hash (got {$operand_type}) for param '{$key}'" );
-			}
-			
-			$params->set( $key, $this->normalizeParams( $operand, $after, $value) );
-		}
+		$this->cleanParams( $params );
 		
 		return $params;
 	}
@@ -274,85 +189,227 @@ class Prack_Utils
 	// TODO: Document!
 	public function buildQuery( $params )
 	{
-		$callback = array( $this, 'onBuildQuery' );
-		return $params->map( $callback )
-		              ->join( Prb::Str( '&' ) );
-	}
-	
-	// TODO: Document!
-	public function onBuildQuery( $key, $value )
-	{
-		if ( $value instanceof Prb_Array )
+		$query = array();
+		
+		foreach ( $params as $name => $param )
 		{
-			$this->obq_k = $key;
-			$callback    = array( $this, 'onBuildQueryArrayIteration' );
-			return $this->buildQuery( $value->collect( $callback ) );
+			if ( is_array( $param ) )
+			{
+				$intermediate = array();
+				foreach ( $param as $value )
+					array_push( $intermediate, "{$this->escape( $name )}={$this->escape( $value )}" );
+				array_push( $query, join( '&', $intermediate ) );
+			}
+			else
+				array_push( $query, "{$this->escape( $name )}={$this->escape( $param )}" );
 		}
 		
-		return Prb::Str( "{$this->escape( Prb::Str( $key ) )->raw()}={$this->escape( $value )->raw()}" );
-	}
-	
-	// TODO: Document!
-	public function onBuildQueryArrayIteration( $item )
-	{
-		return Prb::Ary( array( $this->obq_k, $item ) );
+		return join( '&', $query );
 	}
 	
 	// TODO: Document!
 	public function buildNestedQuery( $params )
 	{
-		$this->obnq_p = array();
-		return $this->_buildNestedQuery( $params );
+		$dirty = $params; // copy params
+		return $this->_buildNestedQuery( $this->dirtyParams( $dirty ) );
 	}
 	
 	// TODO: Document!
-	public function _buildNestedQuery( $value, $prefix = null )
+	private function _buildNestedQuery( $param, $prefix = null )
 	{
-		if ( $value instanceof Prb_Hash )
+		if ( is_array( $param ) && @$param[ 'type' ] == 'assoc' )
 		{
-			if ( isset( $prefix ) )
-				array_push( $this->obnq_p, $prefix );
-			$callback = array( $this, 'onBuildNestedQueryHashIteration' );
-			$result   = $value->map( $callback )->join( Prb::Str( '&' ) );
-			array_pop( $this->obnq_p );
-			return $result;
+			$mapped = array();
+			
+			foreach ( $param[ 'values' ] as $key => $value )
+			{
+				$_prefix = $prefix ? "{$prefix}[{$this->escape( $key )}]" : $this->escape( $key );
+				array_push( $mapped, $this->_buildNestedQuery( $value, $_prefix ) );
+			}
+				
+			return join( '&', $mapped );
 		}
-		else if ( $value instanceof Prb_Array )
+		else if ( is_array( $param ) && @$param[ 'type' ] == 'indexed' )
 		{
-			if ( isset( $prefix ) )
-				array_push( $this->obnq_p, $prefix );
-			$callback = array( $this, 'onBuildNestedQueryArrayIteration' );
-			$result   = $value->map( $callback )->join( Prb::Str( '&' ) );
-			array_pop( $this->obnq_p );
-			return $result;
+			$mapped = array();
+			
+			foreach ( $param[ 'values' ] as $key => $value )
+				array_push( $mapped, $this->_buildNestedQuery( $value, "{$prefix}[]" ) );
+			
+			return join( '&', $mapped );
 		}
-		else if ( $value instanceof Prb_String )
+		else if ( is_string( $param ) )
 		{
 			if ( is_null( $prefix ) )
-				throw new Prb_Exception_Argument( 'value must be a Prb_Hash' );
-			return Prb::Str( $prefix."={$this->escape( $value )->raw()}" );
+				throw new Prb_Exception_Argument( "param must be an array of type 'assoc' (got {$param})" );
+			
+			return $prefix."={$this->escape( $param )}";
 		}
 		
-		return Prb::Str( $prefix );
+		return $prefix;
 	}
 	
-	// TODO: Document!
-	public function onBuildNestedQueryHashIteration( $key, $value )
+	/**
+	 * Normalize an individual parameter, adding its value to the overall params array.
+	 * 
+	 * Recursively processes hash- and array-based param names, creating arrays
+	 * on each recurse suited to holding that level's values.
+	 *
+	 * Arrays generated on each level of recursion have two keys: 'type' and 'values'.
+	 * 'type' is one of two values ('indexed' or 'assoc'), indicating whether that level's
+	 * values are stored as a simple list, or as a lookup. A TypeError exception is thrown
+	 * if, while processing, normalizeParams() encounters an inappropriate container for
+	 * the values it's trying to add. This can be caused by a malformed query string, and
+	 * should probably result in a "400 Bad Request" response.
+	 *
+	 * @author Joshua Morris
+	 * @access private
+	 * @param &$params array array of 'type' and 'values' keys for this level's values
+	 * @param $name string param name at this recursion level
+	 * @param $value mixed null or primitive: if set, used as value to be put in this level's collection
+	 * @return array return value used for recursion only--this function modifies &$params by reference
+	 * @throws TypeError
+	 */
+	private function normalizeParams( &$params, $name, $value = null )
 	{
-		$escaped_key = $this->escape( Prb::Str( $key ) )->raw();
-		if ( empty( $this->obnq_p ) )
-			$prefix = $escaped_key;
-		else
-			$prefix = $this->obnq_p;
+		$values = &$params[ 'values' ]; // this recursion level's values
 		
-		$prefix = is_array( $prefix ) ? end( $this->obnq_p )."[{$escaped_key}]" : $escaped_key;
-		return $this->_buildNestedQuery( $value, $prefix );
+		preg_match_all( '/\A[\[\]]*([^\[\]]+)\]?(.*)/', $name, $matches );
+		
+		if ( !@$matches[ 1 ][ 0 ] )
+			return;
+		
+		$key    = $matches[ 1 ][ 0 ];   // first chunk of square-bracket-delimited text in $name
+		$after  = $matches[ 2 ][ 0 ];   // remainder of name after first match
+		
+		// no remaining characters in $name
+		if ( empty( $after ) )
+			$values[ $key ] = $value;
+		
+		// $after contains exactly '[]', indicating a 'push' onto this param level's 'values'
+		// this also asserts that this level's 'values' are an indexed array.
+		else if ( $after == '[]' )
+		{
+			if ( !@$values[ $key ] )
+				$values[ $key ] = array( 'type' => 'indexed', 'values' => array() );
+			
+			$intermediate = &$values[ $key ];
+			if ( !is_array( $intermediate ) || @$intermediate[ 'type' ] != 'indexed' )
+				throw new Prb_Exception_Type( "expected type 'indexed' (got {$intermediate[ 'type' ]}) for param '{$key}'" );
+			
+			array_push( $intermediate[ 'values' ], $value );
+		}
+		
+		// $after contains '[][key]' or '[]garbage'
+		// as with above, we're still putting things in arrays. this control structure
+		// sets the last of this level's values to be an associative array tuple:
+		//   populating it with normalized values from the child key, recursively
+		// -OR-
+		//   creating the tuple, and then populating it recursively
+		else if ( preg_match_all( '/^\[\]\[([^\[\]]+)\]$/m', $after, $matches ) || preg_match_all( '/^\[\](.+)$/m', $after, $matches ) )
+		{
+			if ( !@$values[ $key ] )
+				$values[ $key ] = array( 'type' => 'indexed', 'values' => array() );
+			
+			$intermediate = &$values[ $key ];
+			if ( !is_array( $intermediate ) || @$intermediate[ 'type' ] != 'indexed' )
+				throw new Prb_Exception_Type( "expected type 'indexed' (got {$intermediate[ 'type' ]}) for param '{$key}'" );
+			
+			$child_key         = $matches[ 1 ][ 0 ];
+			$intermediate_keys = array_keys( $intermediate[ 'values' ] );
+			$last_key          =  array_pop( $intermediate_keys        );
+			
+			$last = null;
+			if ( isset( $last_key ) )
+				$last = &$intermediate[ 'values' ][ $last_key ];
+			
+			if ( ( is_array( $last ) && @$last[ 'type' ] == 'assoc' ) && !array_key_exists( $child_key, $last[ 'values' ] ) )
+				$this->normalizeParams( $last, $child_key, $value );
+			else
+			{
+				$intermediate_values = &$intermediate[ 'values' ];
+				$subparams           = array( 'type' => 'assoc', 'values' => array() );
+				array_push( $intermediate_values, $this->normalizeParams( $subparams, $child_key, $value ) );
+			}
+		}
+		
+		// otherwise, recurse with an associative array:
+		else
+		{
+			if ( !@$values[ $key ] )
+				$values[ $key ] = array( 'type' => 'assoc', 'values' => array() );
+			
+			$intermediate = &$values[ $key ];
+			if ( !is_array( $intermediate ) || @$intermediate[ 'type' ] != 'assoc' )
+				throw new Prb_Exception_Type( "expected type 'assoc' (got {$intermediate[ 'type' ]}) for param '{$key}'" );
+			
+			$values[ $key ] = $this->normalizeParams( $intermediate, $after, $value );
+		}
+		
+		return $params;
 	}
 	
-	// TODO: Document!
-	public function onBuildNestedQueryArrayIteration( $item )
+		/**
+	 * Recursively removes 'type' and 'values' keys from parsed params.
+	 * 
+	 * This function removes query-processing information from an array, leaving
+	 * only the parsed query results. This step is necessary on account of PHP's
+	 * lack of distinction between indexed and associative arrays.
+	 * 
+	 * @author Joshua Morris
+	 * @access private
+	 * @param &$item the current param set to be cleaned
+	 */
+	private function cleanParams( &$item )
 	{
-		$prefix = end( $this->obnq_p );
-		return $this->_buildNestedQuery( $item, "{$prefix}[]" );
+		unset( $item[ 'type' ] );
+		$item = $item[ 'values' ];
+		
+		foreach ( $item as $key => &$value )
+		{
+			if ( is_array( $value ) && @$value[ 'type' ] && @$value[ 'values' ] )
+				$this->cleanParams( $value );
+		}
+	}
+
+	/**
+	 * Recursively adds 'type' and 'values' keys to params.
+	 * 
+	 * This function adds query-processing information to an array. This step
+	 * is necessary on account of PHP's lack of distinction between indexed
+	 * and associative arrays.
+	 * 
+	 * @author Joshua Morris
+	 * @access private
+	 * @param &$item the current param set to be cleaned
+	 */
+	private function dirtyParams( &$item )
+	{
+		if ( is_array( $item ) )
+		{
+			$has_numeric_keys = false;
+			$has_string_keys  = false;
+			foreach ( array_keys( $item ) as $key )
+			{
+				if ( is_string( $key ) )
+					$has_string_keys = true;
+				if ( is_numeric( $key ) )
+					$has_numeric_keys = true;
+			}
+			
+			if ( $has_string_keys && $has_numeric_keys )
+				throw new Prb_Exception_Type( 'dirtyParams $item cannot have both string and numeric keys' );
+			
+			$item   = array( 'type' => $has_string_keys ? 'assoc' : 'indexed', 'values' => $item );
+			$values = &$item[ 'values' ];
+			
+			foreach ( $values as $key => &$value )
+			{
+				if ( is_array( $value ) )
+					$values[ $key ] = $this->dirtyParams( $value );
+			}
+		}
+		
+		return $item;
 	}
 }
