@@ -30,8 +30,8 @@ class Prack_Lint_InputWrapper
 		                   'rack.input method gets called with arguments' );
 		
 		$result = $this->input->gets();
-		prack_lint_assert( is_null( $result ) || $result instanceof Prb_String,
-		                   "rack.input method gets didn't return a Prb_String" );
+		prack_lint_assert( is_null( $result ) || is_string( $result ),
+		                   "rack.input method gets didn't return a string" );
 		return $result;
 	}
 	
@@ -45,7 +45,7 @@ class Prack_Lint_InputWrapper
 	##   if +length+ is not given or is null.
 	##   If +buffer+ is given, then the read data will be placed into +buffer+ instead of a
 	##   newly created String object.
-	public function read( $length = null, $buffer = null )
+	public function read( $length = null, &$buffer = null )
 	{
 		$args = func_get_args();
 		
@@ -59,13 +59,13 @@ class Prack_Lint_InputWrapper
 			                   "rack.input method read called with a negative length" );
 		}
 		if ( count( $args ) >= 2 )
-			prack_lint_assert( $args[ 1 ] instanceof Prb_String,
+			prack_lint_assert( is_string( $args[ 1 ] ),
 		                     "rack.input method read called with non-string buffer" );
 		
 		$result = call_user_func_array( array( $this->input, 'read' ), $args );
 		
-		prack_lint_assert( is_null( $result ) || $result instanceof Prb_String,
-		                   "rack.input method read didn't return null or a Prb_String" );
+		prack_lint_assert( is_null( $result ) || is_string( $result ),
+		                   "rack.input method returned neither string nor null (got {$result})" );
 		if ( array_key_exists( 0, $args ) && is_null( $args[ 0 ] ) )
 			prack_lint_assert( isset( $result ), "rack.input method read( null ) returned null on EOF" );
 		
@@ -83,7 +83,7 @@ class Prack_Lint_InputWrapper
 	// TODO: Document!
 	public function onEach( $line )
 	{
-		prack_lint_assert( $line instanceof Prb_String, "rack.input method each didn't yield a Prb_String" );
+		prack_lint_assert( is_string( $line ), "rack.input method each didn't yield a string" );
 		call_user_func( $this->on_each, $line );
 	}
 	
@@ -116,7 +116,6 @@ class Prack_Lint_InputWrapper
 	{
 		prack_lint_assert( false, "rack.input method close must not be called" );
 	}
-	
 }
 
 // TODO: Document!
@@ -143,8 +142,8 @@ class Prack_Lint_ErrorWrapper
 	## * +write+ must be called with a single argument that is a String.
 	public function write( $string )
 	{
-		prack_lint_assert( $string instanceof Prb_String,
-		                   "rack.errors method write not called with a Prb_String" );
+		prack_lint_assert( is_string( $string ),
+		                   "rack.errors method write called with non-string argument" );
 		$this->error->write( $string );
 	}
 	
@@ -194,14 +193,14 @@ class Prack_Lint
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
 		$clone = clone $this;
 		return $clone->_call( $env );
 	}
 	
 	// TODO: Document!
-	public function _call( $env )
+	public function _call( &$env )
 	{
 		$this->pushAssertOptions();
 		
@@ -209,11 +208,11 @@ class Prack_Lint
 		prack_lint_assert( isset( $env ), 'No env given' );
 		$this->checkEnv( $env );
 		
-		$env->set( 'rack.input',  new Prack_Lint_InputWrapper( $env->get( 'rack.input'  ) ) );
-		$env->set( 'rack.errors', new Prack_Lint_ErrorWrapper( $env->get( 'rack.errors' ) ) );
+		$env[ 'rack.input'  ] = new Prack_Lint_InputWrapper( $env[ 'rack.input'  ] );
+		$env[ 'rack.errors' ] = new Prack_Lint_ErrorWrapper( $env[ 'rack.errors' ] );
 		
 		## and returns an Array of exactly three values:
-		list( $status, $headers, $this->body ) = $this->middleware_app->call( $env )->raw();
+		list( $status, $headers, $this->body ) = $this->middleware_app->call( $env );
 		if ( is_array( $this->body ) )
 			$this->body = Prb::Ary( $this->body ); // Make body OO-enumerable
 		
@@ -226,11 +225,11 @@ class Prack_Lint
 		## and the *body*.
 		$this->checkContentType( $status, $headers );
 		$this->checkContentLength( $status, $headers );
-		$this->head_request = ( $env->get( 'REQUEST_METHOD' )->raw() == 'HEAD' );
+		$this->head_request = ( $env[ 'REQUEST_METHOD' ] == 'HEAD' );
 		
 		$this->popAssertOptions();
 		
-		return Prb::Ary( array( $status, $headers, $this ) );
+		return array( $status, $headers, $this );
 	}
 	
 	// TODO: Document!
@@ -240,8 +239,8 @@ class Prack_Lint
 			prack_lint_assert( $bytes == 0,
 		                     'Response body was given for HEAD request, but should be empty' );
 		else if ( $this->content_length )
-			prack_lint_assert( $this->content_length->raw() == $bytes,
-		                     "Content-Length header was {$this->content_length->raw()}, but should be {$bytes}" );
+			prack_lint_assert( $this->content_length == $bytes,
+		                     "Content-Length header was {$this->content_length}, but should be {$bytes}" );
 	}
 	
 	// TODO: Document!
@@ -253,8 +252,8 @@ class Prack_Lint
 		$this->bytes    = 0;
 		
 		## The Body must respond to +each+
-		prack_lint_assert( $this->body instanceof Prb_I_Enumerable,
-		                   'Response body must respond to each' );
+		prack_lint_assert( is_array( $this->body ) || $this->body instanceof Prb_I_Enumerable,
+		                   'Response body must be array or Prb_I_Enumerable' );
 		
 		$this->body->each( array( $this, 'tabulate' ) );
 		
@@ -267,7 +266,6 @@ class Prack_Lint
 		## to that produced by calling +each+; this may be used by the
 		## server as an alternative, possibly more efficient way to
 		## transport the response.
-		
 		if ( method_exists( $this->body, 'toPath' ) )
 			prack_lint_assert( file_exists( $body->toPath() ),
 			                   'The file identified by body.to_path does not exist' );
@@ -281,10 +279,10 @@ class Prack_Lint
 	{
 		## and must only yield String values.
 		$as_string = print_r( $part, true );
-		prack_lint_assert( $part instanceof Prb_String,
+		prack_lint_assert( is_string( $part ),
 		                   "Body yielded non-string value {$as_string}" );
 		
-		$this->bytes += $part->length();
+		$this->bytes += strlen( $part );
 		
 		call_user_func( $this->callback, $part );
 	}
@@ -296,7 +294,7 @@ class Prack_Lint
 		## CGI-like headers.  The application is free to modify the
 		## environment.
 		$env_type = is_object( $env ) ? get_class( $env ) : gettype( $env );
-		prack_lint_assert( $env instanceof Prb_Hash, "env is not a Prb_Hash, but {$env_type}" );
+		prack_lint_assert( is_array( $env ), "env is not an array, but {$env_type}" );
 		
 		##
 		## The environment is required to include these variables
@@ -360,7 +358,7 @@ class Prack_Lint
 		
 		## <tt>rack.session</tt>:: A hash like interface for storing request session data.
 		##                         The store must implement:
-		if ( $session = $env->get( 'rack.session' ) )
+		if ( $session = @$env[ 'rack.session' ] )
 		{
 			// FIXME: Implement sessions.
 			/*
@@ -375,7 +373,7 @@ class Prack_Lint
 		
 		## <tt>rack.logger</tt>:: A common object interface for logging messages.
 		##                        The object must implement:
-		if ( $logger = $env->get( 'rack.logger' ) )
+		if ( $logger = @$env[ 'rack.logger' ] )
 		{
 			$as_string = print_r( $logger, true );
 			prack_lint_assert( $logger instanceof Prb_I_Logger,
@@ -395,7 +393,7 @@ class Prack_Lint
 		);
 		
 		foreach ( $required_keys as $header )
-			prack_lint_assert( $env->contains( $header ), "env missing required key {$header}" );
+			prack_lint_assert( isset( $env[ $header ] ), "env missing required key {$header}" );
 		
 		## The environment must not contain the keys
 		## <tt>HTTP_CONTENT_TYPE</tt> or <tt>HTTP_CONTENT_LENGTH</tt>
@@ -403,68 +401,66 @@ class Prack_Lint
 		foreach ( array( 'HTTP_CONTENT_TYPE', 'HTTP_CONTENT_LENGTH' ) as $header )
 		{
 			$useable = substr( $header, 5, strlen( $header ) - 1);
-			prack_lint_assert( !$env->contains( $header ), "env contains {$header}, must use {$useable}" );
+			prack_lint_assert( !@$env[ $header ], "env contains {$header}, must use {$useable}" );
 		}
 		
 		## The CGI keys (named without a period) must have String values.
-		foreach ( $env->raw() as $key => $value )
+		foreach ( $env as $key => $value )
 		{
 			if ( strpos( $key, '.' ) )
 				continue;
 			$as_string = is_object( $value ) ? get_class( $value ) : gettype( $value );
-			prack_lint_assert( $value instanceof Prb_String, "env variable {$key} has non-string value {$as_string}" );
+			prack_lint_assert( is_string( $value ), "env variable {$key} has non-string value {$as_string}" );
 		}
 		
 		##
 		## There are the following restrictions:
 		
 		## * <tt>rack.version</tt> must be an array of Integers.
-		$rack_version = $env->get( 'rack.version' );
+		$rack_version = @$env[ 'rack.version' ];
 		$version_type = is_object( $rack_version ) ? get_class( $rack_version ) : gettype( $rack_version );
 		prack_lint_assert( is_array( $rack_version ), "rack.version must be a Prb_Array, was {$version_type}" );
 		
 		## * <tt>rack.url_scheme</tt> must either be +http+ or +https+.
 		
-		$url_scheme      = $env->get( 'rack.url_scheme' );
+		$url_scheme      = $env[ 'rack.url_scheme' ];
 		$url_scheme_type = is_object( $url_scheme ) ? get_class( $url_scheme ) : gettype( $url_scheme );
-		prack_lint_assert( in_array( $env->get( 'rack.url_scheme' )->raw(), array( 'http', 'https' ) ),
+		prack_lint_assert( in_array( @$env[ 'rack.url_scheme' ], array( 'http', 'https' ) ),
 		                   "rack.url_scheme unknown: {$url_scheme_type}"
 		);
 		
 		## * There must be a valid input stream in <tt>rack.input</tt>.
-		$this->checkInput( $env->get( 'rack.input' ) );
+		$this->checkInput( $env[ 'rack.input' ] );
 		## * There must be a valid error stream in <tt>rack.errors</tt>.
-		$this->checkError( $env->get( 'rack.errors' ) );
+		$this->checkError( $env[ 'rack.errors' ] );
 		
 		## * The <tt>REQUEST_METHOD</tt> must be a valid token.
-		$rm_pattern = "/\A[0-9A-Za-z!\#$%&'*+.^_`|~-]+\z/";
-		prack_lint_assert( $env->get( 'REQUEST_METHOD' )->match( $rm_pattern ),
-		                   "REQUEST_METHOD unknown: {$env->get( 'REQUEST_METHOD' )->raw()}" );
+		prack_lint_assert( (bool)preg_match( "/\A[0-9A-Za-z!\#$%&'*+.^_`|~-]+\z/", @$env[ 'REQUEST_METHOD' ] ),
+		                   "REQUEST_METHOD unknown: {$env[ 'REQUEST_METHOD' ]}" );
 		
 		## * The <tt>SCRIPT_NAME</tt>, if non-empty, must start with <tt>/</tt>
-		$sn_pattern = '/\A\//';
-		prack_lint_assert( !$env->contains( 'SCRIPT_NAME' ) || $env->get( 'SCRIPT_NAME' )->isEmpty() || $env->get( 'SCRIPT_NAME' )->match( $sn_pattern ),
+		$sn = @$env[ 'SCRIPT_NAME' ];
+		prack_lint_assert( is_null( $sn ) || empty( $sn ) || (bool)preg_match( '/\A\//', $sn ),
 		                   'SCRIPT_NAME must start with /' );
 		
 		## * The <tt>PATH_INFO</tt>, if non-empty, must start with <tt>/</tt>
-		$pi_pattern = '/\A\//';
-		prack_lint_assert( !$env->contains( 'PATH_INFO' ) || $env->get( 'PATH_INFO' )->isEmpty() || $env->get( 'PATH_INFO' )->match( $pi_pattern ),
+		$pi = @$env[ 'PATH_INFO' ];
+		prack_lint_assert( is_null( $pi ) || empty( $pi ) || (bool)preg_match( '/\A\//', $pi ),
 		                   'PATH_INFO must start with /' );
 		
 		## * The <tt>CONTENT_LENGTH</tt>, if given, must consist of digits only.
-		$cl_pattern = '/\A\d+\z/';
-		prack_lint_assert( !$env->contains( 'CONTENT_LENGTH' ) || $env->get( 'CONTENT_LENGTH' )->match( $cl_pattern ),
-		                   "Invalid CONTENT_LENGTH: {$env->get( 'CONTENT_LENGTH' )->raw()}" );
+		$cl = @$env[ 'CONTENT_LENGTH' ];
+		prack_lint_assert( is_null( $cl ) || (bool)preg_match( '/\A\d+\z/', $cl ),
+		                   "Invalid CONTENT_LENGTH: {$env[ 'CONTENT_LENGTH' ]}" );
 		
 		## * One of <tt>SCRIPT_NAME</tt> or <tt>PATH_INFO</tt> must be
 		##   set.  <tt>PATH_INFO</tt> should be <tt>/</tt> if
 		##   <tt>SCRIPT_NAME</tt> is empty.
-		prack_lint_assert( $env->contains( 'SCRIPT_NAME' ) && !$env->get( 'SCRIPT_NAME' )->isEmpty() ||
-		                   $env->contains( 'PATH_INFO'   ) && !$env->get( 'PATH_INFO'   )->isEmpty(),
+		prack_lint_assert( $sn && !empty( $sn ) || $pi && !empty( $pi ),
 		                   "One of SCRIPT_NAME or PATH_INFO must be set (make PATH_INFO '/' if SCRIPT_NAME is empty)" );
 		
 		##   <tt>SCRIPT_NAME</tt> never should be <tt>/</tt>, but instead be empty.
-		prack_lint_assert( $env->contains( 'SCRIPT_NAME' ) && $env->get( 'SCRIPT_NAME' )->raw() != '/',
+		prack_lint_assert( isset( $sn ) && $sn != '/',
 		                   "SCRIPT_NAME cannot be '/', make it '' and PATH_INFO '/'" );
 	}
 	
@@ -509,7 +505,7 @@ class Prack_Lint
 	{
 		## This is an HTTP status. When parsed as integer (+to_i+), it must be
 		## greater than or equal to 100.
-		prack_lint_assert( $status->raw() >= 100, 'Status must be >= 100 seen as integer' );
+		prack_lint_assert( $status >= 100, 'Status must be >= 100 seen as integer' );
 	}
 	
 	// TODO: Document!
@@ -518,10 +514,11 @@ class Prack_Lint
 	{
 		## The header must respond to +each+, and yield values of key and value.
 		$header_type = is_object( $header ) ? get_class( $header ) : "primitive type ".gettype( $header );
-		prack_lint_assert( $header instanceof Prb_I_Enumerable,
-			                 "headers object should conform to Prb_I_Enumerable, but doesn't (got {$header_type} as headers)" );
+		prack_lint_assert( is_array( $header ),
+			                 "headers object should be an array (got {$header_type} as headers)" );
 		
-		$header->each( array( $this, 'checkHeader' ) );
+		foreach ( $header as $key => $value)
+			$this->checkHeader( $key, $value );
 	}
 	
 	public function checkHeader( $key, $value )
@@ -549,14 +546,13 @@ class Prack_Lint
 		
 		## The values of the header must be Strings,
 		$value_type = is_object( $value ) ? get_class( $value ) : gettype( $value );
-		prack_lint_assert( $value instanceof Prb_String,
-		                   "a header value must be a Prb_String, but the value of '{$key}' is a {$value_type}" );
+		prack_lint_assert( is_string( $value ),
+		                   "a header value must be a string, but the value of '{$key}' is a {$value_type}" );
 		
 		## consisting of lines (for multiple header values, e.g. multiple
 		## <tt>Set-Cookie</tt> values) seperated by "\n".
-		$exploded = $value->split( "/\n/" );
-		foreach ( $exploded->raw() as $key => $value )
-			prack_lint_assert( preg_match( '/[\000-\037]/', $value->raw() ) === 0,
+		foreach ( preg_split( "/\n/", $value ) as $key => $value )
+			prack_lint_assert( preg_match( '/[\000-\037]/', $value ) === 0,
 		                     "invalid header value {$key}: {$value_type}" );
 	}
 	
@@ -564,20 +560,20 @@ class Prack_Lint
 	## === The Content-Type
 	public function checkContentType( $status, $headers )
 	{
-		foreach ( $headers->raw() as $key => $value )
+		foreach ( $headers as $key => $value )
 		{
 			## There must be a <tt>Content-Type</tt>, except when the
 			## +Status+ is 1xx, 204 or 304, in which case there must be none
 			## given.
 			if ( strtolower( $key ) == 'content-type' )
 			{
-				prack_lint_assert( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( (int)$status->raw() ),
-				                   "Content-Type header found in {$status->raw()} response, not allowed" );
+				prack_lint_assert( !in_array( (int)$status, Prack_Utils::singleton()->statusWithNoEntityBody() ),
+				                   "Content-Type header found in {$status} response, not allowed" );
 				return;
 			}
 		}
 		
-		prack_lint_assert( Prack_Utils::singleton()->statusWithNoEntityBody()->contains( $status->raw() ),
+		prack_lint_assert( in_array( (int)$status, Prack_Utils::singleton()->statusWithNoEntityBody() ),
 		                   "No Content-Type header found" );
 	}
 	
@@ -585,14 +581,14 @@ class Prack_Lint
 	## === The Content-Length
 	public function checkContentLength( $status, $headers )
 	{
-		foreach ( $headers->raw() as $key => $value )
+		foreach ( $headers as $key => $value )
 		{
 			## There must not be a <tt>Content-Length</tt> header when the
 			## +Status+ is 1xx, 204 or 304.
 			if ( strtolower( $key ) == 'content-length' )
 			{
-				prack_lint_assert( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( $status->raw() ),
-				                   "Content-Length header found in {$status->raw()} response, not allowed" );
+				prack_lint_assert( !in_array( (int)$status, Prack_Utils::singleton()->statusWithNoEntityBody() ),
+				                   "Content-Length header found in {$status} response, not allowed" );
 				$this->content_length = $value;
 			}
 		}
