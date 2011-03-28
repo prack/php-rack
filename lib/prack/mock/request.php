@@ -89,116 +89,101 @@ class Prack_Mock_Request
 		
 		$parts = array_filter( $parts, 'strlen' );
 		
-		return Prb::Hsh( $parts );
+		return $parts;
 	}
 	
 	// TODO: Document!
-	static function envFor( $url = null, $options = null )
+	static function envFor( $url = '', $options = array() )
 	{
-		$url = is_null( $url ) ? Prb::Str() : $url;
-		if ( !( $url instanceof Prb_String ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: envFor $url must be Prb_String' );
-		$options = is_null( $options ) ? Prb::Hsh() : $options;
-		if ( !( $options instanceof Prb_Hash ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: envFor $options must be Prb_Hash' );
+		$components = self::parseURL( $url );
 		
 		$env = array(
 			'rack.version'      => Prack::version(),
 			'rack.input'        => new Prb_IO_String(),
 			'rack.errors'       => new Prb_IO_String(),
-			'rack.multithread'  => Prb::Num( 0 ),
-			'rack.multiprocess' => Prb::Num( 0 ),
-			'rack.run_once'     => Prb::Num( 1 )
+			'rack.multithread'  => 0,
+			'rack.multiprocess' => 0,
+			'rack.run_once'     => 1
 		);
 		
-		$components = self::parseURL( $url->raw() );
-		if ( ( $path = $components->get( 'path' ) ) && substr( $path, 0, 1 ) != '/' )
-			$components->set( 'path', "/{$path}" );
+		$path = @$components[ 'path' ];
+		if ( $path && substr( $path, 0, 1 ) != '/' )
+			$components[ 'path' ] = "/{$path}";
+		else if ( is_null( $path ) || empty( $path ) )
+			$components[ 'path' ] = '/';
+
+		$env[ 'REQUEST_METHOD'  ] = @$options[ 'method' ] ? strtoupper( $options[ 'method' ] )  : 'GET' ;
+		$env[ 'rack.url_scheme' ] = @$components[ 'scheme' ] ? $components[ 'scheme' ] : 'http';
+		$env[ 'HTTPS'           ] = $env[ 'rack.url_scheme' ] == 'https' ? 'on' : 'off';
+		$env[ 'SERVER_NAME'     ] = @$components[ 'host' ] ? $components[ 'host' ] : 'example.org';
+		$env[ 'SERVER_PORT'     ] = @$components[ 'port' ] ? $components[ 'port' ] : ($env[ 'HTTPS' ] == 'on' ? '443' : '80');
+		$env[ 'SCRIPT_NAME'     ] = (string)@$options[ 'script_name' ];
+		$env[ 'PATH_INFO'       ] = $components[ 'path' ];
+		$env[ 'QUERY_STRING'    ] = (string)@$components[ 'query' ];
+		$env[ 'rack.errors'     ] = @$options[ 'fatal' ] ? new Prack_Mock_FatalWarner() : new Prb_IO_String();
 		
-		// Request method, uppercased ('GET' by default):
-		$env[ 'REQUEST_METHOD' ] =
-		  $options->contains( 'method' ) ? $options->delete( 'method' )->upcase()
-		                                 : Prb::Str( 'GET' );
-		
-		$env[ 'rack.url_scheme' ] =
-		  $components->contains( 'scheme' ) ? Prb::Str( $components->get( 'scheme' ) )
-		                                    : Prb::Str( 'http' );
-		$env[ 'HTTPS' ] =
-		  $env[ 'rack.url_scheme' ]->raw() == 'https' ? Prb::Str( 'on' )
-		                                              : Prb::Str( 'off' );
-		$default_port =
-		  $env[ 'rack.url_scheme' ]->raw() == 'https' ? Prb::Str( '443' )
-		                                              : Prb::Str( '80'  );
-		
-		$env[ 'SERVER_NAME' ] = $components->contains( 'host' ) ? Prb::Str( $components->get( 'host' ) )
-		                                                        : Prb::Str( 'example.org' );
-		$env[ 'SERVER_PORT' ] = $components->contains( 'port' ) ? Prb::Str( $components->get( 'port' ) )
-		                                                        : $default_port;
-		
-		// Script name, path info, query string:
-		$path_info        = Prb::Str( $components->get( 'path' ) );
-		$path_info_viable = !$path_info->isEmpty();
-		
-		$env[ 'SCRIPT_NAME'  ] = $options->contains( 'script_name' ) ? $options->delete( 'script_name' )
-		                                                             : Prb::Str();
-		$env[ 'PATH_INFO'    ] = $path_info_viable                   ? $path_info
-		                                                             : Prb::Str( '/' );
-		$env[ 'QUERY_STRING' ] = Prb::Str( (string)$components->get( 'query' ) );
-		$env[ 'rack.errors'  ] = $options->delete( 'fatal' ) == true ? new Prack_Mock_FatalWarner()
-		                                                             : new Prb_IO_String();
+		unset( $options[ 'method' ]      );
+		unset( $options[ 'scheme' ]      );
+		unset( $options[ 'script_name' ] );
+		unset( $options[ 'fatal'  ]      );
 		
 		// FIXME: Implement query building and multipart form data processing.
-		if ( $params = $options->delete( 'params' ) )
+		if ( $params = @$options[ 'params' ] )
 		{
-			if ( $env[ 'REQUEST_METHOD' ]->raw() == 'GET' )
+			$utils = Prack_Utils::singleton();
+			
+			if ( $env[ 'REQUEST_METHOD' ] == 'GET' )
 			{
-				if ( $params instanceof Prb_String )
-					$params = Prack_Utils::singleton()->parseNestedQuery( $params );
+				if ( is_string( $params ) )
+					$params = $utils->parseNestedQuery( $params );
 				
-				// FIXME: Implement update on Prb_Hash, also mergeInPlace.
-				$params = $params->merge( Prack_Utils::singleton()->parseNestedQuery( $env[ 'QUERY_STRING' ] ) );
-				
-				$env[ 'QUERY_STRING' ] = Prack_Utils::singleton()->buildNestedQuery( $params );
+				$params                = array_merge( $params, $utils->parseNestedQuery( $env[ 'QUERY_STRING' ] ) );
+				$env[ 'QUERY_STRING' ] = $utils->buildNestedQuery( $params );
 			}
-			else if ( !$options->contains( 'input' ) )
+			else if ( !@$options[ 'input' ] )
 			{
-				$options->set( 'CONTENT_TYPE', Prb::Str( 'application/x-www-form-urlencoded' ) );
-				if ( $params instanceof Prb_Hash )
+				$options[ 'CONTENT_TYPE' ] = 'application/x-www-form-urlencoded';
+				
+				if ( is_array( $params ) )
 				{
 					// FIXME: Implement multipart form data processing.
 					if ( $multipart = false )
 						die("FIXME: Implement multipart.");
 					else
-						$options->set( 'input', Prack_Utils::singleton()->buildNestedQuery( $params ) );
+						$options[ 'input' ] = $utils->buildNestedQuery( $params );
 				}
 				else
-					$options->set( 'input', $params );
+					$options[ 'input' ] = $params;
 			}
 		}
 		
-		if ( !$options->contains( 'input' ) )
-			$options->set( 'input', Prb::Str() );
+		if ( !@$options[ 'input' ] )
+			$options[ 'input' ] = '';
 		
-		$input = $options->delete( 'input' );
-		if ( $input instanceof Prb_I_Stringlike )
-			$rack_input = Prb_IO::withString( $input->toS() );
-		else if ( $input instanceof Prb_I_ReadableStreamlike )
-			$rack_input = $input;
-		else
+		if ( is_string( $options[ 'input' ] ) )
 		{
-			$input_type = is_object( $input ) ? get_class( $input ) : gettype( $input );
-			throw new Prb_Exception_Type( "Provided rack input of type {$input_type} is neither String nor ReadableStreamlike" );
+			$rack_input        = Prb_IO::withString( $options[ 'input' ] );
+			$rack_input_length = strlen( $options[ 'input' ] );
 		}
+		else if ( $options[ 'input' ] instanceof Prb_I_ReadableStreamlike )
+		{
+			$rack_input        = $options[ 'input' ];
+			$rack_input_length = $rack_input->length();
+		}
+		else
+			throw new Prb_Exception_Type( 'rack.input not provided' );
 		
 		$env[ 'rack.input' ] = $rack_input;
 		
-		if ( !isset( $env[ 'CONTENT_LENGTH' ] ) )
-			$env[ 'CONTENT_LENGTH' ] = Prb::Str( (string)$rack_input->length() );
+		unset( $options[ 'input' ] );
 		
-		foreach ( $options->raw() as $field => $value )
-			$env[ $field ] = $value;
+		if ( !@$env[ 'CONTENT_LENGTH' ] )
+			$env[ 'CONTENT_LENGTH' ] = (string)$rack_input_length;
 		
-		return Prb::Hsh( $env );
+		foreach ( $options as $key => $value )
+			$env[ $key ] = $value;
+		
+		return $env;
 	}
 	
 	// TODO: Document!
@@ -211,53 +196,46 @@ class Prack_Mock_Request
 	}
 	
 	// TODO: Document!
-	public function get( $uri, $options = null )
+	public function get( $uri = null, $options = null )
 	{
-		return $this->request( Prb::Str( 'GET' ), $uri, $options );
+		return $this->request( 'GET', $uri, $options );
 	}
 	
 	// TODO: Document!
 	public function post( $uri, $options = null )
 	{
-		return $this->request( Prb::Str( 'POST' ), $uri, $options );
+		return $this->request( 'POST', $uri, $options );
 	}
 	
 	// TODO: Document!
 	public function put( $uri, $options = null )
 	{
-		return $this->request( Prb::Str( 'PUT' ), $uri, $options );
+		return $this->request( 'PUT', $uri, $options );
 	}
 	
 	// TODO: Document!
 	public function delete( $uri, $options = null )
 	{
-		return $this->request( Prb::Str( 'DELETE' ), $uri, $options );
+		return $this->request( 'DELETE', $uri, $options );
 	}
 	
 	// TODO: Document!
 	public function request( $method, $uri = null, $options = null )
 	{
-		$uri = is_null( $uri ) ? Prb::Str() : $uri;
-		if ( !( $uri instanceof Prb_String ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: mock request $uri must be Prb_String' );
+		$uri     = $uri     ? (string)$uri     : '';
+		$options = $options ?  (array)$options : array();
 		
-		$options = is_null( $options ) ? Prb::Hsh() : $options;
-		if ( !( $options instanceof Prb_Hash ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: mock request $options must be Prb_Hash' );
-		
-		if ( $lint = $options->delete( 'lint' ) )
-			$middleware_app = new Prack_Lint( $this->middleware_app );
+		if ( $lint = @$options[ 'lint' ] )
+			$middleware_app = Prack_Lint::with( $this->middleware_app );
 		else
 			$middleware_app = $this->middleware_app;
 		
-		$options = $options->merge(
-			Prb::Hsh( array( 'method' => $method ) )
-		);
+		unset( $options[ 'lint' ] );
 		
-		$env    = self::envFor( $uri, $options );
-		$errors = $env->get( 'rack.errors' );
+		$env    = self::envFor( $uri, array_merge( $options, array( 'method' => $method ) ) );
+		$errors = $env[ 'rack.errors' ];
 		
-		list( $status, $headers, $body ) = $middleware_app->call( $env )->raw();
+		list( $status, $headers, $body ) = $middleware_app->call( $env );
 		
 		return new Prack_Mock_Response( $status, $headers, $body, $errors );
 	}

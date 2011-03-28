@@ -4,9 +4,9 @@
 class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 {
 	// TODO: Document!
-	static function app()
+	static function middlewareApp()
 	{
-		return new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
+		return Prack_Mock_Request::with( new Prack_Test_EnvSerializer() );
 	}
 	
 	/**
@@ -16,9 +16,7 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_return_a_Prack_Mock_Response()
 	{
-		$mock_request  = self::app();
-		$mock_response = $mock_request->get( Prb::Str() );
-		$this->assertTrue( $mock_response instanceof Prack_Mock_Response );
+		$this->assertTrue( self::middlewareApp()->get() instanceof Prack_Mock_Response );
 	} // It should return a Prack_Mock_Response
 	
 	/**
@@ -29,8 +27,8 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	public function It_should_be_able_to_only_return_the_environment()
 	{
 		$env = Prack_Mock_Request::envFor();
-		$this->assertTrue( $env instanceof Prb_Hash );
-		$this->assertTrue( $env->contains( 'rack.input' ) );
+		$this->assertTrue( is_array( $env ) );
+		$this->assertNotNull( @$env[ 'rack.input' ] );
 	} // It should be able to only return the environment
 	
 	/**
@@ -40,18 +38,18 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_provide_sensible_defaults()
 	{
-		$mock_request  = self::app();
-		$mock_response = $mock_request->request( Prb::Str( 'GET' ) );
+		$response = self::middlewareApp()->request( 'GET' );
 		
-		$env = unserialize( $mock_response->getBody()->raw() );
+		$env = unserialize( $response->getBody() );
+		$this->assertEquals( 'GET',         $env[ 'REQUEST_METHOD'  ] );
+		$this->assertEquals( 'example.org', $env[ 'SERVER_NAME'     ] );
+		$this->assertEquals( '80',          $env[ 'SERVER_PORT'     ] );
+		$this->assertEquals( '',            $env[ 'QUERY_STRING'    ] );
+		$this->assertEquals( '/',           $env[ 'PATH_INFO'       ] );
+		$this->assertEquals( 'http',        $env[ 'rack.url_scheme' ] );
 		
-		$this->assertEquals( 'GET',         $env->get( 'REQUEST_METHOD'  )->raw() );
-		$this->assertEquals( 'example.org', $env->get( 'SERVER_NAME'     )->raw() );
-		$this->assertEquals( '80',          $env->get( 'SERVER_PORT'     )->raw() );
-		$this->assertEquals( '',            $env->get( 'QUERY_STRING'    )->raw() );
-		$this->assertEquals( '/',           $env->get( 'PATH_INFO'       )->raw() );
-		$this->assertEquals( 'http',        $env->get( 'rack.url_scheme' )->raw() );
-		$this->assertTrue( $env->get( 'mock.postdata' )->isEmpty() );
+		$mock_postdata = $env[ 'mock.postdata' ];
+		$this->assertTrue( empty( $mock_postdata ) );
 	} // It should provide sensible defaults
 	
 	/**
@@ -61,35 +59,21 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_allow_GET_POST_PUT_DELETE()
 	{
-		$mock_request = self::app();
+		$response = self::middlewareApp()->get( '', array( 'input' => 'foo' ) );
+		$env      = unserialize( $response->getBody() );
+		$this->assertEquals( 'GET', $env[ 'REQUEST_METHOD' ] );
 		
-		$mock_response = $mock_request->get(
-		  Prb::Str(),
-		  Prb::Hsh( array( 'input' => Prb::Str( 'foo' ) ) )
-		);
-		$env = unserialize( $mock_response->getBody()->raw() );
-		$this->assertEquals( 'GET', $env->get( 'REQUEST_METHOD' )->raw() );
+		$response = self::middlewareApp()->post( '', array( 'input' => 'foo' ) );
+		$env      = unserialize( $response->getBody() );
+		$this->assertEquals( 'POST', $env[ 'REQUEST_METHOD' ] );
 		
-		$mock_response = $mock_request->post(
-		  Prb::Str(),
-		  Prb::Hsh( array( 'input' => Prb::Str( 'foo' ) ) )
-		);
-		$env = unserialize( $mock_response->getBody()->raw() );
-		$this->assertEquals( 'POST', $env->get( 'REQUEST_METHOD' )->raw() );
+		$response = self::middlewareApp()->put( '', array( 'input' => 'foo' ) );
+		$env      = unserialize( $response->getBody() );
+		$this->assertEquals( 'PUT', $env[ 'REQUEST_METHOD' ] );
 		
-		$mock_response = $mock_request->put(
-		  Prb::Str(),
-		  Prb::Hsh( array( 'input' => Prb::Str( 'foo' ) ) )
-		);
-		$env = unserialize( $mock_response->getBody()->raw() );
-		$this->assertEquals( 'PUT', $env->get( 'REQUEST_METHOD' )->raw() );
-		
-		$mock_response = $mock_request->delete(
-			Prb::Str(),
-			Prb::Hsh( array( 'input' => Prb::Str( 'foo' ) ) )
-		);
-		$env = unserialize( $mock_response->getBody()->raw() );
-		$this->assertEquals( 'DELETE', $env->get( 'REQUEST_METHOD' )->raw() );
+		$response = self::middlewareApp()->delete( '', array( 'input' => 'foo' ) );
+		$env      = unserialize( $response->getBody() );
+		$this->assertEquals( 'DELETE', $env[ 'REQUEST_METHOD' ] );
 	} // It should allow GET/POST/PUT/DELETE
 	
 	/**
@@ -99,10 +83,8 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_set_content_length()
 	{
-		$env = Prack_Mock_Request::envFor(
-			Prb::Str( '/' ), Prb::Hsh( array( 'input' => Prb::Str( 'foo' ) ) )
-		);
-		$this->assertEquals( "3", $env->get( 'CONTENT_LENGTH' )->raw() );
+		$env = Prack_Mock_Request::envFor( '/', array( 'input' => 'foo' ) );
+		$this->assertEquals( '3', $env[ 'CONTENT_LENGTH' ] );
 	} // It should set content length
 	
 	/**
@@ -112,21 +94,13 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_allow_posting()
 	{
-		$mock_request = self::app();
+		$response = self::middlewareApp()->delete( '/', array( 'input' => 'foo' ) );
+		$env      = unserialize( $response->getBody() );
+		$this->assertEquals( 'foo', $env[ 'mock.postdata' ] );
 		
-		$mock_response = $mock_request->delete(
-		  Prb::Str(),
-		  Prb::Hsh( array( 'input' => Prb::Str( 'foo' ) ) )
-		);
-		$env = unserialize( $mock_response->getBody()->raw() );
-		$this->assertEquals( 'foo', $env->get( 'mock.postdata' )->raw() );
-		
-		$mock_response = $mock_request->delete(
-		  Prb::Str(),
-		  Prb::Hsh( array( 'input' => Prb_IO::withString( Prb::Str( 'foo' ) ) ) )
-		);
-		$env = unserialize( $mock_response->getBody()->raw() );
-		$this->assertEquals( 'foo', $env->get( 'mock.postdata' )->raw() );
+		$response = self::middlewareApp()->delete( '', array( 'input' => Prb_IO::withString( 'foo' ) ) );
+		$env      = unserialize( $response->getBody() );
+		$this->assertEquals( 'foo', $env[ 'mock.postdata' ] );
 	} // It should allow posting
 	
 	/**
@@ -136,19 +110,17 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_use_all_parts_of_an_URL()
 	{
-		$mock_request  = self::app();
+		$response = self::middlewareApp()->get( 'https://bla.example.org:9292/meh/foo?bar' );
 		
-		$mock_response = $mock_request->get( Prb::Str( 'https://bla.example.org:9292/meh/foo?bar' ) );
-		$this->assertTrue( $mock_response instanceof Prack_Mock_Response );
+		$this->assertTrue( $response instanceof Prack_Mock_Response );
 		
-		$env = unserialize( $mock_response->getBody()->raw() );
-		
-		$this->assertEquals( 'GET',             $env->get( 'REQUEST_METHOD'  )->raw() );
-		$this->assertEquals( 'bla.example.org', $env->get( 'SERVER_NAME'     )->raw() );
-		$this->assertEquals( '9292',            $env->get( 'SERVER_PORT'     )->raw() );
-		$this->assertEquals( 'bar',             $env->get( 'QUERY_STRING'    )->raw() );
-		$this->assertEquals( '/meh/foo',        $env->get( 'PATH_INFO'       )->raw() );
-		$this->assertEquals( 'https',           $env->get( 'rack.url_scheme' )->raw() );
+		$env = unserialize( $response->getBody() );
+		$this->assertEquals( 'GET',             $env[ 'REQUEST_METHOD'  ] );
+		$this->assertEquals( 'bla.example.org', $env[ 'SERVER_NAME'     ] );
+		$this->assertEquals( '9292',            $env[ 'SERVER_PORT'     ] );
+		$this->assertEquals( 'bar',             $env[ 'QUERY_STRING'    ] );
+		$this->assertEquals( '/meh/foo',        $env[ 'PATH_INFO'       ] );
+		$this->assertEquals( 'https',           $env[ 'rack.url_scheme' ] );
 	} // It should use all parts of an URL
 	
 	/**
@@ -158,20 +130,18 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_set_SSL_port_and_HTTPS_flag_on_when_using_https()
 	{
-		$mock_request  = self::app();
+		$response = self::middlewareApp()->get( 'https://example.org/foo' );
 		
-		$mock_response = $mock_request->get( Prb::Str( 'https://example.org/foo' ) );
-		$this->assertTrue( $mock_response instanceof Prack_Mock_Response );
+		$this->assertTrue( $response instanceof Prack_Mock_Response );
 		
-		$env = unserialize( $mock_response->getBody()->raw() );
-		
-		$this->assertEquals( 'GET',         $env->get( 'REQUEST_METHOD'  )->raw() );
-		$this->assertEquals( 'example.org', $env->get( 'SERVER_NAME'     )->raw() );
-		$this->assertEquals( '443',         $env->get( 'SERVER_PORT'     )->raw() );
-		$this->assertEquals( '',            $env->get( 'QUERY_STRING'    )->raw() );
-		$this->assertEquals( '/foo',        $env->get( 'PATH_INFO'       )->raw() );
-		$this->assertEquals( 'https',       $env->get( 'rack.url_scheme' )->raw() );
-		$this->assertEquals( 'on',          $env->get( 'HTTPS'           )->raw() );
+		$env = unserialize( $response->getBody() );
+		$this->assertEquals( 'GET',         $env[ 'REQUEST_METHOD'  ] );
+		$this->assertEquals( 'example.org', $env[ 'SERVER_NAME'     ] );
+		$this->assertEquals( '443',         $env[ 'SERVER_PORT'     ] );
+		$this->assertEquals( '',            $env[ 'QUERY_STRING'    ] );
+		$this->assertEquals( '/foo',        $env[ 'PATH_INFO'       ] );
+		$this->assertEquals( 'https',       $env[ 'rack.url_scheme' ] );
+		$this->assertEquals( 'on',          $env[ 'HTTPS'           ] );
 	} // It should set SSL port and HTTPS flag on when using https
 	
 	/**
@@ -181,19 +151,17 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_prepend_slash_to_uri_path()
 	{
-		$mock_request  = self::app();
-		$mock_response = $mock_request->get( Prb::Str( 'foo' ) );
+		$response = self::middlewareApp()->get( 'foo' );
 		
-		$this->assertTrue( $mock_response instanceof Prack_Mock_Response );
+		$this->assertTrue( $response instanceof Prack_Mock_Response );
 		
-		$env = unserialize( $mock_response->getBody()->raw() );
-		
-		$this->assertEquals( 'GET',         $env->get( 'REQUEST_METHOD'  )->raw() );
-		$this->assertEquals( 'example.org', $env->get( 'SERVER_NAME'     )->raw() );
-		$this->assertEquals( '80',          $env->get( 'SERVER_PORT'     )->raw() );
-		$this->assertEquals( '',            $env->get( 'QUERY_STRING'    )->raw() );
-		$this->assertEquals( '/foo',        $env->get( 'PATH_INFO'       )->raw() );
-		$this->assertEquals( 'http',        $env->get( 'rack.url_scheme' )->raw() );
+		$env = unserialize( $response->getBody() );
+		$this->assertEquals( 'GET',         $env[ 'REQUEST_METHOD'  ] );
+		$this->assertEquals( 'example.org', $env[ 'SERVER_NAME'     ] );
+		$this->assertEquals( '80',          $env[ 'SERVER_PORT'     ] );
+		$this->assertEquals( '',            $env[ 'QUERY_STRING'    ] );
+		$this->assertEquals( '/foo',        $env[ 'PATH_INFO'       ] );
+		$this->assertEquals( 'http',        $env[ 'rack.url_scheme' ] );
 	} // It should prepend slash to uri path
 	
 	/**
@@ -203,12 +171,10 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_properly_convert_method_name_to_an_uppercase_string()
 	{
-		$mock_request  = self::app();
-		$mock_response = $mock_request->request( Prb::Str( 'GeT' ) );
+		$response = self::middlewareApp()->request( 'GeT' );
 		
-		$env = unserialize( $mock_response->getBody()->raw() );
-		
-		$this->assertEquals( 'GET', $env->get( 'REQUEST_METHOD' )->raw() );
+		$env = unserialize( $response->getBody() );
+		$this->assertEquals( 'GET', $env[ 'REQUEST_METHOD' ] );
 	} // It should properly convert method name to an uppercase string
 	
 	/**
@@ -218,25 +184,14 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_accept_params_and_build_query_string_for_GET_requests()
 	{
-		$mock_request  = self::app();
-		$mock_response = $mock_request->get(
-		  Prb::Str( '/foo?baz=2' ),
-		  Prb::Hsh( array( 
-		    'params' => Prb::Hsh( array(
-		      'foo' => Prb::Hsh( array(
-		        'bar' => Prb::Str( '1' )
-		      ) )
-		    ) )
-		  ) )
-		);
+		$response = self::middlewareApp()->get( '/foo?baz=2', array( 'params' => array( 'foo' => array( 'bar' => '1' ) ) ) );
 		
-		$env = unserialize( $mock_response->getBody()->raw() );
-		
-		$this->assertEquals( 'GET',  $env->get( 'REQUEST_METHOD'  )->raw() );
-		$this->assertEquals( '/foo', $env->get( 'PATH_INFO'       )->raw() );
-		$this->assertEquals( '',     $env->get( 'mock.postdata'   )->raw() );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prb::Str( 'baz=2'      ) ) );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prb::Str( 'foo[bar]=1' ) ) );
+		$env = unserialize( $response->getBody() );
+		$this->assertEquals( 'GET',  $env[ 'REQUEST_METHOD' ] );
+		$this->assertEquals( '/foo', $env[ 'PATH_INFO'      ] );
+		$this->assertEquals( '',     $env[ 'mock.postdata'  ] );
+		$this->assertTrue( is_integer( strpos( $env[ 'QUERY_STRING' ], 'baz=2'      ) ) );
+		$this->assertTrue( is_integer( strpos( $env[ 'QUERY_STRING' ], 'foo[bar]=1' ) ) );
 	} // It should accept params and build query string for GET requests
 	
 	/**
@@ -246,21 +201,14 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_accept_raw_input_in_params_for_GET_requests()
 	{
-		$mock_request  = self::app();
-		$mock_response = $mock_request->get(
-		  Prb::Str( '/foo?baz=2' ),
-		  Prb::Hsh( array(
-		    'params' => Prb::Str( 'foo[bar]=1' )
-		  ) )
-		);
+		$response = self::middlewareApp()->get( '/foo?baz=2', array( 'params' => 'foo[bar]=1' ) );
 		
-		$env = unserialize( $mock_response->getBody()->raw() );
-		
-		$this->assertEquals( 'GET',  $env->get( 'REQUEST_METHOD'  )->raw() );
-		$this->assertEquals( '/foo', $env->get( 'PATH_INFO'       )->raw() );
-		$this->assertEquals( '',     $env->get( 'mock.postdata'   )->raw() );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prb::Str( 'baz=2'      ) ) );
-		$this->assertTrue( $env->get( 'QUERY_STRING' )->contains( Prb::Str( 'foo[bar]=1' ) ) );
+		$env = unserialize( $response->getBody() );
+		$this->assertEquals( 'GET',  $env[ 'REQUEST_METHOD' ] );
+		$this->assertEquals( '/foo', $env[ 'PATH_INFO'      ] );
+		$this->assertEquals( '',     $env[ 'mock.postdata'  ] );
+		$this->assertTrue( is_integer( strpos( $env[ 'QUERY_STRING' ], 'baz=2'      ) ) );
+		$this->assertTrue( is_integer( strpos( $env[ 'QUERY_STRING' ], 'foo[bar]=1' ) ) );
 	} // It should accept raw input in params for GET requests
 	
 	/**
@@ -270,25 +218,14 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_accept_params_and_build_url_encoded_params_for_POST_requests()
 	{
-		$mock_request  = self::app();
-		$mock_response = $mock_request->post(
-		  Prb::Str( '/foo' ),
-		  Prb::Hsh( array(
-		    'params' => Prb::Hsh( array(
-		      'foo' => Prb::Hsh( array(
-		        'bar' => Prb::Str( '1' )
-		      ) )
-		    ) )
-		  ) )
-		);
+		$response = self::middlewareApp()->post( '/foo', array( 'params' => array( 'foo' => array( 'bar' => '1' ) ) ) );
 		
-		$env = unserialize( $mock_response->getBody()->raw() );
-		
-		$this->assertEquals( 'POST',                              $env->get( 'REQUEST_METHOD' )->raw() );
-		$this->assertEquals( '',                                  $env->get( 'QUERY_STRING'   )->raw() );
-		$this->assertEquals( '/foo',                              $env->get( 'PATH_INFO'      )->raw() );
-		$this->assertEquals( 'application/x-www-form-urlencoded', $env->get( 'CONTENT_TYPE'   )->raw() );
-		$this->assertEquals( 'foo[bar]=1',                        $env->get( 'mock.postdata'  )->raw() );
+		$env = unserialize( $response->getBody() );
+		$this->assertEquals( 'POST',                              $env[ 'REQUEST_METHOD' ] );
+		$this->assertEquals( '',                                  $env[ 'QUERY_STRING'   ] );
+		$this->assertEquals( '/foo',                              $env[ 'PATH_INFO'      ] );
+		$this->assertEquals( 'application/x-www-form-urlencoded', $env[ 'CONTENT_TYPE'   ] );
+		$this->assertEquals( 'foo[bar]=1',                        $env[ 'mock.postdata'  ] );
 	} // It should accept params and build url encoded params for POST requests
 	
 	/**
@@ -298,16 +235,14 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_accept_raw_input_in_params_for_POST_requests()
 	{
-		$mock_request  = self::app();
-		$mock_response = $mock_request->post( Prb::Str( '/foo' ), Prb::Hsh( array( 'params' => Prb::Str( 'foo[bar]=1' ) ) ) );
+		$response = self::middlewareApp()->post( '/foo', array( 'params' => 'foo[bar]=1' ) );
 		
-		$env = unserialize( $mock_response->getBody()->raw() );
-		
-		$this->assertEquals( 'POST',                              $env->get( 'REQUEST_METHOD' )->raw() );
-		$this->assertEquals( '',                                  $env->get( 'QUERY_STRING'   )->raw() );
-		$this->assertEquals( '/foo',                              $env->get( 'PATH_INFO'      )->raw() );
-		$this->assertEquals( 'application/x-www-form-urlencoded', $env->get( 'CONTENT_TYPE'   )->raw() );
-		$this->assertEquals( 'foo[bar]=1',                        $env->get( 'mock.postdata'  )->raw() );
+		$env = unserialize( $response->getBody() );
+		$this->assertEquals( 'POST',                              $env[ 'REQUEST_METHOD' ] );
+		$this->assertEquals( '',                                  $env[ 'QUERY_STRING'   ] );
+		$this->assertEquals( '/foo',                              $env[ 'PATH_INFO'      ] );
+		$this->assertEquals( 'application/x-www-form-urlencoded', $env[ 'CONTENT_TYPE'   ] );
+		$this->assertEquals( 'foo[bar]=1',                        $env[ 'mock.postdata'  ] );
 	} // It should accept raw input in params for POST requests
 	
 	/**
@@ -338,56 +273,6 @@ class Prack_Mock_RequestTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_behave_valid_according_to_the_Rack_spec()
 	{
-		$mock_request  = self::app();
-		$mock_response = $mock_request->get(
-		  Prb::Str( 'https://bla.example.org:9292/meh/foo?bar' ),
-		  Prb::Hsh( array( 'lint' => true ) )
-		);
+		self::middlewareApp()->get( 'https://bla.example.org:9292/meh/foo?bar', array( 'lint' => true ) );
 	} // It should behave valid according to the Rack spec
-	
-		/**
-	 * It should throw an exception if uri is not a Prb_String
-	 * @author Joshua Morris
-	 * @test
-	 */
-	public function It_should_throw_an_exception_if_uri_is_not_a_Prb_String()
-	{
-		$this->setExpectedException( 'Prb_Exception_Type' );
-		$mock_request  = self::app();
-		$mock_response = $mock_request->get(
-		  'https://bla.example.org:9292/meh/foo?bar',
-		  Prb::Hsh( array( 'lint' => true ) )
-		);
-	} // It should throw an exception if uri is not a Prb_String
-	
-	/**
-	 * It should throw an exception if options is not a Prb_Hash
-	 * @author Joshua Morris
-	 * @test
-	 */
-	public function It_should_throw_an_exception_if_options_is_not_a_Prb_Hash()
-	{
-		$this->setExpectedException( 'Prb_Exception_Type' );
-		$mock_request  = self::app();
-		$mock_response = $mock_request->get(
-		  Prb::Str( 'https://bla.example.org:9292/meh/foo?bar' ),
-		  array()
-		);
-	} // It should throw an exception if headers is not a Prb_Hash
-	
-		/**
-	 * It should throw an exception if rack.input is neither Prb_I_Stringlike nor Prb_I_ReadableStreamlike
-	 * @author Joshua Morris
-	 * @test
-	 */
-	public function It_should_throw_an_exception_if_rack_input_is_neither_Prb_I_Stringlike_nor_Prb_I_ReadableStreamlike()
-	{
-		$this->setExpectedException( 'Prb_Exception_Type' );
-		
-		$mock_request  = new Prack_Mock_Request( new Prack_Test_EnvSerializer() );
-		$mock_response = $mock_request->get(
-			Prb::Str(),
-			Prb::Hsh( array( 'input' => Prb::Ary() ) )
-		);
-	} // It should throw an exception if rack.input is neither Prb_I_Stringlike nor Prb_I_ReadableStreamlike
 }
