@@ -3,5 +3,5 @@
 // TODO: Document!
 interface Prack_I_MiddlewareApp
 {
-	public function call( $env );
+	public function call( &$env );
 }
