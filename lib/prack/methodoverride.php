@@ -15,16 +15,7 @@ class Prack_MethodOverride
 		static $http_methods = null;
 		
 		if ( is_null( $http_methods ) )
-		{
-			$http_methods = Prb::Ary( array(
-			  Prb::Str( 'GET'     ),
-			  Prb::Str( 'HEAD'    ),
-			  Prb::Str( 'PUT'     ),
-			  Prb::Str( 'POST'    ),
-			  Prb::Str( 'DELETE'  ),
-			  Prb::Str( 'OPTIONS' )
-			) );
-		}
+			$http_methods = array( 'GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'OPTIONS' );
 		
 		return $http_methods;
 	}
@@ -42,19 +33,21 @@ class Prack_MethodOverride
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		if ( $env->get( 'REQUEST_METHOD' )->raw() == 'POST' )
+		if ( @$env[ 'REQUEST_METHOD' ] == 'POST' )
 		{
 			$request = Prack_Request::with( $env );
-			$method  = $request->POST()->contains( self::METHOD_OVERRIDE_PARAM_KEY )
-			  ? $request->POST()->get( self::METHOD_OVERRIDE_PARAM_KEY   )
-			  : $env->get( self::HTTP_METHOD_OVERRIDE_HEADER );
-			$method = isset( $method ) ? $method->toS()->upcase() : Prb::Str();
-			if ( self::httpMethods()->contains( $method ) )
+			$POST    = $request->POST();
+			$method  = @$POST[ self::METHOD_OVERRIDE_PARAM_KEY ]
+			  ? (string)@$POST[ self::METHOD_OVERRIDE_PARAM_KEY ]
+			  : (string)@$env[ self::HTTP_METHOD_OVERRIDE_HEADER ];
+			
+			$method = strtoupper( $method );
+			if ( in_array( $method, self::httpMethods() ) )
 			{
-				$env->set( 'rack.methodoverride.original_method', $env->get( 'REQUEST_METHOD' ) );
-				$env->set( 'REQUEST_METHOD', $method );
+				$env[ 'rack.methodoverride.original_method' ] = $env[ 'REQUEST_METHOD' ];
+				$env[ 'REQUEST_METHOD'] = $method;
 			}
 		}
 		
