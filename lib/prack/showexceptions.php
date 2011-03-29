@@ -34,7 +34,7 @@ class Prack_ShowExceptions
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
 		try
 		{
@@ -43,15 +43,11 @@ class Prack_ShowExceptions
 		catch ( Exception $e )
 		{ 
 			$backtrace = $this->pretty( $env, $e );
-			
-			return Prb::Ary( array(
-			  Prb::Num( 500 ),
-			  Prb::Hsh( array(
-			    'Content-Type'   => Prb::Str( 'text/html' ),
-			    'Content-Length' => Prb::Str( (string)( $backtrace->join()->size() ) )
-			  ) ),
+			return array(
+			  500,
+			  array( 'Content-Type' => 'text/html', 'Content-Length' => strlen( join( '', $backtrace ) ) ),
 			  $backtrace
-			) );
+			);
 		}
 		return $response;
 	}
@@ -60,11 +56,41 @@ class Prack_ShowExceptions
 	public function pretty( $env, $exception )
 	{
 		$request = new Prack_Request( $env );
-		$path    = Prb::Str( $request->scriptName()->raw() . $request->pathInfo()->raw() )->squeeze( '/' );
+		$path    = preg_replace( '/\/+/', '/', $request->scriptName().$request->pathInfo() );
+		$frames  = array();
 		
 		// Gather up the frames by iterating over them.
-		$callback    = array( $this, 'collectFrames' );
-		$frames      = Prb::Ary( $exception->getTrace() )->collect( $callback )->compact();
+		foreach( $exception->getTrace() as $line )
+		{
+			// PHPUnit's stack traces are ridiculous. The regexp match here removes those lines from consideration.
+			// This avoids a lot of file IO, since lines from the files aren't loaded.
+			if ( !isset( $line[ 'file' ] ) || !isset( $line[ 'line' ] ) || preg_match( '/PHPUnit|phpunit/', $line[ 'file' ] ) )
+				continue;
+			
+			$frame = new stdClass();
+			
+			$frame->filename =      $line[ 'file'     ];
+			$frame->lineno   = (int)$line[ 'line'     ];
+			$frame->function =      $line[ 'function' ];
+			
+			try
+			{
+				$lineno = $frame->lineno - 1;
+				$lines  = Prb_IO::withFile( $frame->filename, Prb_IO_File::NO_CREATE_READ )->readlines();
+				
+				$frame->pre_context_lineno  = max( $lineno - self::CONTEXT, 0 );
+				$frame->pre_context         = array_slice( $lines, $frame->pre_context_lineno, $lineno - $frame->pre_context_lineno );
+				$frame->context_line        = rtrim( $lines[ $lineno ] );
+				$frame->post_context_lineno = min( $lineno + self::CONTEXT, count( $lines ) );
+				$frame->post_context        = array_slice( $lines, $lineno + 1, $frame->post_context_lineno - $lineno );
+			}
+			catch ( Exception $lineerror ) {
+				continue;
+			}
+			
+			array_push( $frames, $frame );
+		}
+		
 		$environment = $env;
 		
 		ob_start();
@@ -72,42 +98,12 @@ class Prack_ShowExceptions
 			include $this->template;
 		$result = ob_get_clean();
 		
-		return Prb::Ary( array( Prb::Str( $result ) ) );
-	}
-	
-	// TODO: Document!
-	public function collectFrames( $line )
-	{
-		// PHPUnit's stack traces are ridiculous. The regexp match here removes those lines from consideration.
-		// This avoids a lot of file IO, since lines from the files aren't loaded.
-		if ( !isset( $line[ 'file' ] ) || !isset( $line[ 'line' ] ) || preg_match( '/PHPUnit|phpunit/', $line[ 'file' ] ) )
-			return null;
-			
-		$frame = new stdClass();
-		$frame->filename =      $line[ 'file'     ];
-		$frame->lineno   = (int)$line[ 'line'     ];
-		$frame->function =      $line[ 'function' ];
-		
-		try
-		{
-			$lineno = $frame->lineno - 1;
-			$lines  = Prb_IO::withFile( Prb::Str( $frame->filename ), Prb_IO_File::NO_CREATE_READ )->readlines();
-			
-			$frame->pre_context_lineno  = max( $lineno - self::CONTEXT, 0 );
-			$frame->pre_context         = $lines->slice( $frame->pre_context_lineno, $lineno, true );
-			$frame->context_line        = $lines->get( $lineno )->chomp();
-			$frame->post_context_lineno = min( $lineno + self::CONTEXT, $lines->size() );
-			$frame->post_context        = $lines->slice( $lineno + 1, $frame->post_context_lineno );
-		}
-		catch ( Exception $lineerror ) {}
-		
-		return $frame;
+		return array( $result );
 	}
 	
 	// TODO: Document!
 	public function h( $item )
 	{
-		$item = $item instanceof Prb_String ? $item : Prb::Str( (string)$item );
 		return Prack_Utils::singleton()->escapeHtml( $item );
 	}
 }

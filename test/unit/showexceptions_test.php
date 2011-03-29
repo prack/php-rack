@@ -13,17 +13,13 @@ class Prack_ShowExceptionsTest extends PHPUnit_Framework_TestCase
 		$exception_raising_middleware = new Prack_Test_Echo();
 		$exception_raising_middleware->setEval( 'throw new RuntimeException();' );
 		
-		$mock_request = new Prack_Mock_Request(
-			new Prack_ShowExceptions( $exception_raising_middleware )
-		);
+		$request  = Prack_Mock_Request::with( new Prack_ShowExceptions( $exception_raising_middleware ) );
+		$response = $request->get( '/' );
 		
-		// Implicit test: should not encounter an exception.
-		$mock_response = $mock_request->get( Prb::Str( '/' ) );
+		$this->assertTrue( $response->isServerError() );
+		$this->assertEquals( 500, $response->getStatus() );
 		
-		$this->assertTrue( $mock_response->isServerError() );
-		$this->assertEquals( 500, $mock_response->getStatus()->raw() );
-		
-		$this->assertTrue( $mock_response->match( '/RuntimeException/' ) );
-		$this->assertTrue( $mock_response->match( '/ShowExceptions/'   ) );
+		$this->assertTrue( $response->match( '/RuntimeException/' ) );
+		$this->assertTrue( $response->match( '/ShowExceptions/'   ) );
 	} // It catches exceptions
 }

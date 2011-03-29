@@ -108,17 +108,18 @@
 <body>
 
 <div id="summary">
-  <h1><?php echo $se->h( get_class( $exception ) ); ?> at <?php echo $this->h( $path->raw() ); ?></h1>
+  <h1><?php echo $se->h( get_class( $exception ) ); ?> at <?php echo $this->h( $path ); ?></h1>
   <h2><?php echo $se->h( $exception->getMessage() ); ?></h2>
   <table><tr>
     <th>PHP</th>
     <td>
-      <code><?php echo $se->h( $frames->first()->filename ); ?></code>: in
-      <code><?php echo $se->h( $frames->first()->function ); ?></code>, line <?php echo $se->h( $frames->first()->lineno ); ?>
+      <?php $first = reset( $frames ); ?>
+      <code><?php echo $se->h( $first->filename ); ?></code>: in
+      <code><?php echo $se->h( $first->function ); ?></code>, line <?php echo $se->h( $first->lineno ); ?>
     </td>
   </tr><tr>
     <th>Web</th>
-    <td><code><?php echo $se->h( $request->requestMethod() ); ?> <?php echo $se->h( $request->host()->raw().$path->raw() ); ?></code></td>
+    <td><code><?php echo $se->h( $request->requestMethod() ); ?> <?php echo $se->h( $request->host().$path ); ?></code></td>
   </tr></table>
 
   <h3>Jump to:</h3>
@@ -133,7 +134,7 @@
 <div id="traceback">
   <h2>Traceback <span>(innermost first)</span></h2>
   <ul class="traceback">
-<?php foreach( $frames->raw() as $frame ): ?>
+<?php foreach( $frames as $frame ): ?>
       <li class="frame">
         <code><?php echo $se->h( $frame->filename ); ?></code>: in <code><?php echo $se->h( $frame->function ); ?></code>
           
@@ -141,9 +142,9 @@
           <div class="context" id="c<?php echo $se->h( spl_object_hash( $frame ) ); ?>">
               <?php if ( $frame->pre_context ): ?>
               <ol start="<?php echo $se->h( $frame->pre_context_lineno + 1 ); ?>" class="pre-context" id="pre<?php echo $se->h( spl_object_hash( $frame ) ); ?>">
-                <?php foreach ( $frame->pre_context->raw() as $line ): ?>
+                <?php foreach ( $frame->pre_context as $line ): ?>
                 <li onclick="toggle('pre<?php echo $se->h( spl_object_hash( $frame ) ); ?>', 'post<?php echo $se->h( spl_object_hash( $frame ) ); ?>')">
-                  <?php echo $se->h( $line->raw() ); ?>
+                  <?php echo $se->h( $line ); ?>
                 </li>
                 <?php endforeach; ?>
               </ol>
@@ -157,9 +158,9 @@
 
               <?php if ( $frame->post_context ): ?>
               <ol start="<?php echo $se->h( $frame->lineno + 1 ); ?>" class="post-context" id="post<?php echo $se->h( spl_object_hash( $frame ) ); ?>">
-                <?php foreach ( $frame->post_context->raw() as $line ): ?>
+                <?php foreach ( $frame->post_context as $line ): ?>
                 <li onclick="toggle('pre<?php echo $se->h( spl_object_hash( $frame ) ); ?>', 'post<?php echo $se->h( spl_object_hash( $frame ) ); ?>')">
-                  <?php echo $se->h( isset( $line ) ? $line->raw() : '' ); ?>
+                  <?php echo $se->h( isset( $line ) ? $line : '' ); ?>
                 </li>
                 <?php endforeach; ?>
               </ol>
@@ -175,7 +176,8 @@
   <h2>Request information</h2>
 
   <h3 id="get-info">GET</h3>
-  <?php if ( !( $request->GET()->isEmpty() ) ): ?>
+  <?php $GET = $request->GET() ?>
+  <?php if ( !empty( $GET ) ): ?>
     <table class="req">
       <thead>
         <tr>
@@ -185,12 +187,11 @@
       </thead>
       <tbody>
           <?php
-            $callback = create_function( '$k,$v', 'return Prb::Str( $k );' );
-            $sorted   = $request->GET()->sortBy( $callback );
-            foreach( $sorted->raw() as $key => $val ):
+            uksort( $GET, 'strnatcasecmp' );
+            foreach( $GET as $key => $val ):
           ?>
           <tr>
-            <td><?php echo $se->h( $key->raw() ); ?></td>
+            <td><?php echo $se->h( $key ); ?></td>
             <td class="code"><div><?php echo print_r( $val, true ); ?></div></td>
           </tr>
           <?php endforeach; ?>
@@ -201,7 +202,8 @@
   <?php endif; ?>
 
   <h3 id="post-info">POST</h3>
-  <?php if ( !( $request->POST()->isEmpty() ) ): ?>
+  <?php $POST = $request->POST(); ?>
+  <?php if ( !empty( $POST ) ): ?>
     <table class="req">
       <thead>
         <tr>
@@ -211,12 +213,11 @@
       </thead>
       <tbody>
           <?php
-            $callback = create_function( '$k,$v', 'return Prb::Str( $k );' );
-            $sorted   = $request->POST()->sortBy( $callback );
-            foreach( $sorted->raw() as $key => $val ):
+            uksort( $POST, 'strnatcasecmp' );
+            foreach( $sorted as $key => $val ):
           ?>
           <tr>
-            <td><?php echo $se->h( $key->raw() ); ?></td>
+            <td><?php echo $se->h( $key ); ?></td>
             <td class="code"><div><?php echo print_r( $val, true ); ?></div></td>
           </tr>
           <?php endforeach; ?>
@@ -260,9 +261,8 @@
     </thead>
     <tbody>
         <?php
-          $callback = create_function( '$k,$v', 'return Prb::Str( $k );' );
-          $sorted   = $environment->sortBy( $callback );
-          foreach( $sorted->raw() as $key => $val ):
+          uksort( $environment, 'strnatcasecmp' );
+          foreach( $environment as $key => $val ):
         ?>
         <tr>
           <td><?php echo $se->h( $key ); ?></td>
