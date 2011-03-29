@@ -14,30 +14,28 @@ class Prack_ContentType
 	private $content_type;
 	
 	// TODO: Document!
-	static function with( $middleware_app, $content_type = null )
+	static function with( $middleware_app, $content_type = 'text/html' )
 	{
 		return new Prack_ContentType( $middleware_app, $content_type );
 	}
 	
 	// TODO: Document!
-	public function __construct( $middleware_app, $content_type = null )
+	public function __construct( $middleware_app, $content_type = 'text/html' )
 	{
 		$this->middleware_app = $middleware_app;
-		$this->content_type = is_null( $content_type )
-		  ? Prb::Str( 'text/html' )
-		  : $content_type;
+		$this->content_type   = $content_type;
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		list( $status, $headers, $body ) = $this->middleware_app->call( $env )->raw();
+		list( $status, $headers, $body ) = $this->middleware_app->call( $env );
 		
 		$headers = Prack_Utils_HeaderHash::using( $headers );
 		$headers->contains( 'Content-Type' )
 		  ? true
 		  : $headers->set( 'Content-Type', $this->content_type );
 		
-		return Prb::Ary( array( $status, $headers, $body ) );
+		return array( $status, $headers->raw(), $body );
 	}
 }
