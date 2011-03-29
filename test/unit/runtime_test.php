@@ -10,14 +10,12 @@ class Prack_RuntimeTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_sets_X_Runtime_if_none_is_set()
 	{
-		$middleware_app = new Prack_Test_Echo(
-		  Prb::Num( 200 ),
-		  Prb::Hsh( array( 'Content-Type' => Prb::Str( 'text/plain' ) ) ),
-		  Prb::Str( 'Hello, World!' )
-		);
+		$middleware_app = new Prack_Test_Echo( 200, array( 'Content-Type' => 'text/plain' ), 'Hello, World!' );
 		
-		$response = Prack_Runtime::with( $middleware_app )->call( Prb::Hsh() );
-		$this->assertTrue( $response->get( 1 )->get( 'X-Runtime' )->match( '/[\d\.]+/' ) );
+		$env      = array();
+		$response = Prack_Runtime::with( $middleware_app )->call( $env );
+		
+		$this->assertRegExp( '/[\d\.]+/', (string)@$response[ 1 ][ 'X-Runtime' ] );
 	} // It sets X-Runtime if none is set
 	
 	/**
@@ -28,16 +26,12 @@ class Prack_RuntimeTest extends PHPUnit_Framework_TestCase
 	public function It_doesn_t_set_the_X_Runtime_if_it_is_already_set()
 	{
 		$middleware_app = new Prack_Test_Echo(
-		  Prb::Num( 200 ),
-		  Prb::Hsh( array(
-		    'Content-Type' => Prb::Str( 'text/plain' ),
-		    'X-Runtime'    => Prb::Str( 'foobar'     )
-		  ) ),
-		  Prb::Str( 'Hello, World!' )
-		);
+		  200, array( 'Content-Type' => 'text/plain', 'X-Runtime' => 'foobar' ), 'Hello, World!' );
 		
-		$response = Prack_Runtime::with( $middleware_app )->call( Prb::Hsh() );
-		$this->assertEquals( 'foobar', $response->get( 1 )->get( 'X-Runtime' )->raw() );
+		$env      = array();
+		$response = Prack_Runtime::with( $middleware_app )->call( $env );
+		
+		$this->assertEquals( 'foobar', (string)@$response[ 1 ][ 'X-Runtime' ] );
 	} // It doesn't set the X-Runtime if it is already set
 	
 	/**
@@ -47,14 +41,12 @@ class Prack_RuntimeTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_allow_a_suffix_to_be_set()
 	{
-		$middleware_app = new Prack_Test_Echo(
-		  Prb::Num( 200 ),
-		  Prb::Hsh( array( 'Content-Type' => Prb::Str( 'text/plain' ) ) ),
-		  Prb::Str( 'Hello, World!' )
-		);
+		$middleware_app = new Prack_Test_Echo( 200, array( 'Content-Type' => 'text/plain' ), 'Hello, World!' );
 		
-		$response = Prack_Runtime::with( $middleware_app, "Test" )->call( Prb::Hsh() );
-		$this->assertTrue( $response->get( 1 )->get( 'X-Runtime-Test' )->match( '/[\d\.]+/' ) );
+		$env      = array();
+		$response = Prack_Runtime::with( $middleware_app, 'Test' )->call( $env );
+		
+		$this->assertRegExp( '/[\d\.]+/', (string)@$response[ 1 ][ 'X-Runtime-Test' ] );
 	} // It should allow a suffix to be set
 	
 	/**
@@ -65,26 +57,22 @@ class Prack_RuntimeTest extends PHPUnit_Framework_TestCase
 	public function It_should_allow_multiple_timers_to_be_set()
 	{
 		$middleware_app = new Prack_Test_Echo(
-		  Prb::Num( 200 ),
-		  Prb::Hsh( array( 'Content-Type' => Prb::Str( 'text/plain' ) ) ),
-		  Prb::Str( 'Hello, World!' ),
-		  'sleep( 0.025 );'
-		);
+		  200, array( 'Content-Type' => 'text/plain' ), 'Hello, World!', 'sleep( 0.025 );' );
 		
-		$runtime = Prack_Runtime::with( $middleware_app, "App" );
-		
+		$runtime = Prack_Runtime::with( $middleware_app, 'App' );
 		for ( $i = 0; $i < 50; $i++ )
 			$runtime = Prack_Runtime::with( $runtime, (string)$i );
 		
 		$runtime  = Prack_Runtime::with( $runtime, "All" );
-		$response = $runtime->call( Prb::Hsh() );
+		$env      = array();
+		$response = $runtime->call( $env );
 		
-		$this->assertTrue( $response->get( 1 )->get( 'X-Runtime-App' )->match( '/[\d\.]+/' ) );
-		$this->assertTrue( $response->get( 1 )->get( 'X-Runtime-All' )->match( '/[\d\.]+/' ) );
+		$this->assertRegExp( '/[\d\.]+/', (string)@$response[ 1 ][ 'X-Runtime-App' ] );
+		$this->assertRegExp( '/[\d\.]+/', (string)@$response[ 1 ][ 'X-Runtime-All' ] );
 		
 		$this->assertGreaterThan(
-			(float)( $response->get( 1 )->get( 'X-Runtime-App' )->raw() ),
-			(float)( $response->get( 1 )->get( 'X-Runtime-All' )->raw() )
+			(float)@$response[ 1 ][ 'X-Runtime-App' ],
+			(float)@$response[ 1 ][ 'X-Runtime-All' ]
 		);
 		
 	} // It should allow multiple timers to be set

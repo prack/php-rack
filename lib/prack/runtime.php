@@ -23,15 +23,16 @@ class Prack_Runtime
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		$start_time = Prb::Time()->raw();
-		list( $status, $headers, $body ) = $this->middleware_app->call( $env )->raw();
-		$request_time = Prb::Time( Prb::Time()->raw() - $start_time );
+		$start_time = Prb::Time();
+		list( $status, $headers, $body ) = $this->middleware_app->call( $env );
+		$end_time = Prb::Time();
 		
+		$headers = Prack_Utils_HeaderHash::using( $headers );
 		if ( !$headers->contains( $this->header_name ) )
-			$headers->set( $this->header_name, Prb::Str( '%0.6f' )->sprintf( $request_time ) );
+			$headers->set( $this->header_name, sprintf( '%0.6f', $end_time->raw() - $start_time->raw() ) );
 		
-		return Prb::Ary( array( $status, $headers, $body ) );
+		return array( $status, $headers->raw(), $body );
 	}
 }
