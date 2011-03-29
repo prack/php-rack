@@ -21,32 +21,29 @@ class Prack_File
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
 		$clone = clone $this;
 		return $clone->_call( $env );
 	}
 	
 	// TODO: Document!
-	public function _call( $env )
+	public function _call( &$env )
 	{
-		$this->path_info = Prack_Utils::singleton()->unescape( $env->get( 'PATH_INFO' ) );
+		$this->path_info = Prack_Utils::singleton()->unescape( (string)@$env[ 'PATH_INFO' ] );
 		
-		if ( $this->path_info->contains( Prb::Str( '..' ) ) )
+		if ( is_integer( strpos( $this->path_info, '..' ) ) )
 			return $this->forbidden();
 		
-		$this->path = Prb::Str( join(
-		  DIRECTORY_SEPARATOR,
-		  array( $this->root->raw(), $this->path_info->raw() )
-		) );
+		$this->path = join( '', array( $this->root, $this->path_info ) );
 		
 		try
 		{
 			// FIXME: Handle errors here?
-			if ( file_exists( $this->path->raw() ) && is_file( $this->path->raw() ) && is_readable( $this->path->raw() ) )
+			if ( file_exists( $this->path ) && is_file( $this->path ) && is_readable( $this->path ) )
 				return $this->serving();
 			else
-				throw new Prb_Exception_System_ErrnoEPERM( "file {$this->path->raw()} does not exist or is unreadable" );
+				throw new Prb_Exception_System_ErrnoEPERM( "file {$this->path} does not exist or is unreadable" );
 		}
 		catch( Prb_Exception_System $e )
 		{
@@ -57,16 +54,16 @@ class Prack_File
 	// TODO: Document!
 	public function forbidden()
 	{
-		$body = Prb::Str( "Forbidden\n" );
-		return Prb::Ary( array(
-		  Prb::Num( 403 ),
-		  Prb::Hsh( array(
-		    'Content-Type'   => Prb::Str( 'text/plain' ),
-		    'Content-Length' => Prb::Num( $body->size() )->toS(),
-		    'X-Cascade'      => Prb::Str( 'pass' )
-		  ) ),
-		  Prb::Ary( array( $body ) )
-		) );
+		$body = "Forbidden\n";
+		return array(
+		  403,
+		  array(
+		    'Content-Type'   => 'text/plain',
+		    'Content-Length' => (string)strlen( $body ),
+		    'X-Cascade'      => 'pass'
+		  ),
+		  array( $body )
+		);
 	}
 	
 	// TODO: Document!
@@ -77,45 +74,41 @@ class Prack_File
 	#   we're at it we also use this as body then.
 	public function serving()
 	{
-		if ( $size = filesize( $this->path->raw() ) )
+		if ( $size = filesize( $this->path ) )
 			$body = $this;
 		else
 		{
-			$body = Prb::Ary( array(
-			  Prb_IO::withFile( $this->path, Prb_IO_File::NO_CREATE_READ )->read()
-			) );
-			$size = Prack_Utils::singleton()->bytesize( $body->first() );
+			$body = array( Prb_IO::withFile( $this->path, Prb_IO_File::NO_CREATE_READ )->read() );
+			$size = Prack_Utils::singleton()->bytesize( reset( $body ) );
 		}
 		
-		$pathinfo  = pathinfo( $this->path->raw() );
-		$extension = isset( $pathinfo[ 'extension' ] )
-		  ? '.'.$pathinfo[ 'extension' ]
-		  : null;
+		$pathinfo  = pathinfo( $this->path );
+		$extension = isset( $pathinfo[ 'extension' ] ) ? '.'.$pathinfo[ 'extension' ] : null;
 		
-		return Prb::Ary( array(
-		  Prb::Num( 200 ),
-		  Prb::Hsh( array(
-		    'Last-Modified'  => Prb::Time( filemtime( $this->path->raw() ) )->httpdate(),
-		    'Content-Type'   => Prack_Mime::mimeType( $extension, Prb::Str( 'text/plain' ) ),
-		    'Content-Length' => Prb::Num( $size )->toS()
-		  ) ),
+		return array(
+		  200,
+		  array(
+		    'Last-Modified'  => Prb::Time( filemtime( $this->path ) )->httpdate(),
+		    'Content-Type'   => Prack_Mime::mimeType( $extension, 'text/plain' ),
+		    'Content-Length' => (string)$size
+		  ),
 		  $body
-		) );
+		);
 	}
 	
-		// TODO: Document!
+	// TODO: Document!
 	public function notFound()
 	{
-		$body = Prb::Str( "File not found: {$this->path_info->raw()}\n" );
-		return Prb::Ary( array(
-		  Prb::Num( 404 ),
-		  Prb::Hsh( array(
-		    'Content-Type'   => Prb::Str( 'text/plain' ),
-		    'Content-Length' => Prb::Num( $body->size() )->toS(),
-		    'X-Cascade'      => Prb::Str( 'pass' )
-		  ) ),
-		  Prb::Ary( array( $body ) )
-		) );
+		$body = "File not found: {$this->path_info}\n";
+		return array(
+		  404,
+		  array(
+		    'Content-Type'   => 'text/plain',
+		    'Content-Length' => (string)strlen( $body ),
+		    'X-Cascade'      => 'pass'
+		  ),
+		  array( $body )
+		);
 	}
 	
 	// TODO: Document!
