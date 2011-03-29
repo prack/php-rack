@@ -42,7 +42,7 @@ class Prack_RewindableInput
 	}
 	
 	// TODO: Document!
-	public function read( $length = null, $buffer = null )
+	public function read( $length = null, &$buffer = null )
 	{
 		if ( $this->isReadable() )
 		{
@@ -117,7 +117,7 @@ class Prack_RewindableInput
 	// TODO: Document!
 	private function makeRewindable()
 	{
-		$this->rewindable_io = Prb_IO::withTempfile( Prb::Str( 'prack-rewindable-input' ) );
+		$this->rewindable_io = Prb_IO::withTempfile( 'prack-rewindable-input' );
 		$this->rewindable_io->chmod( 0000 );
 		
 		if ( $this->filesystemHasPosixSemantics() )
@@ -134,11 +134,11 @@ class Prack_RewindableInput
 			while ( $entire_buffer_written_out == false )
 			{
 				$written = $this->rewindable_io->write( $buffer );
-				$entire_buffer_written_out = ( $written == $buffer->length() );
+				$entire_buffer_written_out = ( $written == strlen( $buffer ) );
 				if ( $entire_buffer_written_out == false )
-					$buffer = $written->slice( $written - 1, $buffer->length() - $written );
+					$buffer = substr( $buffer, $written - 1, strlen( $buffer ) - $written );
 			}
-			$this->length += $buffer->length();
+			$this->length += strlen( $buffer );
 		}
 		$this->rewindable_io->rewind();
 	}

@@ -12,9 +12,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	function setUp()
 	{
-		$this->rewindable_input = Prack_RewindableInput::with(
-			Prb_IO::withString( Prb::Str( 'hello world' ) )
-		);
+		$this->rewindable_input = Prack_RewindableInput::with( Prb_IO::withString( 'hello world' ) );
 	}
 	
 	/**
@@ -33,8 +31,8 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_creatable_without_a_string()
 	{
-		$this->rewindable_input = Prb_IO::withString( Prb::Str() );
-		$this->assertEquals( '', $this->rewindable_input->read()->raw() );
+		$this->rewindable_input = Prb_IO::withString( '' );
+		$this->assertEquals( '', $this->rewindable_input->read() );
 	} // It should be creatable without a string
 	
 	/**
@@ -44,7 +42,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read()
 	{
-		$this->assertEquals( 'hello world', $this->rewindable_input->read()->raw() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->read() );
 		
 		$this->rewindable_input->close();
 		try
@@ -66,7 +64,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_null()
 	{
-		$this->assertEquals( 'hello world', $this->rewindable_input->read( null )->raw() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->read( null ) );
 	} // It should be able to handle read( null )
 	
 	/**
@@ -76,7 +74,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_length()
 	{
-		$this->assertEquals( 'h', $this->rewindable_input->read( 1 )->raw() );
+		$this->assertEquals( 'h', $this->rewindable_input->read( 1 ) );
 	} // It should be able to handle read( length )
 	
 	/**
@@ -86,9 +84,9 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_length_and_buffer()
 	{
-		$buffer = Prb::Str();
+		$buffer = '';
 		$result = $this->rewindable_input->read( 1, $buffer );
-		$this->assertEquals( 'h', $result->raw() );
+		$this->assertEquals( 'h', $result );
 		$this->assertSame( $buffer, $result );
 	} // It should be able to handle read( length, buffer )
 	
@@ -99,9 +97,9 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_read_with_null_and_buffer()
 	{
-		$buffer = Prb::Str();
+		$buffer = '';
 		$result = $this->rewindable_input->read( null, $buffer );
-		$this->assertEquals( 'hello world', $result->raw() );
+		$this->assertEquals( 'hello world', $result );
 		$this->assertSame( $buffer, $result );
 	} // It should be able to handle read( null, buffer )
 	
@@ -114,7 +112,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$this->rewindable_input->read( 1 );
 		$this->rewindable_input->rewind();
-		$this->assertEquals( 'hello world', $this->rewindable_input->read()->raw() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->read() );
 	} // It should rewind to the beginning when rewind is called
 	
 	/**
@@ -124,7 +122,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_be_able_to_handle_gets()
 	{
-		$this->assertEquals( 'hello world', $this->rewindable_input->gets()->raw() );
+		$this->assertEquals( 'hello world', $this->rewindable_input->gets() );
 		
 		$this->rewindable_input->close();
 		try
@@ -148,9 +146,9 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = array( $this, 'eachCallback' );
 		
-		$this->lines = Prb::Ary();
+		$this->lines = array();
 		$this->rewindable_input->each( $callback );
-		$this->assertEquals( array( Prb::Str( 'hello world' ) ), $this->lines->raw() );
+		$this->assertEquals( array( 'hello world' ), $this->lines );
 		
 		$this->rewindable_input->close();
 		try
@@ -170,7 +168,7 @@ class Prack_RewindableInputTest extends PHPUnit_Framework_TestCase
 	 */
 	public function eachCallback( $item )
 	{
-		$this->lines->concat( $item );
+		array_push( $this->lines, $item );
 	}
 	
 	/**
