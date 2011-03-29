@@ -19,30 +19,37 @@ class Prack_ContentLength
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		list( $status, $headers, $body ) = $this->middleware_app->call( $env )->raw();
+		list( $status, $headers, $body ) = $this->middleware_app->call( $env );
 		$headers = Prack_Utils_HeaderHash::using( $headers );
 		
-		if ( !Prack_Utils::singleton()->statusWithNoEntityBody()->contains( $status->raw() ) &&
-		     !$headers->contains( 'Content-Length' ) &&
-		     !$headers->contains( 'Transfer-Encoding' ) &&
-		     ( $body instanceof Prb_I_Arraylike || $body instanceof Prb_I_Stringlike ) )
+		if ( !in_array( $status, Prack_Utils::singleton()->statusWithNoEntityBody() ) &&
+		     !@$headers->contains( 'Content-Length' ) && !$headers->contains( 'Transfer-Encoding' )
+		     && ( is_string( $body ) || is_array( $body ) || $body instanceof Prb_I_Enumerable ) )
 		{
-			if ( $body instanceof Prb_I_Stringlike )
-				$body = Prb::Ary( array( $body ) );
+			if ( is_string( $body ) )
+				$body = array( $body );
 			
 			static $callback = null;
 			if ( is_null( $callback ) )
 			  $callback = create_function(
 			    '$accumulator, $part',
-			    'return Prb::Num( $accumulator->raw() + Prack_Utils::singleton()->bytesize( $part ) );'
-			);
+			    'return $accumulator + Prack_Utils::singleton()->bytesize( $part );'
+			  );
 			
-			$length = $body->toAry()->inject( Prb::Num( 0 ), $callback );
-			$headers->set( 'Content-Length', $length->toS() );
+			$accumulator = 0;
+			if ( $body instanceof Prb_I_Enumerable )
+				$length = $body->toAry()->inject( 0, $callback );
+			else
+			{
+				$accumulator = 0;
+				foreach ( $body as $part )
+					$accumulator = call_user_func( $callback, $accumulator, $part );
+			}
+			$headers->set( 'Content-Length', (string)$accumulator );
 		}
 		
-		return Prb::Ary( array( $status, $headers, $body ) );
+		return array( $status, $headers->raw(), $body );
 	}
 }
