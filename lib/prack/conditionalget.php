@@ -31,31 +31,30 @@ class Prack_ConditionalGet
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		if ( !( Prb::Ary( array( Prb::Str( 'GET' ), Prb::Str( 'HEAD' ) ) )
-		          ->contains( $env->get( 'REQUEST_METHOD' ) ) ) )
+		if ( !in_array( $env[ 'REQUEST_METHOD' ], array( 'GET', 'HEAD' ) ) )
 			return $this->middleware_app->call( $env );
 		
-		list( $status, $headers, $body ) = $this->middleware_app->call( $env )->raw();
+		list( $status, $headers, $body ) = $this->middleware_app->call( $env );
 		
 		$headers = Prack_Utils_HeaderHash::using( $headers );
 		if ( $this->etagMatches( $env, $headers ) || $this->isModifiedSince( $env, $headers ) )
 		{
-			$status = Prb::Num( 304 );
+			$status = 304;
 			$headers->delete( 'Content-Type'   );
 			$headers->delete( 'Content-Length' );
-			$body = Prb::Ary();
+			$body = array();
 		}
 		
-		return Prb::Ary( array( $status, $headers, $body ) );
+		return array( $status, $headers->raw(), $body );
 	}
 	
 	// TODO: Document!
 	private function etagMatches( $env, $headers )
 	{
 		$etag = $headers->get( 'Etag' );
-		return ( isset( $etag ) && $etag == $env->get( 'HTTP_IF_NONE_MATCH' ) )
+		return ( isset( $etag ) && $etag == (string)@$env[ 'HTTP_IF_NONE_MATCH' ] )
 		  ? $etag
 		  : null;
 	}
@@ -64,7 +63,7 @@ class Prack_ConditionalGet
 	private function isModifiedSince( $env, $headers )
 	{
 		$last_modified = $headers->get( 'Last-Modified' );
-		return ( isset( $last_modified ) && $last_modified == $env->get( 'HTTP_IF_MODIFIED_SINCE' ) )
+		return ( isset( $last_modified ) && $last_modified == (string)@$env[ 'HTTP_IF_MODIFIED_SINCE' ] )
 		  ? $last_modified
 		  : null;
 	}
