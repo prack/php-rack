@@ -24,11 +24,11 @@ class Prack_Logger
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		$logger = Prb_Logger::with( $env->get( 'rack.errors' ) );
+		$logger = Prb_Logger::with( $env[ 'rack.errors' ] );
 		$logger->setLevel( $this->level );
-		$env->set( 'rack.logger', $logger );
+		$env[ 'rack.logger' ] = $logger;
 		
 		try
 		{
