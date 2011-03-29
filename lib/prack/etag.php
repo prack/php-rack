@@ -20,38 +20,36 @@ class Prack_ETag
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		list( $status, $headers, $body ) = $this->middleware_app->call( $env )->raw();
+		list( $status, $headers, $body ) = $this->middleware_app->call( $env );
 		
-		if ( !$headers->hasKey( 'ETag' ) )
+		$response = Prack_Response::with( $body, $status, $headers );
+		if ( !$response->get( 'ETag' ) )
 		{
-			list( $digest, $body ) = $this->digestBody( $body )->raw();
-			$headers->set( 'ETag', Prb::Str( "\"{$digest->raw()}\"" ) );
+			list( $digest, $body ) = $this->digestBody( $response->getBody() );
+			$response->set( 'ETag', "\"$digest\"" );
 		}
 		
-		return Prb::Ary( array( $status, $headers, $body ) );
+		return $response->raw();
 	}
 	
 	// TODO: Document!
 	private function digestBody( $body )
 	{
-		$this->buffer = Prb::Str();
-		$this->parts  = Prb::Ary();
+		$this->buffer = '';
+		$this->parts  = array();
 		
 		static $callback = null;
 		if ( is_null( $callback ) )
 			$callback = array( $this, 'onDigestBody' );
 		
-		$body->each( $callback );
+		foreach ( $body as $part )
+		{
+			$this->buffer .= $part;
+			array_push( $this->parts, $part );
+		}
 		
-		return Prb::Ary( array( Prb_String::md5( $this->buffer ), $this->parts ) );
-	}
-	
-	// TODO: Document!
-	public function onDigestBody( $part )
-	{
-		$this->buffer->concat( $part );
-		$this->parts->concat( $part );
+		return array( md5( $this->buffer ), $this->parts );
 	}
 }

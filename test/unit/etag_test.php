@@ -10,13 +10,10 @@ class Prack_ETagTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_set_ETag_if_none_is_set()
 	{
-		$middleware_app = new Prack_Test_Echo(
-		  Prb::Num( 200 ),
-		  Prb::Hsh( array( 'Content-Type' => Prb::Str( 'text/plain' ) ) ),
-		  Prb::Ary( array( Prb::Str( 'Hello, World!' ) ) )
-		);
-		$response = Prack_ETag::with( $middleware_app )->call( Prb::Hsh() );
-		$this->assertEquals( "\"65a8e27d8879283831b664bd8b7f0ad4\"", $response->get( 1 )->get( 'ETag' )->raw() );
+		$middleware_app = new Prack_Test_Echo( 200, array( 'Content-Type' => 'text/plain' ), array( 'Hello, World!' ) );
+		$env = array();
+		$response = Prack_ETag::with( $middleware_app )->call( $env );
+		$this->assertEquals( "\"65a8e27d8879283831b664bd8b7f0ad4\"", @$response[ 1 ][ 'ETag' ] );
 	} // It should set ETag if none is set
 	
 	/**
@@ -27,14 +24,12 @@ class Prack_ETagTest extends PHPUnit_Framework_TestCase
 	public function It_should_not_change_ETag_if_it_is_already_set()
 	{
 		$middleware_app = new Prack_Test_Echo(
-		  Prb::Num( 200 ),
-		  Prb::Hsh( array(
-		    'Content-Type' => Prb::Str( 'text/plain' ),
-		    'ETag'         => Prb::Str( '"abc"' )
-		  ) ),
-		  Prb::Ary( array( Prb::Str( 'Hello, World!' ) ) )
+		  200,
+		  array( 'Content-Type' => 'text/plain', 'ETag' => '"abc"' ),
+		  array( 'Hello, World!' )
 		);
-		$response = Prack_ETag::with( $middleware_app )->call( Prb::Hsh() );
-		$this->assertEquals( Prb::Str( "\"abc\"" ), $response->get( 1 )->get( 'ETag' ) );
+		$env = array();
+		$response = Prack_ETag::with( $middleware_app )->call( $env );
+		$this->assertEquals( "\"abc\"", @$response[ 1 ][ 'ETag' ] );
 	} // It should not change ETag if it is already set
 }
