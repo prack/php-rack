@@ -12,9 +12,10 @@ class Prack_Config
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		call_user_func( $this->callback, $env );
+		// PHP 5.2 Hack: call_user_func doesn't pass by reference. call_user_func_array can.
+		call_user_func_array( $this->callback, array( &$env ) );
 		return $this->middleware_app->call( $env );
 	}
 }
