@@ -17,44 +17,40 @@ class Prack_Cascade
 		static $not_found = null;
 		
 		if ( is_null( $not_found ) )
-			$not_found = Prb::Ary( array( Prb::Num( 404 ), Prb::Hsh(), Prb::Ary() ) );
+			$not_found = array( 404, array(), array() );
 		
 		return $not_found;
 	}
 	
 	// TODO: Document!
-	static function with( $middleware_apps, $catch = null )
+	static function with( $middleware_apps, $catch = array( 404 ) )
 	{
 		return new Prack_Cascade( $middleware_apps, $catch );
 	}
 	
 	// TODO: Document!
-	public function __construct( $middleware_apps, $catch = null )
+	public function __construct( $middleware_apps, $catch = array( 404 ) )
 	{
-		$catch = is_null( $catch )
-		  ? Prb::Ary( array( Prb::Num( 404 ) ) )
-		  : $catch;
+		$this->middleware_apps = array();
+		$this->has_app         = array();
 		
-		$this->middleware_apps = Prb::Ary();
-		$this->has_app         = Prb::Hsh();
-		
-		foreach ( $middleware_apps->raw() as $middleware_app )
+		foreach ( $middleware_apps as $middleware_app )
 			$this->add( $middleware_app );
 		
-		$this->catch = Prb::Hsh();
-		foreach ( $catch->raw() as $status )
-			$this->catch->set( $status->toS()->raw(), true );
+		$this->catch = array();
+		foreach ( $catch as $status )
+			$this->catch[ $status ] = true;
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
 		$result = self::notFound();
 		
-		foreach ( $this->middleware_apps->raw() as $middleware_app )
+		foreach ( $this->middleware_apps as $middleware_app )
 		{
 			$result = $middleware_app->call( $env );
-			if ( !( $this->catch->contains( $result->get( 0 )->toS()->raw() ) ) )
+			if ( !@$this->catch[ $result[ 0 ] ] )
 				break;
 		}
 		
@@ -64,8 +60,8 @@ class Prack_Cascade
 	// TODO: Document!
 	public function add( $middleware_app )
 	{
-		$this->has_app->set( spl_object_hash( $middleware_app ), true );
-		$this->middleware_apps->push( $middleware_app );
+		$this->has_app[ spl_object_hash( $middleware_app ) ] = true;
+		array_push( $this->middleware_apps, $middleware_app );
 	}
 	
 	public function concat( $middleware_app ) { return $this->add( $middleware_app ); }
@@ -73,6 +69,6 @@ class Prack_Cascade
 	// TODO: Document!
 	public function contains( $middleware_app )
 	{
-		return $this->has_app->contains( spl_object_hash( $middleware_app ) );
+		return @$this->has_app[ spl_object_hash( $middleware_app ) ];
 	}
 }
