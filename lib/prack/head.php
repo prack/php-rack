@@ -19,13 +19,13 @@ class Prack_Head
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		list( $status, $headers, $body ) = $this->middleware_app->call( $env )->raw();
+		list( $status, $headers, $body ) = $this->middleware_app->call( $env );
 		
-		if ( $env->get( 'REQUEST_METHOD' )->raw() == 'HEAD' )
-			return Prb::Ary( array( $status, $headers, Prb::Ary() ) );
+		if ( $env[ 'REQUEST_METHOD' ] == 'HEAD' )
+			return array( $status, $headers, array() );
 		
-		return Prb::Ary( array( $status, $headers, $body ) );
+		return array( $status, $headers, $body );
 	}
 }

@@ -4,21 +4,11 @@
 class Prack_HeadTest extends PHPUnit_Framework_TestCase 
 {
 	// TODO: Document!
-	static function responseFor( $headers = null )
+	static function responseFor( $headers = array() )
 	{
-		$headers        = is_null( $headers ) ? Prb::Hsh() : Prb::Hsh( $headers );
-		$middleware_app = new Prack_Test_Echo(
-		  Prb::Num( 200 ),
-		  Prb::Hsh( array(
-		    'Content-type'   => Prb::Str( 'test/plain' ),
-		    'Content-length' => Prb::Str( '3'          )
-		  ) ),
-		  Prb::Ary( array( Prb::Str( 'foo' ) ) )
-		);
-		
-		$request  = Prack_Mock_Request::envFor( Prb::Str( '/' ), $headers );
+		$middleware_app = new Prack_Test_Echo( 200, array( 'Content-type' => 'test/plain', 'Content-length' => '3' ), array( 'foo' ) );
+		$request  = Prack_Mock_Request::envFor( '/', $headers );
 		$response = Prack_Head::with( $middleware_app )->call( $request );
-		
 		return $response;
 	}
 	
@@ -33,21 +23,11 @@ class Prack_HeadTest extends PHPUnit_Framework_TestCase
 		
 		foreach ( $methods as $method )
 		{
-			$response = self::responseFor( array( 'REQUEST_METHOD' => Prb::Str( $method ) ) );
-			
-			$this->assertEquals( 200, $response->get( 0 )->raw() );
-			$this->assertEquals(
-			  array(
-			    'Content-type'   => Prb::Str( 'test/plain' ),
-			    'Content-length' => Prb::Str( '3'          )
-			  ),
-			  $response->get( 1 )->raw()
-			);
-			$this->assertEquals(
-			  array( Prb::Str( 'foo' ) ),
-			  $response->get( 2 )->raw()
-			);
-		}	
+			$response = self::responseFor( array( 'REQUEST_METHOD' => $method ) );
+			$this->assertEquals( 200,                                                              $response[ 0 ] );
+			$this->assertEquals( array( 'Content-type' => 'test/plain', 'Content-length' => '3' ), $response[ 1 ] );
+			$this->assertEquals( array( 'foo' ),                                                   $response[ 2 ] );
+		}
 	} // It should pass GET, POST, PUT, DELETE, OPTIONS, TRACE requests
 	
 	/**
@@ -57,19 +37,9 @@ class Prack_HeadTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_remove_body_from_HEAD_requests()
 	{
-		$response = self::responseFor( array( 'REQUEST_METHOD' => Prb::Str( 'HEAD' ) ) );
-		
-		$this->assertEquals( 200, $response->get( 0 )->raw() );
-		$this->assertEquals(
-		  array(
-		    'Content-type'   => Prb::Str( 'test/plain' ),
-		    'Content-length' => Prb::Str( '3'          )
-		  ),
-		  $response->get( 1 )->raw()
-		);
-		$this->assertEquals(
-		  array(),
-		  $response->get( 2 )->raw()
-		);
+		$response = self::responseFor( array( 'REQUEST_METHOD' => 'HEAD' ) );
+		$this->assertEquals( 200,                                                              $response[ 0 ] );
+		$this->assertEquals( array( 'Content-type' => 'test/plain', 'Content-length' => '3' ), $response[ 1 ] );
+		$this->assertEquals( array(),                                                          $response[ 2 ] );
 	} // It should remove body from HEAD requests
 }
