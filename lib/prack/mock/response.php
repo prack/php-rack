@@ -14,39 +14,40 @@ class Prack_Mock_Response
 	private $errors;
 	
 	// TODO: Document!
-	function __construct( $status, $headers, $body, $errors = null )
+	function __construct( $status = 200, $headers = array(), $body = '', $errors = null )
 	{
-		$status = is_null( $status ) ? Prb::Num() : $status;
-		if ( !( $status instanceof Prb_Numeric ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: mock request $status must be Prb_Numeric' );
+		if ( !is_string( $body ) && !is_array( $body ) && !( $body instanceof Prb_I_Enumerable ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: __construct $body must be either string or array of items castable to string' );
 		
-		$headers = is_null( $headers ) ? Prb::Hsh() : $headers;
-		if ( !( $headers instanceof Prb_Hash ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: mock request $headers must be Prb_Hash' );
+		if ( is_null( $headers ) )
+			$headers = array();
+		if ( !is_array( $headers ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: __construct $headers must be an array' );
 		
-		$body = is_null( $body ) ? Prb::Str() : $body;
-		if ( !( $body instanceof Prb_I_Stringlike ) && !( $body instanceof Prb_I_Enumerable ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: mock request $body must be Prb_I_Stringlike or Prb_I_Enumerable' );
+		$status  =   (int)$status;
+		$headers = (array)$headers;
 		
 		$errors = is_null( $errors ) ? Prb_IO::withString() : $errors;
 		if ( !( $errors instanceof Prb_I_WritableStreamlike ) )
 			throw new Prb_Exception_Type( 'FAILSAFE: mock request $errors must be Prack_Writable_Streamlike' );
 		
-		$this->status           = $status;
-		$this->original_headers = $headers;
-		$this->headers          = Prack_Utils_HeaderHash::using( Prb::Hsh() );
+		$this->status           = (int)$status;
+		$this->original_headers = (array)$headers;
+		$this->headers          = new Prack_Utils_HeaderHash();
 		
-		foreach ( $headers->raw() as $key => $values )
+		foreach ( $headers as $key => $values )
 		{
 			$this->headers->set( $key, $values );
-			if ( is_null( $values ) || $values->isEmpty() )
-				$this->headers->set( $key, Prb::Str() );
+			if ( is_null( $values ) || empty( $values ) )
+				$this->headers->set( $key, '' );
 		}
 		
-		$this->body = Prb::Str();
+		$this->body = '';
 		
-		if ( $body instanceof Prb_I_Stringlike )
-			$this->body = $body->toStr();
+		if ( is_string( $body ) )
+			$this->body = $body;
+		else if ( is_array( $body ) )
+			array_walk( $body, array( $this, 'onWrite' ) );
 		else if ( $body instanceof Prb_I_Enumerable )
 			$body->each( array( $this, 'onWrite' ) );
 		
@@ -57,7 +58,7 @@ class Prack_Mock_Response
 	// TODO: Document!
 	public function onWrite( $addition )
 	{
-		$this->body->concat( $addition );
+		$this->body .= $addition;
 	}
 	  
 	// TODO: Document!
@@ -81,7 +82,7 @@ class Prack_Mock_Response
 	// TODO: Document!
 	public function match( $pattern, &$matches = null )
 	{
-		return ( preg_match_all( $pattern, $this->body->raw(), $matches ) > 0 );
+		return (bool)preg_match( $pattern, $this->body, $matches );
 	}
 	
 	// TODO: Document!
