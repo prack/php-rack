@@ -4,15 +4,9 @@
 class Prack_Test_NothingMiddleware
   implements Prack_I_MiddlewareApp
 {
-	static public $env;
+	static public $env = null;
 	
 	private $middleware_app;
-	
-	// TODO: Document!
-	static function env()
-	{
-		return Prack_Test_NothingMiddleware::$env;
-	}
 	
 	// TODO: Document!
 	function __construct( $middleware_app, $eval_on_call = null )
@@ -21,9 +15,9 @@ class Prack_Test_NothingMiddleware
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		Prack_Test_NothingMiddleware::$env = $env;
+		Prack_Test_NothingMiddleware::$env = &$env;
 		$response = $this->middleware_app->call( $env );
 		return $response;
 	}
@@ -42,18 +36,14 @@ class Prack_Test_AppClass
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
 		if ( $this->called > 0 )
 			throw new Exception( 'bzzzt' );
 		
 		$this->called++;
 		
-		return Prb::Ary( array(
-			Prb::Num( 200 ),
-			Prb::Hsh( array( 'Content-Type' => Prb::Str( 'text/plain' ) ) ),
-			Prb::Ary( array( Prb::Str( 'OK' ) ) )
-		) );
+		return array( 200, array( 'Content-Type' => 'text/plain' ), array( 'OK' ) );
 	}
 }
 
@@ -66,33 +56,15 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_supports_mapping()
 	{
-		$middleware_app = new Prack_Builder();
-		$middleware_app
+		$middleware_app = Prack_Builder::domain()
 		  ->map( '/' )
-		    ->run(
-		      new Prack_Test_Echo(
-		        Prb::Num( 200 ),
-		        Prb::Hsh(),
-		        Prb::Ary( array( Prb::Str( 'root' ) ) )
-		      )
-		    )
+		    ->run( new Prack_Test_Echo( 200, array(), array( 'root' ) ) )
 		  ->map( '/sub' )
-		    ->run(
-		      new Prack_Test_Echo(
-		        Prb::Num( 200 ),
-		        Prb::Hsh(),
-		        Prb::Ary( array( Prb::Str( 'sub' ) ) )
-		      )
-		    )
+		    ->run( new Prack_Test_Echo( 200, array(), array( 'sub'  ) ) )
 		->toMiddlewareApp();
 		
-		$this->assertEquals(
-		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->getBody()->toS()->raw()
-		);
-		
-		$this->assertEquals(
-		  'sub', Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/sub' ) )->getBody()->toS()->raw()
-		);
+		$this->assertEquals( 'root', Prack_Mock_Request::with( $middleware_app )->get( '/'    )->getBody() );
+		$this->assertEquals( 'sub',  Prack_Mock_Request::with( $middleware_app )->get( '/sub' )->getBody() );
 	} // It supports mapping
 	
 	/**
@@ -102,24 +74,16 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_doesn_t_dupe_env_even_when_mapping()
 	{
-		$middleware_app = new Prack_Builder();
-		$middleware_app
+		$middleware_app = Prack_Builder::domain()
 		  ->using( 'Prack_Test_NothingMiddleware' )->build()
 		  ->map( '/' )
-		    ->run(
-		      new Prack_Test_Echo(
-		        Prb::Num( 200 ), Prb::Hsh(), Prb::Ary( array( Prb::Str( 'root' ) ) ),
-		        '$env->set( "new_key", Prb::Str( "new_value" ) );'
-		      )
-		    )
+		    ->run( new Prack_Test_Echo( 200, array(), array( 'root' ), '$env[ "new_key" ] = "new_value";' ) )
 		->toMiddlewareApp();
 		
-		$this->assertEquals(
-		  'root', Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->getBody()->toS()->raw()
-		);
+		$this->assertEquals( 'root', Prack_Mock_Request::with( $middleware_app )->get( '/' )->getBody() );
 		
-		$this->assertEquals( Prb::Str( 'new_value' ),
-		                     Prack_Test_NothingMiddleware::env()->get( 'new_key' ) );
+		$env = &Prack_Test_NothingMiddleware::$env;
+		$this->assertEquals( 'new_value', $env[ 'new_key' ] );
 	} // It doesn't dupe env even when mapping
 	
 	/**
@@ -129,20 +93,14 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_chains_apps_by_default()
 	{
-		$middleware_app = new Prack_Builder();
-		$middleware_app
+		$middleware_app = Prack_Builder::domain()
 		  ->using( 'Prack_ShowExceptions' )->build()
-		  ->run(
-		    new Prack_Test_Echo(
-		      Prb::Num( 200 ), Prb::Hsh(), Prb::Ary( array( Prb::Str( 'root' ) ) ),
-		      'throw new Exception( "bzzzt" );'
-		    )
-		  )
+		  ->run( new Prack_Test_Echo( 200, array(), array( 'root' ), 'throw new Exception( "bzzzt" );' ) )
 		->toMiddlewareApp();
 		
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
 	} // It chains apps by default
 	
 	/**
@@ -152,19 +110,14 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_has_implicit_toMiddlewareApp()
 	{
-		$middleware_app = new Prack_Builder();
+		$middleware_app = Prack_Builder::domain();
 		$middleware_app
 		  ->using( 'Prack_ShowExceptions' )->build()
-		  ->run(
-		    new Prack_Test_Echo(
-		      Prb::Num( 200 ), Prb::Hsh(), Prb::Ary( array( Prb::Str( 'root' ) ) ),
-		      'throw new Exception( "bzzzt" );'
-		    )
-		  );
+		  ->run( new Prack_Test_Echo( 200, array(), array( 'root' ), 'throw new Exception( "bzzzt" );' ) );
 		
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
 	} // It has implicit toMiddlewareApp
 	
 	/**
@@ -177,37 +130,26 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		$callback       = array( $this, 'onBuild' );
 		$middleware_app = Prack_Builder::domain( $callback );
 		
-		$response = Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) );
+		$response = Prack_Mock_Request::with( $middleware_app )->get( '/' );
 		$this->assertTrue( $response->isClientError() );
-		$this->assertEquals( 401, $response->getStatus()->raw() );
+		$this->assertEquals( 401, $response->getStatus() );
 		
 		# with auth...
 		$response = Prack_Mock_Request::with( $middleware_app )->get(
-		  Prb::Str( '/' ),
-		  Prb::Hsh( array(
-		    'HTTP_AUTHORIZATION' => Prb::Str( 'Basic ' )->concat( Prb::Str( 'joe:secret' )->base64Encode() )
-		  ) )
-		);
+		  '/', array( 'HTTP_AUTHORIZATION' => 'Basic '.base64_encode( 'joe:secret' ) ) );
 		
-		$this->assertEquals( 200, $response->getStatus()->raw() );
-		$this->assertEquals( 'Hi Boss', $response->getBody()->toS()->raw() );
+		$this->assertEquals( 200, $response->getStatus() );
+		$this->assertEquals( 'Hi Boss', $response->getBody() );
 	} // It supports callbacks on use
 	
 	// TODO: Document!
 	public function onBuild( $builder )
 	{
-		$callback = create_function( '$username,$password', 'return "secret" == $password->raw();' );
+		$callback = create_function( '$username,$password', 'return "secret" == $password;' );
 		$builder
 		  ->using( 'Prack_ShowExceptions' )->build()
-		  ->using( 'Prack_Auth_Basic' )->withArgs( null )->withCallback( $callback )->build()
-		  ->run(
-		      new Prack_Test_Echo(
-		        Prb::Num( 200 ),
-		        Prb::Hsh(),
-		        Prb::Ary( array( Prb::Str( 'Hi Boss' ) ) )
-		      )
-		    )
-		->toMiddlewareApp(); // Just for style, here. Optional.
+		  ->using( 'Prack_Auth_Basic' )->withArgs( null )->andCallback( $callback )->build()
+		  ->run( new Prack_Test_Echo( 200, array(), array( 'Hi Boss' ) ) );
 	}
 	
 	/**
@@ -219,17 +161,12 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	{
 		$middleware_app = Prack_Builder::domain()
 		  ->using( 'Prack_ShowExceptions' )->build()
-		  ->run(
-		    new Prack_Test_Echo(
-		      Prb::Num( 200 ), Prb::Hsh(), Prb::Ary( array( Prb::Str( 'root' ) ) ),
-		      'throw new Exception( "bzzzt" );'
-		    )
-		  )
+		  ->run( new Prack_Test_Echo( 200, array(), array( 'root' ), 'throw new Exception( "bzzzt" );' ) )
 		->toMiddlewareApp();
 		
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
 	} // It has explicit toMiddlewareApp
 	
 	/**
@@ -239,13 +176,13 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_initialize_apps_once()
 	{
-		$middleware_app = new Prack_Builder();
-		$middleware_app
+		$middleware_app = Prack_Builder::domain()
 		  ->using( 'Prack_ShowExceptions' )->build()
-		  ->run( new Prack_Test_AppClass() );
+		  ->run( new Prack_Test_AppClass() )
+		->toMiddlewareApp();
 		
-		$this->assertEquals( Prb::Num( 200 ), Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->getStatus() );
-		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( Prb::Str( '/' ) )->isServerError() );
+		$this->assertEquals( 200, Prack_Mock_Request::with( $middleware_app )->get( '/' )->getStatus() );
+		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
 	} // It should initialize apps once
 	
 	/**

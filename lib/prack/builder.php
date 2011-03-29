@@ -23,7 +23,7 @@ class Prack_Builder
 	{
 		$this->path   = $path;
 		$this->parent = $parent;
-		$this->stack  = Prb::Ary();
+		$this->stack  = array();
 		
 		$this->resetFluentInterface();
 		
@@ -39,14 +39,21 @@ class Prack_Builder
 	// TODO: Document!
 	public function map( $path, $callback = null )
 	{
-		if ( $this->stack->last() instanceof Prb_Hash )
+		$stack_keys = array_keys( $this->stack );
+		$last_key   = array_pop( $stack_keys );
+		
+		$last = null;
+		if ( $last_key !== null )
+			$last = &$this->stack[ $last_key ];
+		
+		if ( $last && $last[ 'type' ] == 'assoc' )
 		{
 			$child = new Prack_Builder( $path, $this, $callback );
-			$this->stack->last()->set( $path, $child );
+			$last[ 'values' ][ $path ] = $child;
 		}
 		else
 		{
-			$this->stack->concat( Prb::Hsh() );
+			array_push( $this->stack, array( 'type' => 'assoc', 'values' => array() ) );
 			return $this->map( $path, $callback );
 		}
 		
@@ -62,30 +69,47 @@ class Prack_Builder
 		if ( !($middleware_app instanceof Prack_I_MiddlewareApp ) )
 			throw new Prb_Exception_Argument( 'run $middleware_map must be an instance of Prack_I_MiddlewareApp' );
 		
-		$this->stack->concat( $middleware_app );
+		array_push( $this->stack, $middleware_app );
+		
 		return is_null( $this->parent ) ? $this : $this->parent;
 	}
 	
 	// TODO: Document!
 	public function toMiddlewareApp()
 	{
-		if ( $this->stack->last() instanceof Prb_Hash )
-			$this->stack->set( -1, Prack_URLMap::with( $this->stack->last() ) );
+		$stack_keys = array_keys( $this->stack );
+		$last_key   = array_pop( $stack_keys );
+		
+		$last = null;
+		if ( $last_key !== null )
+			$last = &$this->stack[ $last_key ];
+		
+		if ( is_array( $last ) && $last[ 'type' ] == 'assoc' )
+		{
+			$this->stack[ $last_key ] = Prack_URLMap::with( $last[ 'values' ] );
+			$last = &$this->stack[ $last_key ];
+		}
 		
 		static $callback = null;
-		
 		if ( is_null( $callback ) )
 			$callback = create_function(
 			  '$calling_middleware_app, $class, $args, $callback',
 			  '$reflection = new ReflectionClass( $class );
-			   $args       = $args->raw();
 			   array_unshift( $args, $calling_middleware_app );
 			   if ( isset( $callback ) )
 			     array_push( $args, $callback );
 			   return $reflection->newInstanceArgs( $args );'
 			);
-		$inner_middleware_app = $this->stack->last();
-		return $this->stack->slice( 0, -1, true )->reverse()->inject( $inner_middleware_app, $callback );
+		
+		$middleware_app = $last;
+		foreach( array_reverse( $stack_keys ) as $key )
+		{
+			$specification = $this->stack[ $key ][ 'values' ];
+			array_unshift( $specification, $middleware_app );
+			$middleware_app = call_user_func_array( $callback, $specification );
+		}
+		
+		return $middleware_app;
 	}
 	
 	// TODO: Document!
@@ -137,14 +161,14 @@ class Prack_Builder
 		if ( isset( $this->fi_callback ) && !is_callable( $this->fi_callback ) )
 			throw new Prb_Exception_Callback( 'callback specified in middleware app specification is not actually callable: ' );
 		
-		$this->specify( $this->fi_class, Prb::Ary( $this->fi_args ), $this->fi_callback );
+		$this->specify( $this->fi_class, $this->fi_args, $this->fi_callback );
 		$this->resetFluentInterface();
 		
 		return $this;
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
 		return $this->toMiddlewareApp()->call( $env );
 	}
@@ -152,9 +176,7 @@ class Prack_Builder
 	// TODO: Document!
 	private function specify( $class, $args, $callback )
 	{
-		$this->stack->concat(
-		  Prb::Ary( array( $class, $args, $callback ) )
-		);
+		array_push( $this->stack, array( 'type' => 'indexed', 'values' => array( $class, $args, $callback ) ) );
 	}
 	
 	// TODO: Document!
