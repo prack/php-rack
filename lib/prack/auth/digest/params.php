@@ -1,51 +1,42 @@
 <?php
 
 // TODO: Document!
-class Prack_Auth_Digest_Params extends Prb_Hash
+class Prack_Auth_Digest_Params
 {
+	private $array;
+	
 	// TODO: Document!
 	static function parse( $string )
 	{
-		$callback = array( 'Prack_Auth_Digest_Params', 'onParse' );
-		return Prack_Auth_Digest_Params::splitHeaderValue( $string )->inject(
-		  new Prack_Auth_Digest_Params(),
-		  $callback
-		);
-	}
-	
-	// TODO: Document!
-	static function onParse( $header, $param )
-	{
-		$split = $param->split( '/=/', 2 );
-		$header->set(
-		  $split->get( 0 )->raw(),
-		  Prack_Auth_Digest_Params::dequote( $split->get( 1 ) )
-		);
-		return $header;
+		$split = Prack_Auth_Digest_Params::splitHeaderValue( $string );
+		
+		$accumulator = new Prack_Auth_Digest_Params();
+		foreach( $split as $value )
+		{
+			$split = preg_split( '/=/', $value, 2 );
+			$accumulator->set( $split[ 0 ], Prack_Auth_Digest_Params::dequote( $split[ 1 ] ) );
+		}
+		
+		return $accumulator;
 	}
 	
 	// TODO: Document!
 	static function dequote( $string )
 	{
-		$return = $string->match( '/\A"(.*)"\Z/', $matches ) ? Prb::Str( $matches[ 1 ][ 0 ] ) : $string;
+		$return = (bool)preg_match_all( '/\A"(.*)"\Z/', $string, $matches ) ? $matches[ 1 ][ 0 ] : $string;
 		
 		static $callback = null;
 		if ( is_null( $callback ) )
 			$callback = create_function( '$m', 'return $m;' );
 		
-		$return = $return->gsub( "/\\\\(.)/", $callback );
-		
-		return $return;
+		return preg_replace_callback( "/\\\\(.)/", $callback, $return );
 	}
 	
 	// TODO: Document!
 	static function splitHeaderValue( $string )
 	{
-		static $callback = null;
-		if ( is_null( $callback ) )
-			$callback = create_function( '$v', 'return $v;' );
-		
-		return $string->scan( '/(\w+\=(?:"[^\"]+"|[^,]+))/' )->collect( $callback );
+		preg_match_all( '/(\w+\=(?:"[^\"]+"|[^,]+))/', $string, $matches );
+		return $matches[ 1 ];
 	}
 	
 	// TODO: Document!
@@ -54,12 +45,7 @@ class Prack_Auth_Digest_Params extends Prb_Hash
 		static $unquoted = null;
 		
 		if ( is_null( $unquoted ) )
-		{
-			$unquoted = Prb::Ary( array(
-				Prb::Str( 'nc'    ),
-				Prb::Str( 'stale' ),
-			) );
-		}
+			$unquoted = array( 'nc', 'stale' );
 		
 		return $unquoted;
 	}
@@ -67,7 +53,7 @@ class Prack_Auth_Digest_Params extends Prb_Hash
 	// TODO: Document!
 	function __construct( $callback = null )
 	{
-		parent::__construct();
+		$this->array = array();
 		
 		if ( is_callable( $callback ) )
 			call_user_func( $callback, $this );
@@ -76,43 +62,39 @@ class Prack_Auth_Digest_Params extends Prb_Hash
 	// TODO: Document!
 	public function get( $key )
 	{
-		return parent::get( $key );
+		return @$this->array[ $key ];
 	}
 	
 	// TODO: Document!
 	public function set( $key, $value )
 	{
-		return parent::set( $key, $value->toS() );
+		$this->array[ $key ] = $value;
 	}
 	
 	// TODO: Document!
-	public function toS()
+	public function contains( $key )
 	{
-		static $callback = null;
-		if ( is_null( $callback ) )
-			$callback = array( $this, 'onToS' );
-		
-		return $this->inject( Prb::Ary(), $callback )->join( Prb::Str( ', ' ) );
+		return isset( $this->array[ $key ] );
 	}
 	
 	// TODO: Document!
-	public function onToS( $parts, $key, $value )
+	public function raw()
 	{
-		$parts->concat(
-		  Prb::Str( "{$key}=" )->concat( self::unquoted()->contains( $key ) ? $value->toS() : $this->quote( $value ) )
-		);
-		return $parts;
+		$accumulator = array();
+		foreach ( $this->array as $key => $value )
+		{
+			$param = "{$key}=".( in_array( $key, self::unquoted() ) ? (string)$value : $this->quote( $value ) );
+			array_push( $accumulator, $param );
+		}
+		return join( ', ', $accumulator );
 	}
 	
 	// TODO: Document!
 	public function quote( $string )
 	{
-		$callback = null;
+		static $callback = null;
 		if ( is_null( $callback ) )
 			$callback = create_function( '$m', 'return "\\{$m}";' );
-		
-		return Prb::Str( '"' )
-		  ->concat( $string->gsub( '/[\\\"]/', $callback ) )
-		  ->concat( Prb::Str( '"' ) );
+		return '"'.preg_replace_callback( '/[\\\"]/', $callback, $string ).'"';
 	}
 }

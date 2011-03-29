@@ -13,7 +13,7 @@ class Prack_Auth_Digest_Nonce
 	static function privateKey()
 	{
 		if ( is_null( self::$private_key ) )
-			self::$private_key = Prb::Str();
+			self::$private_key = '';
 		
 		return self::$private_key;
 	}
@@ -42,11 +42,8 @@ class Prack_Auth_Digest_Nonce
 	// TODO: Document!
 	static function parse( $string )
 	{
-		$split = $string->base64Decode()->split( '/ /', 2 );
-		return Prack_Auth_Digest_Nonce::with(
-		  Prb::Time( $split->get( 0 )->toN()->raw() ),
-		  $split->get( 1 )
-		);
+		$split = @preg_split( '/ /', @base64_decode( $string ), 2 );
+		return Prack_Auth_Digest_Nonce::with( Prb::Time( (int)$split[ 0 ] ), $split[ 1 ] );
 	}
 	
 	// TODO: Document!
@@ -66,24 +63,15 @@ class Prack_Auth_Digest_Nonce
 	}
 	
 	// TODO: Document!
-	public function toS()
+	public function raw()
 	{
-		return Prb::Ary( array(
-		  $this->timestamp->toS(),
-		  $this->digest()
-		) )->join( Prb::Str( ' ' ) )
-		   ->base64Encode();
+		return base64_encode( join( ' ', array( (string)$this->timestamp, $this->digest() ) ) );
 	}
 	
 	// TODO: Document!
 	public function digest()
 	{
-		return Prb::Str( md5(
-		  Prb::Ary( array(
-		    $this->timestamp->toS(),
-		    self::privateKey()
-		  ) )->join( Prb::Str( ':' ) )->raw()
-		) );
+		return md5( join( ':', array( $this->timestamp, self::privateKey() ) ) );
 	}
 	
 	// TODO: Document!

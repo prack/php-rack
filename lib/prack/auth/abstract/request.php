@@ -15,11 +15,11 @@ abstract class Prack_Auth_Abstract_Request
 		static $authorization_keys = null;
 		
 		if ( is_null( $authorization_keys ) )
-			$authorization_keys = Prb::Ary( array(
-			  Prb::Str( 'HTTP_AUTHORIZATION'   ),
-			  Prb::Str( 'X-HTTP_AUTHORIZATION' ),
-			  Prb::Str( 'X_HTTP_AUTHORIZATION' )
-			) );
+			$authorization_keys = array(
+			  'HTTP_AUTHORIZATION',
+			  'X-HTTP_AUTHORIZATION',
+			  'X_HTTP_AUTHORIZATION'
+			);
 		
 		return $authorization_keys;
 	}
@@ -42,13 +42,10 @@ abstract class Prack_Auth_Abstract_Request
 	{
 		if ( is_null( $this->parts ) )
 		{
-			$auth_key    = $this->authorizationKey() ? $this->authorizationKey()->raw() : null;
-			$auth_header = $this->env->contains( $auth_key )
-			  ? $this->env->get( $auth_key )
-			  : Prb::Str();
-			$this->parts = $auth_header->split( '/ /', 2 );
+			$auth_key    = $this->authorizationKey();
+			$this->parts = preg_split( '/ /', (string)@$this->env[ $auth_key ], 2 );
 		}
-			
+		
 		return $this->parts;
 	}
 	
@@ -56,7 +53,12 @@ abstract class Prack_Auth_Abstract_Request
 	public function scheme()
 	{
 		if ( is_null( $this->scheme ) )
-			$this->scheme = $this->parts()->first()->downcase();
+		{
+			$parts = $this->parts();
+			$first = reset( $parts );
+			$this->scheme = strtolower( (string)$first );
+		}
+		
 		return $this->scheme;
 	}
 	
@@ -64,7 +66,11 @@ abstract class Prack_Auth_Abstract_Request
 	public function params()
 	{
 		if ( is_null( $this->params ) )
-			$this->params = $this->parts()->last();
+		{
+			$parts        = $this->parts();
+			$this->params = end( $parts );
+		}
+		
 		return $this->params;
 	}
 	
@@ -73,15 +79,18 @@ abstract class Prack_Auth_Abstract_Request
 	{
 		if ( is_null( $this->authorization_key ) )
 		{
-			$callback = array( $this, 'onDetect' );
-			$this->authorization_key = self::authorizationKeys()->detect( $callback );
+			$found = null;
+			foreach ( self::authorizationKeys() as $key )
+			{
+				if ( @$this->env[ $key ] )
+				{
+					$found = $key;
+					break;
+				}
+			}
+			$this->authorization_key = $found;
 		}
+		
 		return $this->authorization_key;
-	}
-	
-	// TODO: Document!
-	public function onDetect( $key )
-	{
-		return $this->env->contains( $key->raw() );
 	}
 }

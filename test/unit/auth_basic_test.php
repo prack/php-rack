@@ -6,26 +6,26 @@ class Prack_Auth_BasicTest extends PHPUnit_Framework_TestCase
 	// TODO: Document!
 	public function realm()
 	{
-		return Prb::Str( 'WallysWorld' );
+		return 'WallysWorld';
 	}
 	
 	// TODO: Document!
 	public function unprotectedMiddlewareApp()
 	{
 		return new Prack_Test_Echo(
-			Prb::Num( 0 ),
-			Prb::Hsh(),
-			Prb::Ary(),
-			' $this->status  = Prb::Num( 200 );
-			  $this->headers = Prb::Hsh( array( "Content-Type" => Prb::Str( "text/plain" ) ) );
-			  $this->body    = Prb::Ary( array( Prb::Str( "Hi {$env->get( \'REMOTE_USER\' )->raw()}" ) ) ); '
+			0,
+			array(),
+			array(),
+			' $this->status  = 200;
+			  $this->headers = array( "Content-Type" => "text/plain" );
+			  $this->body    = array( "Hi {$env[ \'REMOTE_USER\' ]}" );'
 		);
 	}
 	
 	// TODO: Document!
 	public function protectedMiddlewareApp()
 	{
-		$callback       = create_function( '$username,$password', 'return "Boss" == $username->raw();' );
+		$callback       = create_function( '$username,$password', 'return "Boss" == $username;' );
 		$middleware_app = Prack_Auth_Basic::with( $this->unprotectedMiddlewareApp(), null, $callback );
 		$middleware_app->setRealm( $this->realm() );
 		return $middleware_app;
@@ -40,19 +40,14 @@ class Prack_Auth_BasicTest extends PHPUnit_Framework_TestCase
 	// TODO: Document!
 	public function request( $headers, $callback )
 	{
-		return call_user_func( $callback, $this->request->get( Prb::Str( '/' ), $headers ) );
+		return call_user_func( $callback, $this->request->get( '/', $headers ) );
 	}
 	
 	// TODO: Document!
 	public function requestWithBasicAuth( $username, $password, $callback )
 	{
 		return $this->request(
-		  Prb::Hsh( array( 
-		    'HTTP_AUTHORIZATION' => Prb::Str( 'Basic ' )->concat(
-		      Prb::Str( "{$username->raw()}:{$password->raw()}" )->base64Encode()
-		    )
-		  ) ),
-		  $callback
+		  array( 'HTTP_AUTHORIZATION' => 'Basic '.base64_encode( "{$username}:{$password}" ) ), $callback
 		);
 	}
 	
@@ -60,11 +55,10 @@ class Prack_Auth_BasicTest extends PHPUnit_Framework_TestCase
 	public function assertBasicAuthChallenge( $response )
 	{
 		$this->assertTrue( $response->isClientError() );
-		$this->assertEquals( 401, $response->getStatus()->raw() );
+		$this->assertEquals( 401, $response->getStatus() );
 		$this->assertTrue( $response->contains( 'WWW-Authenticate' ) );
-		$quoted = preg_quote( $this->realm()->raw() );
-		$this->assertTrue( $response->get( 'WWW-Authenticate' )->match( "/Basic realm=\"{$quoted}\"/" ) );
-		$this->assertTrue( $response->getBody()->isEmpty() );
+		$this->assertRegExp( "/Basic realm=\"{$this->realm()}\"/", $response->get( 'WWW-Authenticate' ) );
+		$this->assertEquals( '', $response->getBody() );
 	}
 	
 	/**
@@ -74,7 +68,7 @@ class Prack_Auth_BasicTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_challenge_correctly_when_no_credentials_are_specified()
 	{
-		$this->request( Prb::Hsh(), array( $this, 'assertBasicAuthChallenge' ) );
+		$this->request( array(), array( $this, 'assertBasicAuthChallenge' ) );
 	} // It should challenge correctly when no credentials are specified
 	
 	/**
@@ -84,11 +78,7 @@ class Prack_Auth_BasicTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_rechallenge_if_incorrect_credentials_are_specified()
 	{
-		$this->requestWithBasicAuth(
-		  Prb::Str( 'joe'      ),
-		  Prb::Str( 'password' ),
-		  array( $this, 'assertBasicAuthChallenge' )
-		);
+		$this->requestWithBasicAuth( 'joe', 'password', array( $this, 'assertBasicAuthChallenge' ) );
 	} // It should rechallenge if incorrect credentials are specified
 	
 	/**
@@ -98,18 +88,14 @@ class Prack_Auth_BasicTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_return_application_output_if_correct_credentials_are_specified()
 	{
-		$this->requestWithBasicAuth(
-		  Prb::Str( 'Boss'     ),
-		  Prb::Str( 'password' ),
-		  array( $this, 'onCorrectCredentials' )
-		);
+		$this->requestWithBasicAuth( 'Boss', 'password', array( $this, 'onCorrectCredentials' ) );
 	} // It should return application output if correct credentials are specified
 	
 	// TODO: Document!
 	public function onCorrectCredentials( $response )
 	{
-		$this->assertEquals( 200,       $response->getStatus()->raw() );
-		$this->assertEquals( 'Hi Boss', $response->getBody()->toS()->raw() );
+		$this->assertEquals( 200,       $response->getStatus() );
+		$this->assertEquals( 'Hi Boss', $response->getBody()   );
 	}
 	
 	/**
@@ -119,19 +105,14 @@ class Prack_Auth_BasicTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_return_400_Bad_Request_if_different_auth_scheme_used()
 	{
-		$this->request(
-		  Prb::Hsh( array(
-		    'HTTP_AUTHORIZATION' => Prb::Str( 'Digest params' )
-		  ) ),
-		  array( $this, 'onWrongScheme' )
-		);
+		$this->request( array( 'HTTP_AUTHORIZATION' => 'Digest params' ), array( $this, 'onWrongScheme' ) );
 	} // It should return 400 Bad Request if different auth scheme used
 	
 	// TODO: Document!
 	public function onWrongScheme( $response )
 	{
 		$this->assertTrue( $response->isClientError() );
-		$this->assertEquals( 400, $response->getStatus()->raw() );
+		$this->assertEquals( 400, $response->getStatus() );
 		$this->assertFalse( $response->contains( 'WWW-Authenticate' ) );
 	}
 	

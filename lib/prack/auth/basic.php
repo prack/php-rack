@@ -8,21 +8,22 @@ class Prack_Auth_Basic_Request extends Prack_Auth_Abstract_Request
 	// TODO: Document!
 	public function isBasic()
 	{
-		return ( $this->scheme()->raw() == 'basic' );
+		return ( $this->scheme() == 'basic' );
 	}
 	
 	// TODO: Document!
 	public function credentials()
 	{
 		if ( is_null( $this->credentials ) )
-			$this->credentials = $this->params()->base64Decode()->split( '/:/', 2 );
+			$this->credentials = @preg_split( '/:/', @base64_decode( $this->params() ), 2 );
 		return $this->credentials;
 	}
 	
 	// TODO: Document!
 	public function username()
 	{
-		return $this->credentials()->first();
+		$credentials = $this->credentials();
+		return reset( $credentials );
 	}
 }
 
@@ -43,7 +44,7 @@ class Prack_Auth_Basic extends Prack_Auth_Abstract_Handler
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
 		$auth = new Prack_Auth_Basic_Request( $env );
 		
@@ -55,7 +56,7 @@ class Prack_Auth_Basic extends Prack_Auth_Abstract_Handler
 		
 		if ( $this->isValid( $auth ) )
 		{
-			$env->set( 'REMOTE_USER', $auth->username() );
+			$env[ 'REMOTE_USER' ] = $auth->username();
 			return $this->middleware_app->call( $env );
 		}
 		
@@ -65,12 +66,12 @@ class Prack_Auth_Basic extends Prack_Auth_Abstract_Handler
 	// TODO: Document!
 	public function isValid( $auth )
 	{
-		return call_user_func_array( $this->callback, $auth->credentials()->raw() );
+		return call_user_func_array( $this->callback, $auth->credentials() );
 	}
 	
 	// TODO: Document!
 	protected function challenge()
 	{
-		return Prb::Str( 'Basic realm="%s"' )->sprintf( $this->realm() );
+		return sprintf( 'Basic realm="%s"', $this->realm() );
 	}
 }

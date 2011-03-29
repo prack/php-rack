@@ -4,34 +4,33 @@
 class Prack_Auth_Digest_Request extends Prack_Auth_Abstract_Request
 {
 	private $nonce;
-	private $uri;
 	
 	// TODO: Document!
 	function __call( $method, $args )
 	{
 		if ( $this->params()->contains( $method ) )
 			return $this->params()->get( $method );
-		throw new RuntimeException( 'attempt to access missing key in Prack_Auth_Digest_MockRequest' );
+		throw new RuntimeException( "attempt to access missing key {$method} in Prack_Auth_Digest_Request" );
 	}
 	
 	// TODO: Document!
 	public function method()
 	{
-		return $this->env->contains( 'rack.methodoverride.original_method' )
-		 ? $this->env->get( 'rack.methodoverride.original_method' )
-		 : $this->env->get( 'REQUEST_METHOD'                      );
+		return @$this->env[ 'rack.methodoverride.original_method' ]
+		 ? $this->env[ 'rack.methodoverride.original_method' ]
+		 : $this->env[ 'REQUEST_METHOD' ];
 	}
 	
 	// TODO: Document!
 	public function isDigest()
 	{
-		return ( $this->scheme()->raw() == 'digest' );
+		return ( $this->scheme() == 'digest' );
 	}
 	
 	// TODO: Document!
 	public function isCorrectURI()
 	{
-		return ( $this->env->get( 'SCRIPT_NAME' )->concat( $this->env->get( 'PATH_INFO' ) )->raw() == $this->uri()->raw() );
+		return ( (string)@$this->env[ 'SCRIPT_NAME' ].(string)@$this->env[ 'PATH_INFO' ] ) == $this->uri();
 	}
 	
 	// TODO: Document!
@@ -46,9 +45,11 @@ class Prack_Auth_Digest_Request extends Prack_Auth_Abstract_Request
 	public function params()
 	{
 		if ( is_null( $this->params ) )
-			$this->params = Prack_Auth_Digest_Params::parse( $this->parts()->last() );
+		{
+			$parts = $this->parts();
+			$this->params = Prack_Auth_Digest_Params::parse( end( $parts ) );
+		}
+		
 		return $this->params;
 	}
-	
-	
 }
