@@ -1,34 +1,38 @@
-_This project is very much a work in progress. Feedback is welcome._
-
 Prack
 =====
 
-Prack is Ruby's Rack ported to PHP 5.2+, vetted against the ported Ruby specification (test suite).
+Prack is Ruby's Rack ported to PHP 5.2+, designed against Ruby Rack's own test suite.
+
+See Prack's [sandbox](http://github.com/prack/sandbox) for a demo! _Prack is very
+well tested and probably suited for your next project!_
 
 You can learn more about Rack on [its homepage](http://rack.rubyforge.org/ "Rack Homepage").
 The webserver interface specification upon which Rack and Prack are built is 
 [here](http://rack.rubyforge.org/doc/SPEC.html "Rack Specification").
 
-I'm doing my best to design all the callback functions to be future-proof.
-If you're running 5.3, you may be able to just drop in anonymous functions and enjoy
-the benefits of closures, but I can't guarantee anything.
-
-
 Dependencies
 ============
 
 Prack is built on top of a "Rubification" library called
-[php-ruby](http://github.com/prack/php-rb "Prb Homepage") ("Prb" for short).
+[php-ruby](http://github.com/prack/php-rb "Prb Homepage") ("Prb" for short). After a recent
+rework, Prack's dependence on Prb has been _dramatically_ reduced. Prack still makes heavy
+use of the following Prb functionality internally:
 
-For information on how to use it yourself, visit the above link. You may want to see
-phpunit.bootstrap.php file for an example of how to include Prb.
+* Time
+* Logger
+* IO
+
+But not so much of the other stuff anything else. This means that you don't need to know
+anything about Prb, except maybe its logger.
+
+Check out Prack's [sandbox](http://github.com/prack/sandbox) for info on the logger.
 
 
 Progress
 ========
 
-Working and Shippable
----------------------
+Fully-tested and Production Ready
+---------------------------------
 
 * <tt>Auth_Basic</tt>: basic (login/password) HTTP authentication
 * <tt>Auth_Digest</tt>: digest (md5-based) HTTP authentication
@@ -55,7 +59,7 @@ Working and Shippable
 * <tt>Utils_HeaderHash</tt>: case-insensitive, multiple-value supporting assoc array wrapper
 * <tt>Interfaces</tt>: MiddlewareApp
 
-Working perfectly, but not feature-complete
+Works perfectly, but Lacks a Feature or Two
 -------------------------------------------
 
 * <tt>Lint</tt>: Ensures response sanity. (pending</tt>: sessions)
@@ -66,13 +70,11 @@ Working perfectly, but not feature-complete
 Works, but isn't properly/entirely tested
 -----------------------------------------
 
-* <tt>ModPHP_Compat</tt>: jiggers <tt>$\_SERVER</tt> into an acceptable request environment for Prack
+* <tt>ModPHP_Compat</tt>: jiggers <tt>$\_SERVER</tt> into an acceptable request environment for Prack; renders response arrays
 
 To Do
 -----
 
-* (maybe) an MD5 implementation that doesn't require a whole string to be in-memory
-* Documentation on when Prack uses PHP primitives vs. Prb wrappers
 * Sessions
 * Cookies
 * Multipart-form-data processing
@@ -87,11 +89,10 @@ method names as descriptive and consistent as possible, so please check them
 out as documentation until the project matures a bit more.
 
 To run tests:
-<pre>
+
 	git clone https://github.com/prack/php-rack.git
 	cd Prack
 	phpunit
-</pre>
 
 Of course, you must have PHPUnit installed, preferably alongside XDebug. I'm using
 PHPUnit 3.5.
@@ -105,18 +106,18 @@ which is stupidly easy to implement:
 
 	interface Prack_I_MiddlewareApp
 	{
-		public function call( $env ); // $env is a Prb_Hash
+		public function call( &$env ); // $env is an array
 	}
 
-I put this interface in place for 5.2-compatibility, but when 5.3 is implemented,
-I will revisit whether to drop it so we can also include lambdas as first-class middleware apps.
+I put this interface in place for 5.2-compatibility, but when Prack is reworked for 5.3,
+this interface may be dropped for <tt>__invoke</tt> and straightup lambdas (like Rack).
 
-<tt>call</tt> MUST return a <tt>Prb_Array</tt> as its response with the following items, in this order</tt>:
+<tt>call</tt> MUST return an <tt>array</tt> as its response with the following items, in this order:
 
 <pre>
-1. Prb_Numeric                          (status)
-2. Prb_Hash                             (headers)
-3. Prb_I_Enumerable OR Prb_I_Stringlike (body)
+1. status  - integer
+2. headers - array
+3. body    - string, array of strings, or a Prb_I_Enumerable
 </pre>
 
 
@@ -129,19 +130,15 @@ Prack works exactly the same way, even in the environment variable names it uses
 Things I'm would love guidance on/help with
 ===========================================
 
-* The <tt>Prack_Lint</tt> implementation and tests is very... pragmatic. The outcome is the same as Rack's,
-but the code isn't pretty. If any awesome PHP coders could take a look, I'd be eternally grateful.
-* What about string encoding in PHP vs. Ruby? I'm not sure how to handle this, so I'm ignoring it
-on account of the fact that PHP strings have no intrinsic encoding. I'm assuming they'll just
-function as binaries.
-* Obviously, PHP runs in the context of the Apache web server. Prack may not be useful as a
-bootstrapping utility (a la Rack), or it may be, but the code structure benefits of a Rack-like
-approach are enough for me to think this should be useful.
-* Bridging to/from Ruby middleware. Hybrid stacks... possible?
+* String encoding in Ruby is very different from PHP. I'm not sure about all the ramifications
+of this.
+* PHP runs in the context of the Apache web server. Ruby is much more general-purpose than PHP,
+so Prack doesn't yet have a way to start up a server. This will probably involve a custom SAPI,
+which I totally don't want to write. In the context of Apache PHP, we can get there 80% of the
+way with a compatibility layer: currently, ModPHP_Compat.
 
 
 Acknowledgments
 ===============
 
-Thanks to the Ruby Rack team for all their hard work on Rack, and thanks to the Python folks
-who dreamed up WSGI. And thanks to Matz for making such an amazing language.
+Thanks to the Ruby Rack team for all their hard work on Rack.
