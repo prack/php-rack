@@ -23,48 +23,36 @@ class Prack_Static
 	private $path;
 	
 	// TODO: Document!
-	static function with( $middleware_app, $options = null )
+	static function with( $middleware_app, $options = array() )
 	{
 		return new Prack_Static( $middleware_app, $options );
 	}
 	
 	// TODO: Document!
-	function __construct( $middleware_app, $options = null )
+	function __construct( $middleware_app, $options = array() )
 	{
-		$options = is_null( $options ) ? Prb::Hsh() : $options;
-		if ( !( $options instanceof Prb_Hash ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $options not a Prb_Hash' );
-		
 		$this->middleware_app = $middleware_app;
-		$this->urls           = $options->contains( 'urls' )
-		  ? $options->delete( 'urls' )
-		  : Prb::Ary( array( Prb::Str( '/favicon.ico' ) ) );
-		
-		$root = $options->contains( 'root' )
-		  ? $options->delete( 'root' )
-		  : Prb::Str( getcwd() );
-		
-		$this->file_server = Prack_File::with( $root );
+		$this->urls           = @$options[ 'urls' ] ? $options[ 'urls' ] : array( '/favicon.ico' );
+		$this->file_server    = Prack_File::with( @$options[ 'root' ] ? $options[ 'root' ] : getcwd() );
 	}
 	
 	// TODO: Document!
-	public function call( $env )
+	public function call( &$env )
 	{
-		$this->path = $env->get( 'PATH_INFO' );
+		$this->path = (string)@$env[ 'PATH_INFO' ];
+		$can_serve  = false;
 		
-		$callback  = array( $this, 'onDetectAny' );
-		$can_serve = $this->urls->detectAny( $callback );
+		foreach( $this->urls as $url )
+		{
+			$quoted    = preg_quote( $url, '/' );
+			$can_serve = (bool)preg_match( "/^{$quoted}/", $this->path );
+			if ( $can_serve === true )
+				break;
+		}
 		
 		if ( $can_serve )
 			return $this->file_server->call( $env );
 		
 		return $this->middleware_app->call( $env );
-	}
-	
-	// TODO: Document!
-	public function onDetectAny( $item )
-	{
-		$quoted = preg_quote( $item->raw(), '/' );
-		return (bool)$this->path->match( "/^{$quoted}/" );
 	}
 }
