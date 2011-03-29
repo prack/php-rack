@@ -26,9 +26,7 @@ class Prack_Request
 			$attr        = $matches[ 2 ][ 0 ];
 			$attr_viable = ( isset( $attr ) && strlen( $attr ) > 0 );
 			
-			return Prb::Ary( array(
-				Prb::Str( $key ), (float)( $attr_viable ? $attr : 1.0 )
-			) );
+			return array( $key, (float)( $attr_viable ? $attr : 1.0 ) );
 		}
 		
 		throw new Prack_Exception_Request_AcceptEncodingInvalid();
@@ -44,10 +42,8 @@ class Prack_Request
 		
 		if ( is_null( $form_data_media_types ) )
 		{
-			$form_data_media_types = Prb::Ary( array(
-				Prb::Str( 'application/x-www-form-urlencoded' ),
-				Prb::Str( 'multipart/form-data'               )
-			) );
+			$form_data_media_types =
+			  array( 'application/x-www-form-urlencoded', 'multipart/form-data' );
 		}
 		
 		return $form_data_media_types;
@@ -63,10 +59,8 @@ class Prack_Request
 		
 		if ( is_null( $parseable_data_media_types ) )
 		{
-			$parseable_data_media_types = Prb::Ary( array(
-				Prb::Str( 'multipart/related' ),
-				Prb::Str( 'multipart/mixed'   )
-			) );
+			$parseable_data_media_types =
+			  array( 'multipart/related', 'multipart/mixed' );
 		}
 		
 		return $parseable_data_media_types;
@@ -84,18 +78,18 @@ class Prack_Request
 		$this->env = $env;
 	}
 	
-	public function contentLength()  { return $this->env->get( 'CONTENT_LENGTH'       ); }
-	public function contentType()    { return $this->env->get( 'CONTENT_TYPE'         ); }
-	public function body()           { return $this->env->get( 'rack.input'           ); }
-	public function scheme()         { return $this->env->get( 'rack.url_scheme'      ); }
-	public function scriptName()     { return $this->env->get( 'SCRIPT_NAME'          ); }
-	public function pathInfo()       { return $this->env->get( 'PATH_INFO'            ); }
-	public function port()           { return $this->env->get( 'SERVER_PORT'          ); }
-	public function requestMethod()  { return $this->env->get( 'REQUEST_METHOD'       ); }
-	public function queryString()    { return $this->env->get( 'QUERY_STRING'         ); }
-	public function logger()         { return $this->env->get( 'rack.logger'          ); }
-	// public function session()        { return $this->env->get( 'rack.session'         ); }
-	// public function sessionOptions() { return $this->env->get( 'rack.session.options' ); }
+	public function contentLength()  { return @$this->env[ 'CONTENT_LENGTH'  ]; }
+	public function contentType()    { return @$this->env[ 'CONTENT_TYPE'    ]; }
+	public function body()           { return @$this->env[ 'rack.input'      ]; }
+	public function scheme()         { return @$this->env[ 'rack.url_scheme' ]; }
+	public function scriptName()     { return @$this->env[ 'SCRIPT_NAME'     ]; }
+	public function pathInfo()       { return @$this->env[ 'PATH_INFO'       ]; }
+	public function port()           { return @$this->env[ 'SERVER_PORT'     ]; }
+	public function requestMethod()  { return @$this->env[ 'REQUEST_METHOD'  ]; }
+	public function queryString()    { return @$this->env[ 'QUERY_STRING'    ]; }
+	public function logger()         { return @$this->env[ 'rack.logger'     ]; }
+	// public function session()        { return $this->env[ 'rack.session'         ]; }
+	// public function sessionOptions() { return $this->env[ 'rack.session.options' ]; }
 	
 	// TODO: Document!
 	# The media type (type/subtype) portion of the CONTENT_TYPE header
@@ -110,8 +104,8 @@ class Prack_Request
 		if ( is_null( $content_type ) )
 			return null;
 		
-		$components = preg_split( '/\s*[;,]\s*/', $content_type->raw(), 2 );
-		return Prb::Str( strtolower( $components[ 0 ] ) );
+		$components = preg_split( '/\s*[;,]\s*/', $content_type, 2 );
+		return strtolower( $components[ 0 ] );
 	}
 	
 	// TODO: Document!
@@ -124,20 +118,17 @@ class Prack_Request
 	{
 		$content_type = $this->contentType();
 		if ( is_null( $content_type ) )
-			return Prb::Ary();
+			return array();
 		
-		$components = preg_split( '/\s*[;,]\s*/', $content_type->raw() );
+		$components = preg_split( '/\s*[;,]\s*/', $content_type );
 		array_shift( $components );  // Ditch the MIME type.
 		
 		$function   = create_function( '$s', '$split = preg_split( \'/=/\', $s, 2 ); return array( $split[0], $split[1] );' );
 		$components = array_map( $function, $components );
 		
-		$mediaTypeParams = Prb::Hsh();
+		$mediaTypeParams = array();
 		foreach ( $components as $component )
-			$mediaTypeParams->set(
-				strtolower( $component[ 0 ] ),
-				Prb::Str( $component[ 1 ] )
-			);
+			$mediaTypeParams[ strtolower( $component[ 0 ] ) ] = $component[ 1 ];
 		
 		return $mediaTypeParams;
 	}
@@ -149,89 +140,89 @@ class Prack_Request
 	# charset are to be considered ISO-8859-1.
 	public function contentCharset()
 	{
-		return $this->mediaTypeParams()->get( 'charset' );
+		$media_type_params = $this->mediaTypeParams();
+		return @$media_type_params[ 'charset' ];
 	}
 	
 	// TODO: Document!
 	public function hostWithPort()
 	{
-		if ( $forwarded = $this->env->get( 'HTTP_X_FORWARDED_HOST' ) )
+		if ( $forwarded = @$this->env[ 'HTTP_X_FORWARDED_HOST' ] )
 		{
-			$forwarded = preg_split( '/,\s?/', $forwarded->raw(), 2 );
-			return Prb::Str( end( $forwarded ) );
+			$forwarded = preg_split( '/,\s?/', $forwarded, 2 );
+			return end( $forwarded );
 		}
 		
-		if ( $this->env->contains( 'HTTP_HOST' ) )
-			return $this->env->get( 'HTTP_HOST' );
+		if ( @$this->env[ 'HTTP_HOST' ] )
+			return $this->env[ 'HTTP_HOST' ];
 		
-		if ( $this->env->contains( 'SERVER_NAME' ) ) 
-			return $this->env->get( 'SERVER_NAME' );
+		if ( @$this->env[ 'SERVER_NAME' ] )
+			return $this->env[ 'SERVER_NAME' ];
 		
-		$host = $this->env->contains( 'SERVER_ADDR' ) ? $this->env->get( 'SERVER_ADDR' )->raw()
-		                                              : '';
-		$port = $this->env->contains( 'SERVER_PORT' ) ? $this->env->get( 'SERVER_PORT' )->raw()
-		                                              : '';
-		return Prb::Str( "{$host}:{$port}" );
+		$host = (string)@$this->env[ 'SERVER_ADDR' ];
+		$port = (string)@$this->env[ 'SERVER_PORT' ];
+		
+		return "{$host}:{$port}";
 	}
 	
 	// TODO: Document!
 	public function host()
 	{
-		return Prb::Str( preg_replace( '/:\d+$/', '', $this->hostWithPort()->raw() ) );
+		return preg_replace( '/:\d+$/', '', $this->hostWithPort() );
 	}
 	
 	// TODO: Document!
 	public function setScriptName( $script_name )
 	{
-		$this->env->set( 'SCRIPT_NAME', $script_name );
+		$this->env[ 'SCRIPT_NAME' ] = $script_name;
 	}
 	
 	// TODO: Document!
 	public function setPathInfo( $path_info )
 	{
-		$this->env->set( 'PATH_INFO', $path_info );
+		$this->env[ 'PATH_INFO' ] = $path_info;
 	}
 	
 	// TODO: Document!
 	public function isDelete()
 	{
-		return ( $this->requestMethod()->raw() == 'DELETE' );
+		return ( $this->requestMethod() == 'DELETE' );
 	}
 	
 	// TODO: Document!
 	public function isGet()
 	{
-		return ( $this->requestMethod()->raw() == 'GET' );
+		return ( $this->requestMethod() == 'GET' );
 	}
 	
 	// TODO: Document!
 	public function isHead()
 	{
-		return ( $this->requestMethod()->raw() == 'HEAD' );
+		return ( $this->requestMethod() == 'HEAD' );
 	}
 	
 	// TODO: Document!
 	public function isOptions()
 	{
-		return ( $this->requestMethod()->raw() == 'OPTIONS' );
+		return ( $this->requestMethod() == 'OPTIONS' );
 	}
 	
 	// TODO: Document!
 	public function isPost()
 	{
-		return ( $this->requestMethod()->raw() == 'POST' );
+		return ( $this->requestMethod() == 'POST' );
 	}
 	
 	// TODO: Document!
 	public function isPut()
 	{
-		return ( $this->requestMethod()->raw() == 'PUT' );
+		return ( $this->requestMethod() == 'PUT' );
 	}
 	
 	// TODO: Document!
 	public function isTrace()
 	{
-		return ( $this->requestMethod()->raw() == 'TRACE' );
+		return ( $this->requestMethod() == 'TRACE' );
 	}
 	
 	// TODO: Document!
@@ -246,30 +237,34 @@ class Prack_Request
 	public function isFormData()
 	{
 		$type            = $this->mediaType();
-		$method_override = "rack.methodoverride.original_method";
-		$request_method  = $this->env->contains( $method_override ) ? $this->env->get( $method_override )
-		                                                            : $this->env->get( 'REQUEST_METHOD' );
-		return ( $request_method->raw() == 'POST' && 
-		         is_null( $type ) || self::formDataMediaTypes()->contains( $type ) );
+		$request_method  = @$this->env[ 'rack.methodoverride.original_method' ]
+		  ? $this->env[ 'rack.methodoverride.original_method' ]
+		  : $this->env[ 'REQUEST_METHOD' ];
+		
+		return ( $request_method == 'POST' && is_null( $type ) ) || in_array( $type, self::formDataMediaTypes() );
 	}
 	
 	// TODO: Document!
 	public function isParseableData()
 	{
-		return self::parseableDataMediaTypes()->contains( $this->mediaType() );
+		return in_array( $this->mediaType(), self::parseableDataMediaTypes() );
 	}
 	
 	// TODO: Document!
 	# Returns the data recieved in the query string.
-	public function GET()
+	public function &GET()
 	{
-		if ( $this->env->get( 'rack.request.query_string' ) == $this->queryString() )
-			return $this->env->get( 'rack.request.query_hash' );
+		if ( @$this->env[ 'rack.request.query_string' ] === $this->queryString() )
+		{
+			$return = &$this->env[ 'rack.request.query_hash' ];
+			return $return;
+		}
 		
-		$this->env->set( 'rack.request.query_string', $this->queryString() );
-		$this->env->set( 'rack.request.query_hash'  , $this->parseQuery( $this->queryString() ) );
+		$this->env[ 'rack.request.query_string' ] = $this->queryString();
+		$this->env[ 'rack.request.query_hash'   ] = $this->parseQuery( $this->queryString() );
 		
-		return $this->env->get( 'rack.request.query_hash' );
+		$return = &$this->env[ 'rack.request.query_hash' ];
+		return $return;
 	}
 	
 	// TODO: Document!
@@ -277,48 +272,53 @@ class Prack_Request
 	#
 	# This method support both application/x-www-form-urlencoded and
 	# multipart/form-data.
-	public function POST()
+	public function &POST()
 	{
-		if ( $this->env->get( 'rack.input' ) == null )
+		if ( !@$this->env[ 'rack.input' ] )
 			throw new Prack_Exception_Runtime_RackInputMissing( 'no rack.input when processing POST data' );
 			
-		else if ( $this->env->get( 'rack.request.form_input' ) == $this->env->get( 'rack.input' ) )
-			return $this->env->get( 'rack.request.form_hash' );
+		else if ( @$this->env[ 'rack.request.form_input' ] === $this->env[ 'rack.input' ] )
+		{
+			$return = &$this->env[ 'rack.request.form_hash' ];
+			return $return;
+		}
 		
 		else if ( $this->isFormData() || $this->isParseableData() )
 		{
-			$this->env->set( 'rack.request.form_input', $this->env->get( 'rack.input' ) );
+			$this->env[ 'rack.request.form_input' ] = $this->env[ 'rack.input' ];
 			
 			// FIXME: Implement multipart processing
-			// if ( ! ( $this->env->get( 'rack.request.form_hash' ) = $this->parseMultipart() ) )
+			// if ( ! ( $this->env[ 'rack.request.form_hash' ] = $this->parseMultipart() ) )
 			$multipart = false;
 			if ( $multipart )
 				die("FIXME: Implement multipart.");
 			else
 			{
-				// FIXME: Implement preg_replace on Prb_String
-				$form_vars = $this->env->get( 'rack.input' )->read();
-				$form_vars = Prb::Str( preg_replace( '/\0\z/', '', $form_vars->raw() ) );
+				$form_vars = $this->env[ 'rack.input' ]->read();
+				$form_vars = preg_replace( '/\0\z/', '', $form_vars );
 				
-				$this->env->set( 'rack.request.form_vars', $form_vars );
-				$this->env->set( 'rack.request.form_hash', $this->parseQuery( $form_vars ) );
-				$this->env->get( 'rack.input' )->rewind();
+				$this->env[ 'rack.request.form_vars' ] = $form_vars;
+				$this->env[ 'rack.request.form_hash' ] = $this->parseQuery( $form_vars );
+				$this->env[ 'rack.input' ]->rewind();
 			}
-			return $this->env->get( 'rack.request.form_hash' );
+			
+			$return = &$this->env[ 'rack.request.form_hash' ];
+			return $return;
 		}
 		
-		return Prb::Hsh();
+		$return = array();
+		return $return;
 	}
 	
 	// TODO: Document!
 	# The union of GET and POST data.
-	public function params()
+	public function &params()
 	{
 		try
 		{
-			$get  = $this->GET();
-			$post = $this->POST();
-			return $get->update( $post );;
+			$get = &$this->GET();
+			$get = array_merge( $get, $this->POST() );
+			return $get;
 		}
 		catch ( Prack_Error_EOF $e1 )
 		{
@@ -329,27 +329,35 @@ class Prack_Request
 	// TODO: Document!
 	public function getParam( $k )
 	{
-		return $this->params()->get( $k );
+		$params = $this->params();
+		return $params[ $k ];
 	}
 	
 	// TODO: Document!
 	public function setParam( $k, $v )
 	{
-		$this->params()->set( (string)$k, $v );
+		$params = &$this->params();
+		$params[ (string)$k ] = $v;
 	}
 	
 	// TODO: Document!
 	public function valuesAt()
 	{
-		$keys = func_get_args();
-		return call_user_func_array( array( $this->params(), 'valuesAt' ), $keys );
+		$keys   = func_get_args();
+		$params = &$this->params();
+		
+		$values = array();
+		foreach ( $keys as $key )
+			array_push( $values, @$params[ $key ] );
+		
+		return $values;
 	}
 	
 	// TODO: Document!
 	# the referer of the client or '/'
 	public function referer()
 	{
-		return $this->env->contains( 'HTTP_REFERER' ) ? $this->env->get( 'HTTP_REFERER' ) : Prb::Str( '/' );
+		return ( @$this->env[ 'HTTP_REFERER' ] ) ? $this->env[ 'HTTP_REFERER' ] : '/';
 	}
 	
 	// TODO: Document!
@@ -361,34 +369,33 @@ class Prack_Request
 	// TODO: Document!
 	public function userAgent()
 	{
-		return $this->env->contains( 'HTTP_USER_AGENT' ) ? $this->env->get( 'HTTP_USER_AGENT' ) : null;
+		return ( @$this->env[ 'HTTP_USER_AGENT' ] ) ? $this->env[ 'HTTP_USER_AGENT' ] : null;
 	}
 	
 	// TODO: Document!
 	public function cookies()
 	{
-		if ( !$this->env->contains( 'HTTP_COOKIE' ) )
-			return Prb::Ary();
+		if ( !@$this->env[ 'HTTP_COOKIE' ] )
+			return array();
 
-		if ( ( $cookie_string = $this->env->get( 'rack.request.cookie_string' ) ) && 
-		     $cookie_string == $this->env->get( 'HTTP_COOKIE' ) )
-			return $this->env->get( 'rack.request.cookie_hash' );
+		if ( @$this->env[ 'rack.request.cookie_string' ] && $this->env[ 'rack.request.cookie_string' ] === $this->env[ 'HTTP_COOKIE' ] )
+			return @$this->env[ 'rack.request.cookie_hash' ];
 		else
 		{
-			$cookie_string = $this->env->get( 'HTTP_COOKIE' );
-			$cookie        = http_parse_cookie( $cookie_string->raw() ); // FIXME: Implement cookie parsing.
+			$cookie_string = $this->env[ 'HTTP_COOKIE' ];
+			$cookie        = http_parse_cookie( $cookie_string ); // FIXME: Implement cookie parsing.
 			
-			$this->env->set( 'rack.request.cookie_string', $cookie_string  );
-			$this->env->set( 'rack.request.cookie_hash',   $cookie->cookies );
+			$this->env[ 'rack.request.cookie_string' ] = $cookie_string;
+			$this->env[ 'rack.request.cookie_hash'   ] = $cookie->cookies;
 		}
 		
-		return $this->env->get( 'rack.request.cookie_hash' );
+		return @$this->env[ 'rack.request.cookie_hash' ];
 	}
 	
 	// TODO: Document!
 	public function isXhr()
 	{
-		return ( ( $xhr = $this->env->get( 'HTTP_X_REQUESTED_WITH' ) ) && $xhr->raw() == 'XMLHttpRequest' );
+		return ( @$this->env[ 'HTTP_X_REQUESTED_WITH' ] && $this->env[ 'HTTP_X_REQUESTED_WITH' ] === 'XMLHttpRequest' );
 	}
 	
 	// TODO: Document!
@@ -396,70 +403,69 @@ class Prack_Request
 	public function url()
 	{
 		$scheme = $this->scheme();
-		$port   = (int)( $this->port()->raw() );
+		$port   = (int)( $this->port() );
 		
-		$url  = $scheme->raw().'://';
-		$url .= $this->host()->raw();
+		$url  = $scheme.'://';
+		$url .= $this->host();
 		
-		if ( ( $scheme->raw() == 'https' && $port != 443 ) ||
-		     ( $scheme->raw() == 'http'  && $port != 80  )    )
+		if ( ( $scheme == 'https' && $port != 443 ) ||
+		     ( $scheme == 'http'  && $port != 80  )    )
 			$url .= ':'.$port;
 			
-		$url .= $this->fullpath()->raw();
+		$url .= $this->fullpath();
 		
-		return Prb::Str( $url );
+		return $url;
 	}
 	
 	// TODO: Document!
 	public function path()
 	{
-		return Prb::Str( $this->scriptName()->raw().$this->pathInfo()->raw() );
+		return $this->scriptName().$this->pathInfo();
 	}
 	
 	// TODO: Document!
 	public function fullpath()
 	{
-		$query_string = $this->queryString()->raw();
+		$query_string = $this->queryString();
 		if ( empty( $query_string ) )
 			return $this->path();
 		
-		return Prb::Str( $this->path()->raw().'?'.$this->queryString()->raw() );
+		return $this->path().'?'.$this->queryString();
 	}
 	
 	// TODO: Document!
 	public function acceptEncoding()
 	{
-		$accept_encoding = $this->env->contains( 'HTTP_ACCEPT_ENCODING' ) ? $this->env->get( 'HTTP_ACCEPT_ENCODING' )
-		                                                                  : Prb::Str();
+		$accept_encoding = (string)@$this->env[ 'HTTP_ACCEPT_ENCODING' ];
 		
 		// If there are no matches, preg_split returns an array with one empty string.
 		// This is absolutely fucking stupid, but hey.
-		$raw = preg_split( '/,\s*/', (string)$accept_encoding->raw() );
-		if ( $raw == array( '' ) )
-			return Prb::Ary();
+		$candidates = preg_split( '/,\s*/', $accept_encoding );
+		if ( $candidates == array( '' ) )
+			return array();
 			
-		$candidates = Prb::Ary( $raw );
-		$callback   = array( 'Prack_Request', 'processAcceptEncodingCandidate' );
+		static $callback = null;
+		if ( is_null( $callback ) )
+			$callback = array( 'Prack_Request', 'processAcceptEncodingCandidate' );
 		
-		return $candidates->collect( $callback );
+		return array_map( $callback, $candidates );
 	}
 	
 	// TODO: Document!
 	public function ip()
 	{
-		if ( $address = $this->env->get( 'HTTP_X_FORWARDED_FOR' ) )
+		if ( $address = @$this->env[ 'HTTP_X_FORWARDED_FOR' ] )
 		{
-			$address = explode( ',', $address->raw() );
-			$address = preg_grep( '/\d\./', $address ); // FIXME: Implement grep on array wrapper
-			return isset( $address ) ? Prb::Str( reset( $address ) )
-			                         : Prb::Str( trim( $this->env->get( 'REMOTE_ADDR' )->raw() ) ); // FIXME Implement chomp/trim on String
+			$address = explode( ',', $address );
+			$address = preg_grep( '/\d\./', $address );
+			return isset( $address ) ? reset( $address ) : trim( (string)@$this->env[ 'REMOTE_ADDR' ] );
 		}
 		
-		return $this->env->get( 'REMOTE_ADDR' );
+		return @$this->env[ 'REMOTE_ADDR' ];
 	}
 	
 	// TODO: Document!
-	public function getEnv()
+	public function &getEnv()
 	{
 		return $this->env;
 	}
