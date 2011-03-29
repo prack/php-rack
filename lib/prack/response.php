@@ -19,7 +19,7 @@ class Prack_Response
 	const DELEGATE = 'Prack_DelegateFor_Response';
 	
 	private $status;
-	private $headers;
+	private $header;
 	private $callback;
 	private $after_finish;
 	private $length;
@@ -31,47 +31,41 @@ class Prack_Response
 		static $default_headers = null;
 		
 		if ( is_null( $default_headers ) )
-			$default_headers = Prb::Hsh( 
-				array( 'Content-Type' => Prb::Str( 'text/html' )
-			) );
+			$default_headers = array( 'Content-Type' => 'text/html' );
 		
 		return $default_headers;
 	}
 	
 	// TODO: Document!
-	static function with( $body = null, $status = null, $headers = null, $on_build = null )
+	static function with( $body = array(), $status = 200, $headers = array(), $on_build = null )
 	{
 		return new Prack_Response( $body, $status, $headers, $on_build );
 	}
 	
 	// TODO: Document!
-	function __construct( $body = null, $status = null, $headers = null, $on_build = null )
+	function __construct( $body = array(), $status = 200, $headers = array(), $on_build = null )
 	{
-		$body = is_null( $body ) ? Prb::Ary() : $body;
-		if ( !( $body instanceof Prb_I_Stringlike ) && !( $body instanceof Prb_I_Enumerable ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $body must be Prb_I_Stringlike or Prb_I_Enumerable' );
+		if ( !is_string( $body ) && !is_array( $body ) && !( $body instanceof Prb_I_Enumerable ) )
+			throw new Prb_Exception_Type( 'FAILSAFE: __construct $body must be either string or array of items castable to string' );
 		
-		$status = is_null( $status ) ? Prb::Num( 200 ) : $status->toN();
-		if ( !( $status instanceof Prb_Numeric ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $status must be Prb_Numeric' );
-		
-		$headers = is_null( $headers ) ? self::defaultHeaders() : $headers;
-		if ( !( $headers instanceof Prb_Hash ) )
-			throw new Prb_Exception_Type( 'FAILSAFE: __construct $headers an instance of Prb_Hash' );
+		$status  = (int)$status;
+		$headers = $headers ? (array)$headers : array();
 		
 		$this->status       = $status;
-		$this->header       = new Prack_Utils_HeaderHash( self::defaultHeaders()->merge( $headers ) );
+		$this->header       = new Prack_Utils_HeaderHash( array_merge( self::defaultHeaders(), $headers ) );
 		$this->writer       = array( $this, 'onWrite' );
 		$this->callback     = null;
 		$this->after_finish = null;
 		$this->length       = 0;
-		$this->body         = Prb::Ary();
+		$this->body         = array();
 		
 		// Wrap the body if applicable so it has an interface.
-		if ( $body instanceof Prb_I_Stringlike )
-			$this->write( $body->toS() );
+		if ( is_string( $body ) )
+			$this->write( $body );
+		else if ( is_array( $body ) )
+			array_walk( $body, $this->writer );
 		else if ( $body instanceof Prb_I_Enumerable )
-			$body->each( $this->writer );
+			$body->each( array( $this, 'write' ) );
 		
 		if ( is_callable( $on_build ) )
 			call_user_func( $on_build, $this );
@@ -91,7 +85,7 @@ class Prack_Response
 	
 	public function onWrite( $addition )
 	{
-		return $this->body->push( $addition );
+		array_push( $this->body, $addition );
 	}
 	
 	// TODO: Document!
@@ -99,9 +93,9 @@ class Prack_Response
 	# NOTE: Do not mix #write and direct #body access!
 	public function write( $buffer )
 	{
-		$this->length += $buffer->length();
+		$this->length += strlen( $buffer );
 		call_user_func( $this->writer, $buffer );
-		$this->set( 'Content-Length', Prb::Str( (string)$this->length ) );
+		$this->set( 'Content-Length', (string)$this->length );
 		return $buffer;
 	}
 	
@@ -135,14 +129,10 @@ class Prack_Response
 	// TODO: Document!
 	public function redirect( $target, $status = null )
 	{
-		if ( !( $target instanceof Prb_I_Stringlike ) )
-			throw new Prb_Exception_Type( 'redirect $target must be Prack_I_Stringable' );
+		$target = (string)$target;
+		$status = is_null( $status ) ? 302 : (int)$status;
 		
-		$status = is_null( $status ) ? Prb::Num( 302 ) : $status;
-		if ( !( $status instanceof Prb_Numeric ) )
-			throw new Prb_Exception_Type( 'redirect $status must be Prb_Numeric' );
-		
-		$this->set( 'Location', $target->toS() );
+		$this->set( 'Location', $target );
 		$this->status = $status;
 	}
 	
@@ -151,29 +141,19 @@ class Prack_Response
 	{
 		$this->callback = $callback;
 		
-		if ( in_array( (int)$this->status->raw(), array( 204, 304 ) ) )
+		if ( in_array( (int)$this->status, array( 204, 304 ) ) )
 		{
 			$this->header->delete( 'Content-Type' );
-			return Prb::Ary( array(
-			  $this->status,
-			  $this->header->toHash(),
-			  Prb::Ary()
-			) );
+			return array( $this->status, $this->header->raw(), array() );
 		}
 		
-		return Prb::Ary( array( $this->status, $this->header->toHash(), $this ) );
-	}
-	
-	// TODO: Document!
-	public function toA() 
-	{
-		return $this->finish();
+		return array( $this->status, $this->header->raw(), $this );
 	}
 	
 	// TODO: Document!
 	public function raw()
 	{
-		return $this->toA()->raw();
+		return $this->finish();
 	}
 	
 	// TODO: Document!
@@ -181,8 +161,9 @@ class Prack_Response
 	{
 		if ( !is_callable( $callback ) )
 			throw new Prb_Exception_Callback();
-			
-		$this->body->each( $callback );
+		
+		array_walk( $this->body, $callback );
+		
 		$this->writer = $callback;
 		
 		if ( is_callable( $this->callback ) )
@@ -199,7 +180,7 @@ class Prack_Response
 	// TODO: Document!
 	public function isEmpty()
 	{
-		return ( $this->callback == null && $this->body->isEmpty() );
+		return ( $this->callback == null && empty( $this->body ) );
 	}
 	
 	// TODO: Document!
