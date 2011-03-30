@@ -63,6 +63,7 @@ Fully-tested and Production Ready
 Works perfectly, but Lacks a Feature or Two
 -------------------------------------------
 
+* <tt>Directory</tt>: directory listing of a filepath (pending: symbolic links)
 * <tt>Lint</tt>: Ensures response sanity. (pending</tt>: sessions)
 * <tt>Request</tt>: Actual request (pending</tt>: multipart form data)
 * <tt>Response</tt>: Actual response, delegates some methods (pending</tt>: cookie management)

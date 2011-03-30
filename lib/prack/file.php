@@ -30,12 +30,14 @@ class Prack_File
 	// TODO: Document!
 	public function _call( &$env )
 	{
-		$this->path_info = Prack_Utils::singleton()->unescape( (string)@$env[ 'PATH_INFO' ] );
+		$this->path_info = Prack_Utils::singleton()->unescape( $env[ 'PATH_INFO' ] );
 		
-		if ( is_integer( strpos( $this->path_info, '..' ) ) )
+		if ( strpos( $this->path_info, '..' ) !== false )
 			return $this->forbidden();
 		
-		$this->path = join( '', array( $this->root, $this->path_info ) );
+		$joined     = join( DIRECTORY_SEPARATOR, array( $this->root, $this->path_info ) );
+		$ds         = preg_quote( DIRECTORY_SEPARATOR, '/' );
+		$this->path = preg_replace( "/{$ds}+/", DIRECTORY_SEPARATOR, $joined );
 		
 		try
 		{
