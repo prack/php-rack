@@ -51,6 +51,7 @@ Fully-tested and Production Ready
 * <tt>Mime</tt>: a default and configurable set of MIME types
 * <tt>Mock_Request</tt>: fake requests for testing
 * <tt>Mock_Response</tt>: fake responses for testing, delegates some methods
+* <tt>NullLogger</tt>: no-op logger. eats log messages.
 * <tt>RewindableInput</tt>: adds rewindability to any stream
 * <tt>Runtime</tt>: records the runtime of a partial or full stack of middleware apps
 * <tt>ShowExceptions</tt>: catches uncaught exceptions and show them as pretty HTML with context
