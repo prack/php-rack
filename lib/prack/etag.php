@@ -31,7 +31,7 @@ class Prack_ETag
 			$response->set( 'ETag', "\"$digest\"" );
 		}
 		
-		return $response->raw();
+		return $response->finish();
 	}
 	
 	// TODO: Document!

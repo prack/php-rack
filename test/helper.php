@@ -20,7 +20,7 @@ class Prack_Test_EnvSerializer
 		$status  = @$get_params[ 'status' ] ? $get_params[ 'status' ] : 200;
 		$headers = array( 'Content-Type' => 'text/yaml' );
 		
-		return Prack_Response::with( $body, $status, $headers )->raw();
+		return Prack_Response::with( $body, $status, $headers )->finish();
 	}
 }
 
