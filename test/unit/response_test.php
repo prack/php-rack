@@ -60,7 +60,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$response = new Prack_Response();
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->finish();
 		
 		$this->assertEquals( 200, $status );
 		$this->assertEquals( array( 'Content-Type' => 'text/html' ), $headers );
@@ -87,7 +87,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$response->write( 'baz' );
 		$response->finish();
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->finish();
 		
 		$this->parts = array();
 		$body->each( array( $this, 'addToParts' ) );
@@ -250,14 +250,14 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$response = new Prack_Response();
 		$response->redirect( '/foo' );
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->finish();
 		
 		$this->assertEquals( 302, $status );
 		$this->assertEquals( '/foo', $response->get( 'Location' ) );
 		
 		$response = new Prack_Response();
 		$response->redirect( '/foo', 307 );
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->finish();
 		
 		$this->assertEquals( 307, $status );
 	} // It can do redirects
@@ -272,21 +272,21 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$callback = array( $this, 'addToBuffer' );
 		
 		$response = new Prack_Response( 'foo' );
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->finish();
 		$this->buffer = '';
 		$body->each( $callback );
 		$this->assertEquals( 'foo', $this->buffer );
 		
 		$response = new Prack_Response( array( 'foo', 'bar' ) );
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->finish();
 		$this->buffer = '';
 		$body->each( $callback );
 		$this->assertEquals( 'foobar', $this->buffer );
 		
 		$response = Prack_Response::with( new Prack_ResponseTest_Iterator( array( 'foo', 'bar' ) ) );
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->finish();
 		$this->buffer = '';
 		
 		$body->each( $callback );
@@ -309,7 +309,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 		$callback = array( $this, 'configureResponse' );
 		$response = Prack_Response::with( array(), 200, array(), $callback );
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->finish();
 		
 		$callback = array( $this, 'addToBuffer' );
 		$this->buffer = '';
@@ -337,7 +337,7 @@ class Prack_ResponseTest extends PHPUnit_Framework_TestCase
 	{
 		$response = new Prack_Response( array( 'foo', 'bar' ), 204 );
 		
-		list( $status, $headers, $body ) = $response->raw();
+		list( $status, $headers, $body ) = $response->finish();
 		
 		$this->buffer = '';
 		array_walk( $body, array( $this, 'addToBuffer' ) );

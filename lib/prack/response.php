@@ -63,7 +63,7 @@ class Prack_Response
 		if ( is_string( $body ) )
 			$this->write( $body );
 		else if ( is_array( $body ) )
-			array_walk( $body, $this->writer );
+			array_walk( $body, array( $this, 'write' ) );
 		else if ( $body instanceof Prb_I_Enumerable )
 			$body->each( array( $this, 'write' ) );
 		
@@ -148,12 +148,6 @@ class Prack_Response
 		}
 		
 		return array( $this->status, $this->header->raw(), $this );
-	}
-	
-	// TODO: Document!
-	public function raw()
-	{
-		return $this->finish();
 	}
 	
 	// TODO: Document!
