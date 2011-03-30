@@ -17,39 +17,24 @@ class Prack_ModPHP_Compat
 	// TODO: Document!
 	public function extractEnv( $server )
 	{
-		$env = Prb::Hsh();
-		
+		$env = array();
 		foreach ( $server as $variable => $value )
-			$env->set( $variable, Prb::Str( $value ) );
+			$env[ $variable ] = $value;
 		
 		// Undoing PHP's stupid auto-processing of credentials.
-		$auth_user = $env->delete( 'PHP_AUTH_USER' );
-		$auth_pass = $env->delete( 'PHP_AUTH_PW'   );
+		$auth_user = @$env[ 'PHP_AUTH_USER' ];
+		$auth_pass = @$env[ 'PHP_AUTH_PW'   ];
 		if ( $auth_user && $auth_pass )
-		{
-			$env->set(
-			  'X_HTTP_AUTHORIZATION',
-			  Prb::Str( 'Basic ' )->concat(
-			    Prb::Ary( array(
-			      $auth_user, $auth_pass
-			    ) )->join( Prb::Str( ':' ) )->base64Encode()
-			  )
-			);
-		}
+			$env[ 'HTTP_AUTHORIZATION' ] = 'Basic '.base64_encode( $auth_user.':'.$auth_pass );
 		
-		$env->set( 'rack.version',      Prack::version()                                     );
-		$env->set( 'rack.input',        Prb_IO::withStream( fopen( 'php://stdin',  'r+b' ) ) );
-		$env->set( 'rack.errors',       Prb_IO::withStream( fopen( 'php://stderr', 'w+b' ) ) );
-		$env->set( 'rack.multithread',  Prb::Num( 0 )                                        );
-		$env->set( 'rack.multiprocess', Prb::Num( 1 )                                        );
-		$env->set( 'rack.run_once',     Prb::Num( 1 )                                        );
-		
-		$env->set( 'SCRIPT_NAME', Prb::Str() );
-		$env->set( 'PATH_INFO',
-		  isset( $server[ 'REDIRECT_X_PRACK_PATHINFO' ] )
-		    ? Prb::Str( $server[ 'REDIRECT_X_PRACK_PATHINFO' ] )
-		    : Prb::Str( '/' )
-		);
+		$env[ 'rack.version'       ] = Prack::version();
+		$env[ 'rack.input'         ] = Prb_IO::withStream( fopen( 'php://stdin',  'r+b' ) );
+		$env[ 'rack.errors'        ] = Prb_IO::withStream( fopen( 'php://stderr', 'w+b' ) );
+		$env[ 'rack.multithread'   ] = 0;
+		$env[ 'rack.multiprocess'  ] = 1;
+		$env[ 'rack.run_once'      ] = 1;
+		$env[ 'SCRIPT_NAME'        ] = '';
+		$env[ 'PATH_INFO'          ] = @$server[ 'REDIRECT_X_PRACK_PATHINFO' ] ? $server[ 'REDIRECT_X_PRACK_PATHINFO' ] : '/';
 		
 		return $env;
 	}
@@ -57,27 +42,31 @@ class Prack_ModPHP_Compat
 	// TODO: Document!
 	public function render( $response )
 	{
-		list( $status, $headers, $body ) = $response->toA()->raw();
+		list( $status, $headers, $body ) = $response;
 		
 		// Send the status header.
-		header( 'x', null, $status->raw() );
+		header( 'x', null, (int)$status );
 		
 		// Send other headers.
-		foreach ( $headers->toHash()->raw() as $header => $value )
-			header( "{$header}:{$value->raw()}", false );
+		foreach ( $headers as $header => $value )
+			header( "{$header}:{$value}", false );
 		
 		$callback = array( $this, 'onRender' );
 		
-		if ( $body instanceof Prb_I_Stringlike )
-			$body = Prb::Ary( array( $body->toS() ) );
-		
-		$body->each( $callback );
-	}
-	
-	// TODO: Document!
-	public function onRender( $body_part )
-	{
-		echo $body_part->raw();
+		if ( is_string( $body ) )
+			$body = array( $body );
+		else if ( $body instanceof Prb_I_Enumerable )
+		{
+			static $callback = null;
+			if ( is_null( $callback ) )
+				$callback = create_function( '$part', 'echo $part;' );
+			$body->each( $callback );
+		}
+		else if ( is_array( $body ) )
+		{
+			foreach( $body as $part )
+				echo $part;
+		}
 	}
 }
 /*
