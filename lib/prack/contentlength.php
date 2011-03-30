@@ -22,14 +22,13 @@ class Prack_ContentLength
 	public function call( &$env )
 	{
 		list( $status, $headers, $body ) = $this->middleware_app->call( $env );
-		$headers = Prack_Utils_HeaderHash::using( $headers );
 		
+		$header_hash = Prack_Utils_HeaderHash::using( $headers );
 		if ( !in_array( $status, Prack_Utils::singleton()->statusWithNoEntityBody() ) &&
-		     !@$headers->contains( 'Content-Length' ) && !$headers->contains( 'Transfer-Encoding' )
-		     && ( is_string( $body ) || is_array( $body ) || $body instanceof Prb_I_Enumerable ) )
+		     !$header_hash->contains( 'Content-Length' ) && !$header_hash->contains( 'Transfer-Encoding' )
+		     && ( is_string( $body ) || is_array( $body ) || $body instanceof Prb_Enumerable ) )
 		{
-			if ( is_string( $body ) )
-				$body = array( $body );
+			$response = Prack_Response::with( $body, $status, $headers );
 			
 			static $callback = null;
 			if ( is_null( $callback ) )
@@ -39,17 +38,14 @@ class Prack_ContentLength
 			  );
 			
 			$accumulator = 0;
-			if ( $body instanceof Prb_I_Enumerable )
-				$length = $body->toAry()->inject( 0, $callback );
-			else
-			{
-				$accumulator = 0;
-				foreach ( $body as $part )
-					$accumulator = call_user_func( $callback, $accumulator, $part );
-			}
-			$headers->set( 'Content-Length', (string)$accumulator );
+			foreach ( $response->getBody() as $part )
+				$accumulator = call_user_func( $callback, $accumulator, $part );
+			
+			$response->set( 'Content-Length', (string)$accumulator );
+			
+			list( $status, $headers, $body ) = $response->finish();
 		}
 		
-		return array( $status, $headers->raw(), $body );
+		return array( $status, $headers, $body );
 	}
 }

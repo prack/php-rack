@@ -1,6 +1,25 @@
 <?php
 
 // TODO: Document!
+class Prack_ContentLengthTest_VariableLength
+  implements Prb_I_Enumerable
+{
+	private $function;
+	
+	// TODO: Document!
+	public function __construct( $function )
+	{
+		$this->function = $function;
+	}
+	
+	// TODO: Document!
+	public function each( $callback )
+	{
+		call_user_func( $this->function, $callback );
+	}
+}
+
+// TODO: Document!
 class Prack_ContentLengthTest extends PHPUnit_Framework_TestCase 
 {
 	/**
@@ -36,9 +55,13 @@ class Prack_ContentLengthTest extends PHPUnit_Framework_TestCase
 	 */
 	public function It_should_not_set_Content_Length_on_variable_length_bodies()
 	{
-		$middleware_app = new Prack_Test_Echo( 200, array( 'Content-Type' => 'text/plain' ), new stdClass() );
+		$function       = create_function( '', 'return "Hello World";' );
+		$body           = new Prack_ContentLengthTest_VariableLength( $function );
+		$middleware_app = new Prack_Test_Echo( 200, array( 'Content-Type' => 'text/plain' ), $body );
+		
 		$env = array();
 		$response = Prack_ContentLength::with( $middleware_app )->call( $env );
+		
 		$this->assertNull( @$response[ 1 ][ 'Content-Length' ] );
 	} // It should not set Content-Length on variable length bodies
 	
