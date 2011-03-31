@@ -71,6 +71,13 @@ Prack_ContentType
  [x] It should not change Content Type if it is already set
  [x] It should detect Content Type case insensitive
 
+Prack_Directory
+ [x] It should serve directory indices
+ [x] It should pass to app if file found
+ [x] It should serve uri with URL encoded filenames
+ [x] It should not allow directory traversal
+ [x] It should 404 if it can t find the file
+
 Prack_ETag
  [x] It should set ETag if none is set
  [x] It should not change ETag if it is already set
@@ -136,9 +143,6 @@ Prack_Mock_Request
  [x] It should accept raw input in params for POST requests
  [ ] It should accept params and build multipart encoded params for POST requests
  [x] It should behave valid according to the Rack spec
- [x] It should throw an exception if uri is not a Prb String
- [x] It should throw an exception if options is not a Prb Hash
- [x] It should throw an exception if rack input is neither Prb I Stringlike nor Prb I ReadableStreamlike
 
 Prack_Mock_Response
  [x] It should provide access to the HTTP status
@@ -148,8 +152,11 @@ Prack_Mock_Response
  [x] It should optionally make Rack errors fatal
  [x] It should optionally make Rack errors fatal  part 2 
  [x] It should throw an exception when an unknown method is called  on account of delegation
- [x] It should throw an exception if body is neither a Prb I Stringlike or Prb I Enumerable
- [x] It should throw an exception if headers is not a Prb Hash
+ [x] It should throw an exception if body is neither string nor array nor Prb I Enumerable
+ [x] It should throw an exception if headers is not an array
+
+Prack_NullLogger
+ [x] It should act as a noop logger
 
 Prack_Request
  [x] It should wrap the rack variables
@@ -166,7 +173,6 @@ Prack_Request
  [x] It should set value to key on params with setParam
  [x] It should return values for the keys in the order given from valuesAt
  [x] It should extract referrer correctly
- [x] It should alias referer to referrer
  [x] It should extract user agent correctly
  [x] It should cache  but invalidates the cache
  [x] It should figure out if called via XHR
@@ -249,7 +255,6 @@ Prack_Utils_HeaderHash
  [x] It should check existence of keys case insensitively
  [x] It should merge case insensitively
  [x] It should overwrite case insensitively and assume the new key s case
- [x] It should be converted to real Prb Hash
  [x] It should convert values to Prb String when converting to Prb Hash
  [x] It should replace correctly
  [x] It should be able to delete the given key case sensitively
@@ -257,8 +262,6 @@ Prack_Utils_HeaderHash
  [x] It should return null when delete is called on a non existant key
  [x] It should avoid unnecessary object creation if possible
  [x] It should create an object with an array otherwise
- [ ] It should distill values when responding to each
- [x] It should alias hasKey and isMember to contains
 
 Prack_Utils
  [x] It should escape correctly
