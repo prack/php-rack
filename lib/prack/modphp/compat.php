@@ -34,7 +34,7 @@ class Prack_ModPHP_Compat
 		$env[ 'rack.multiprocess'  ] = 1;
 		$env[ 'rack.run_once'      ] = 1;
 		$env[ 'SCRIPT_NAME'        ] = '';
-		$env[ 'PATH_INFO'          ] = @$server[ 'REDIRECT_X_PRACK_PATHINFO' ] ? $server[ 'REDIRECT_X_PRACK_PATHINFO' ] : '/';
+		$env[ 'PATH_INFO'          ] = @$server[ 'REDIRECT_URL' ] ? $server[ 'REDIRECT_URL' ] : '/';
 		
 		return $env;
 	}
