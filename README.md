@@ -3,7 +3,7 @@ Prack
 
 Prack is Ruby's Rack ported to PHP 5.2+, designed against Ruby Rack's own test suite.
 
-See Prack's [sandbox](http://github.com/prack/sandbox) for a demo! _Prack is very
+See Prack's [livesite](http://github.com/prack/livesite) for a demo! _Prack is very
 well tested and probably suited for your next project!_
 
 You can learn more about Rack on [its homepage](http://rack.rubyforge.org/ "Rack Homepage").
@@ -25,7 +25,7 @@ use of the following Prb functionality internally:
 But not so much of the other stuff anything else. This means that you don't need to know
 anything about Prb, except maybe its logger.
 
-Check out Prack's [sandbox](http://github.com/prack/sandbox) for info on the logger.
+Check out Prack's [livesite](http://github.com/prack/livesite) for info on the logger.
 
 
 Progress
@@ -123,7 +123,7 @@ this interface may be dropped for <tt>__invoke</tt> and straightup lambdas (like
 </pre>
 
 
-See Prack's [sandbox](http://github.com/prack/sandbox) for a working demo app!
+See Prack's [livesite](http://github.com/prack/livesite) for a working demo app!
 
 If all this confuses you, grok the [Rack spec](http://rack.rubyforge.org/doc/SPEC.html "Rack Interface Specification").
 Prack works exactly the same way, even in the environment variable names it uses.
