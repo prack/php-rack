@@ -35,7 +35,7 @@
     div.context ol {
         padding-left:30px; margin:0 10px; list-style-position: inside; }
     div.context ol li {
-        font-family:monospace; white-space:pre; color:#666; cursor:pointer; }
+        font-family:monospace; color:#666; cursor:pointer; }
     div.context ol.context-line li { color:black; background-color:#ccc; }
     div.context ol.context-line li span { float: right; }
     div.commands { margin-left: 40px; }

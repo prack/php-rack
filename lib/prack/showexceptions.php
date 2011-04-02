@@ -1,5 +1,10 @@
 <?php
 
+function prackShowExceptionsErrorHandler( $errno, $errstr, $errfile = null, $errline = null, $errcontext = null )
+{
+	throw new ErrorException( $errstr, 0, $errno, $errfile, $errline );
+}
+
 // TODO: Document!
 # Rack::ShowExceptions catches all exceptions raised from the app it
 # wraps.  It shows a useful backtrace with the sourcefile and
@@ -27,15 +32,19 @@ class Prack_ShowExceptions
 	}
 	
 	// TODO: Document!
-	function __construct( $middleware_app )
+	function __construct( $middleware_app, $php_error_level = null )
 	{
-		$this->middleware_app = $middleware_app;
-		$this->template       = self::template();
+		$this->middleware_app  = $middleware_app;
+		$this->template        = self::template();
+		$this->php_error_level = $php_error_level;
 	}
 	
 	// TODO: Document!
 	public function call( &$env )
 	{
+		if ( isset( $this->php_error_level ) )
+			set_error_handler ( 'prackShowExceptionsErrorHandler', $this->php_error_level );
+		
 		try
 		{
 			$response = $this->middleware_app->call( $env );
@@ -43,12 +52,16 @@ class Prack_ShowExceptions
 		catch ( Exception $e )
 		{ 
 			$backtrace = $this->pretty( $env, $e );
-			return array(
+			$response  = array(
 			  500,
 			  array( 'Content-Type' => 'text/html', 'Content-Length' => strlen( join( '', $backtrace ) ) ),
 			  $backtrace
 			);
 		}
+		
+		if ( isset( $this->php_error_level ) )
+			restore_error_handler();
+		
 		return $response;
 	}
 	
@@ -64,17 +77,17 @@ class Prack_ShowExceptions
 		{
 			// PHPUnit's stack traces are ridiculous. The regexp match here removes those lines from consideration.
 			// This avoids a lot of file IO, since lines from the files aren't loaded.
-			if ( !isset( $line[ 'file' ] ) || !isset( $line[ 'line' ] ) || preg_match( '/PHPUnit|phpunit/', $line[ 'file' ] ) )
+			if ( !isset( $line[ 'file' ] ) || !isset( $line[ 'line' ] ) || preg_match( '/PHPUnit|phpunit/', (string)@$line[ 'file' ] ) )
 				continue;
-			
-			$frame = new stdClass();
-			
-			$frame->filename =      $line[ 'file'     ];
-			$frame->lineno   = (int)$line[ 'line'     ];
-			$frame->function =      $line[ 'function' ];
 			
 			try
 			{
+				$frame = new stdClass();
+			
+				$frame->filename =      $line[ 'file'     ];
+				$frame->lineno   = (int)$line[ 'line'     ];
+				$frame->function =      $line[ 'function' ];
+				
 				$lineno = $frame->lineno - 1;
 				$lines  = Prb_IO::withFile( $frame->filename, Prb_IO_File::NO_CREATE_READ )->readlines();
 				
