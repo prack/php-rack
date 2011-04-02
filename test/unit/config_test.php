@@ -17,9 +17,9 @@ class Prack_ConfigTest extends PHPUnit_Framework_TestCase
 		
 		$callback = array( $this, 'onConfig' );
 		$middleware_app = Prack_Builder::domain()
-		  ->using( 'Prack_Lint'          )->build()
-		  ->using( 'Prack_ContentLength' )->build()
-		  ->using( 'Prack_Config'        )->withCallback( $callback )->build()
+		  ->using( 'Prack_Lint'          )->push()
+		  ->using( 'Prack_ContentLength' )->push()
+		  ->using( 'Prack_Config'        )->withCallback( $callback )->push()
 		  ->run( $echo )
 		->toMiddlewareApp();
 		
