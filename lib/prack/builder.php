@@ -39,25 +39,7 @@ class Prack_Builder
 	// TODO: Document!
 	public function map( $path, $callback = null )
 	{
-		$stack_keys = array_keys( $this->stack );
-		$last_key   = array_pop( $stack_keys );
-		
-		$last = null;
-		if ( $last_key !== null )
-			$last = &$this->stack[ $last_key ];
-		
-		if ( $last && $last[ 'type' ] == 'assoc' )
-		{
-			$child = new Prack_Builder( $path, $this, $callback );
-			$last[ 'values' ][ $path ] = $child;
-		}
-		else
-		{
-			array_push( $this->stack, array( 'type' => 'assoc', 'values' => array() ) );
-			return $this->map( $path, $callback );
-		}
-		
-		return $child;
+		return new Prack_Builder( $path, $this );
 	}
 	
 	// TODO: Document!
@@ -71,24 +53,17 @@ class Prack_Builder
 		
 		array_push( $this->stack, $middleware_app );
 		
-		return is_null( $this->parent ) ? $this : $this->parent;
+		return $this;
 	}
 	
 	// TODO: Document!
 	public function toMiddlewareApp()
 	{
-		$stack_keys = array_keys( $this->stack );
-		$last_key   = array_pop( $stack_keys );
-		
-		$last = null;
-		if ( $last_key !== null )
-			$last = &$this->stack[ $last_key ];
-		
+		$last = &$this->lastStackItem();
 		if ( is_array( $last ) && $last[ 'type' ] == 'assoc' )
-		{
-			$this->stack[ $last_key ] = Prack_URLMap::with( $last[ 'values' ] );
-			$last = &$this->stack[ $last_key ];
-		}
+			$last = Prack_URLMap::with( $last[ 'values' ] );
+		else if ( !( $last instanceof Prack_I_MiddlewareApp ) )
+			throw new RuntimeException( 'you must specify exactly one run directive OR map urls within a given builder' );
 		
 		static $callback = null;
 		if ( is_null( $callback ) )
@@ -101,12 +76,31 @@ class Prack_Builder
 			   return $reflection->newInstanceArgs( $args );'
 			);
 		
+		$stack_keys = array_keys( $this->stack );
+		array_pop( $stack_keys );
+		
 		$middleware_app = $last;
 		foreach( array_reverse( $stack_keys ) as $key )
 		{
-			$specification = $this->stack[ $key ][ 'values' ];
-			array_unshift( $specification, $middleware_app );
-			$middleware_app = call_user_func_array( $callback, $specification );
+			$specification = $this->stack[ $key ];
+			if ( !is_array( $specification ) )
+				throw new RuntimeException( 'you must specify exactly one run directive OR map urls within a given builder' );
+			
+			array_unshift( $specification[ 'values' ], $middleware_app );
+			$middleware_app = call_user_func_array( $callback, $specification[ 'values' ] );
+		}
+		
+		return $middleware_app;
+	}
+	
+	// TODO: Document!
+	public function endMap() {
+		$middleware_app = $this->toMiddlewareApp();
+		
+		if ( $this->parent )
+		{
+			$this->parent->registerMapping( $this->path, $middleware_app );
+			return $this->parent;
 		}
 		
 		return $middleware_app;
@@ -150,7 +144,7 @@ class Prack_Builder
 	}
 	
 	// TODO: Document!
-	public function build()
+	public function push()
 	{
 		if ( is_null( $this->fi_class ) )
 			throw new Prb_Exception_Argument( 'attempt to specify middleware app failed: you must first provide the middleware app class with using' );
@@ -161,7 +155,7 @@ class Prack_Builder
 		if ( isset( $this->fi_callback ) && !is_callable( $this->fi_callback ) )
 			throw new Prb_Exception_Callback( 'callback specified in middleware app specification is not actually callable: ' );
 		
-		$this->specify( $this->fi_class, $this->fi_args, $this->fi_callback );
+		$this->pushSpecification( $this->fi_class, $this->fi_args, $this->fi_callback );
 		$this->resetFluentInterface();
 		
 		return $this;
@@ -174,7 +168,23 @@ class Prack_Builder
 	}
 	
 	// TODO: Document!
-	private function specify( $class, $args, $callback )
+	public function registerMapping( $path, $middleware_app )
+	{
+		$last = &$this->lastStackItem();
+		
+		if ( isset( $last ) && !is_array( $last ) )
+			throw new RuntimeException( 'you must specify exactly one run directive OR map urls within a given builder' );
+		else if ( !is_array( $last ) || $last[ 'type' ] !== 'assoc' )
+		{
+			array_push( $this->stack, array( 'type' => 'assoc', 'values' => array() ) );
+			return $this->registerMapping( $path, $middleware_app );
+		}
+		
+		$last[ 'values' ][ $path ] = $middleware_app;
+	}
+	
+	// TODO: Document!
+	public function pushSpecification( $class, $args, $callback )
 	{
 		array_push( $this->stack, array( 'type' => 'indexed', 'values' => array( $class, $args, $callback ) ) );
 	}
@@ -187,4 +197,16 @@ class Prack_Builder
 		$this->fi_callback = null;
 	}
 	
+	// TODO: Document!
+	private function &lastStackItem()
+	{
+		$stack_keys = array_keys( $this->stack );
+		$last_key   = array_pop( $stack_keys );
+		
+		$last = null;
+		if ( $last_key !== null )
+			$last = &$this->stack[ $last_key ];
+		
+		return $last;
+	}
 }

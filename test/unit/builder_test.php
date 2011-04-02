@@ -59,8 +59,12 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		$middleware_app = Prack_Builder::domain()
 		  ->map( '/' )
 		    ->run( new Prack_Test_Echo( 200, array(), array( 'root' ) ) )
+		  ->endMap()
+		
 		  ->map( '/sub' )
 		    ->run( new Prack_Test_Echo( 200, array(), array( 'sub'  ) ) )
+		  ->endMap()
+		
 		->toMiddlewareApp();
 		
 		$this->assertEquals( 'root', Prack_Mock_Request::with( $middleware_app )->get( '/'    )->getBody() );
@@ -75,9 +79,10 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	public function It_doesn_t_dupe_env_even_when_mapping()
 	{
 		$middleware_app = Prack_Builder::domain()
-		  ->using( 'Prack_Test_NothingMiddleware' )->build()
+		  ->using( 'Prack_Test_NothingMiddleware' )->push()
 		  ->map( '/' )
 		    ->run( new Prack_Test_Echo( 200, array(), array( 'root' ), '$env[ "new_key" ] = "new_value";' ) )
+		  ->endMap()
 		->toMiddlewareApp();
 		
 		$this->assertEquals( 'root', Prack_Mock_Request::with( $middleware_app )->get( '/' )->getBody() );
@@ -94,7 +99,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	public function It_chains_apps_by_default()
 	{
 		$middleware_app = Prack_Builder::domain()
-		  ->using( 'Prack_ShowExceptions' )->build()
+		  ->using( 'Prack_ShowExceptions' )->push()
 		  ->run( new Prack_Test_Echo( 200, array(), array( 'root' ), 'throw new Exception( "bzzzt" );' ) )
 		->toMiddlewareApp();
 		
@@ -112,7 +117,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	{
 		$middleware_app = Prack_Builder::domain();
 		$middleware_app
-		  ->using( 'Prack_ShowExceptions' )->build()
+		  ->using( 'Prack_ShowExceptions' )->push()
 		  ->run( new Prack_Test_Echo( 200, array(), array( 'root' ), 'throw new Exception( "bzzzt" );' ) );
 		
 		$this->assertTrue( Prack_Mock_Request::with( $middleware_app )->get( '/' )->isServerError() );
@@ -147,8 +152,8 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	{
 		$callback = create_function( '$username,$password', 'return "secret" == $password;' );
 		$builder
-		  ->using( 'Prack_ShowExceptions' )->build()
-		  ->using( 'Prack_Auth_Basic' )->withArgs( null )->andCallback( $callback )->build()
+		  ->using( 'Prack_ShowExceptions' )->push()
+		  ->using( 'Prack_Auth_Basic' )->withArgs( null )->andCallback( $callback )->push()
 		  ->run( new Prack_Test_Echo( 200, array(), array( 'Hi Boss' ) ) );
 	}
 	
@@ -160,7 +165,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	public function It_has_explicit_toMiddlewareApp()
 	{
 		$middleware_app = Prack_Builder::domain()
-		  ->using( 'Prack_ShowExceptions' )->build()
+		  ->using( 'Prack_ShowExceptions' )->push()
 		  ->run( new Prack_Test_Echo( 200, array(), array( 'root' ), 'throw new Exception( "bzzzt" );' ) )
 		->toMiddlewareApp();
 		
@@ -177,7 +182,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 	public function It_should_initialize_apps_once()
 	{
 		$middleware_app = Prack_Builder::domain()
-		  ->using( 'Prack_ShowExceptions' )->build()
+		  ->using( 'Prack_ShowExceptions' )->push()
 		  ->run( new Prack_Test_AppClass() )
 		->toMiddlewareApp();
 		
@@ -195,7 +200,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		try
 		{
 			Prack_Builder::domain()
-			  ->build();
+			  ->push();
 		} catch ( Exception $e1 ) {}
 		
 		if ( isset( $e1 ) )
@@ -206,7 +211,7 @@ class Prack_BuilderTest extends PHPUnit_Framework_TestCase
 		try
 		{
 			Prack_Builder::domain()
-			  ->using( 'Prack_Test_Echo' )->withCallback( array( $this, 'nonexistantFunction' ) )->build();
+			  ->using( 'Prack_Test_Echo' )->withCallback( array( $this, 'nonexistantFunction' ) )->push();
 		} catch ( Exception $e2 ) {}
 		
 		if ( isset( $e2 ) )
