@@ -117,4 +117,18 @@ class Prack_FileTest extends PHPUnit_Framework_TestCase
 		$this->assertTrue( method_exists( $body, 'toPath' ) );
 		$this->assertEquals( $path, $body->toPath() );
 	} // It should return bodies that respond to toPath
+	
+	/**
+	 * It should respond to toPath
+	 *
+	 * The functionality tested here pertains to Prack_Sendfile.
+	 *
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_respond_to_toPath()
+	{
+		$middleware_app = Prack_File::with( dirname( __FILE__ ) );
+		$this->assertTrue( method_exists( $middleware_app, 'toPath' ) );
+	} // It should respond to toPath
 }

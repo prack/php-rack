@@ -54,6 +54,7 @@ Fully-tested and Production Ready
 * <tt>NullLogger</tt>: no-op logger. eats log messages.
 * <tt>RewindableInput</tt>: adds rewindability to any stream
 * <tt>Runtime</tt>: records the runtime of a partial or full stack of middleware apps
+* <tt>Sendfile</tt>: mod_sendfile support
 * <tt>ShowExceptions</tt>: catches uncaught exceptions and show them as pretty HTML with context
 * <tt>Static</tt>: static asset server
 * <tt>URLMap</tt>: used by Builder to map middleware (stacks) to a URL endpoints

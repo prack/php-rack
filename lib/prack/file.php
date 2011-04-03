@@ -141,12 +141,7 @@ class Prack_File
 	{
 		return $this->path;
 	}
-	
-	// TODO: Document!
-	public function toPath()
-	{
-		return $this->path();
-	}
+	public function toPath() { return $this->path(); }
 	
 	// TODO: Document!
 	public function setPath( $path )
