@@ -34,6 +34,7 @@ Progress
 Fully-tested and Production Ready
 ---------------------------------
 
+* <tt>Arachnid</tt>: cute ascii art a la <tt>Rack::Lobster</tt> _(use with showexceptions!)_
 * <tt>Auth_Basic</tt>: basic (login/password) HTTP authentication
 * <tt>Auth_Digest</tt>: digest (md5-based) HTTP authentication
 * <tt>Builder</tt>: fluent interface for building middleware app stacks in a domain
@@ -81,7 +82,6 @@ To Do
 * Sessions
 * Cookies
 * Multipart-form-data processing
-* Prack Attack (Rack Lobster analog)
 * Everything else in Ruby Rack :)
 
 Running Tests
