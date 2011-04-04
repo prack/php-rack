@@ -209,4 +209,36 @@ class Prack_UtilsTest extends PHPUnit_Framework_TestCase
 		else
 			$this->fail( "Expected exception on nested query building." );
 	} // It should build nested query strings correctly
+	
+	/**
+	 * It should figure out which encodings are acceptable
+	 * @author Joshua Morris
+	 * @test
+	 */
+	public function It_should_figure_out_which_encodings_are_acceptable()
+	{
+		$this->assertEquals( null, $this->aeHelper( array(),           array(array('x', 1))          ));
+		$this->assertEquals( null, $this->aeHelper( array('identity'), array(array('identity', 0.0)) ));
+		$this->assertEquals( null, $this->aeHelper( array('identity'), array(array('*', 0.0))        ));
+		
+		$this->assertEquals( 'identity', $this->aeHelper( array('identity'), array(array('compress', 1.0),array('gzip', 1.0)) ));
+		
+		$this->assertEquals( 'compress', $this->aeHelper( array('compress','gzip','identity'), array(array('compress',1.0),array('gzip',1.0)) ));
+		$this->assertEquals( 'gzip',     $this->aeHelper( array('compress','gzip','identity'), array(array('compress',0.5),array('gzip',1.0)) ));
+		
+		$this->assertEquals( 'identity', $this->aeHelper( array('foo','bar','identity'), array()                                   ));
+		$this->assertEquals( 'foo',      $this->aeHelper( array('foo','bar','identity'), array(array('*',1.0))                     ));
+		$this->assertEquals( 'bar',      $this->aeHelper( array('foo','bar','identity'), array(array('*',1.0),array('foo',0.9))    ));
+		                                                                                       
+		$this->assertEquals( 'identity', $this->aeHelper( array('foo','bar','identity'), array(array('foo',0),array('bar',0))      ));
+		$this->assertEquals( 'identity', $this->aeHelper( array('foo','bar','identity'), array(array('*',0),array('identity',0.1)) ));
+	} // It should figure out which encodings are acceptable
+	
+	/**
+	 * @callback
+	 */
+	public function aeHelper( $a, $b )
+	{
+		return Prack_Utils::singleton()->selectBestEncoding( $a, $b );
+	}
 }

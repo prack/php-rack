@@ -349,7 +349,71 @@ class Prack_Utils
 		return $params;
 	}
 	
-		/**
+	// TODO: Document!
+	public function selectBestEncoding( $available_encodings, $accept_encoding )
+	{
+		# http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+		
+		$expanded_accept_encoding = array();
+		foreach ( $accept_encoding as $ae )
+		{
+			list( $encoding, $q ) = $ae;
+			
+			$intermediate = array();
+			if ( $encoding == '*' )
+			{
+				$gathered = array();
+				foreach( $accept_encoding as $ae )
+					array_push( $gathered, $ae[ 0 ] );
+				
+				$intermediate = array_diff( $available_encodings, $gathered );
+				foreach ( $intermediate as $key => $_encoding )
+					$intermediate[ $key ] = array( $_encoding, $q );
+			}
+			else
+				$intermediate = array( array( $encoding, $q ) );
+			
+			array_push( $expanded_accept_encoding, $intermediate );
+		}
+		
+		$accumulator = array();
+		foreach ( $expanded_accept_encoding as $list )
+			$accumulator = array_merge( $accumulator, $list );
+		
+		$expanded_accept_encoding = $accumulator;
+		
+		$proxies = array();
+		foreach ( $expanded_accept_encoding as $encoding_candidate )
+			array_push( $proxies, -$encoding_candidate[ 1 ] );
+		
+		asort( $proxies, SORT_NUMERIC );
+		
+		// Workaround for PHP's arbitrary ordering of same-valued elements.
+		$encoding_candidates = array();
+		foreach( array_unique( $proxies ) as $negative_q )
+		{
+			$keys = array_keys( $proxies, $negative_q );
+			sort( $keys );
+			foreach( $keys as $key )
+				array_push( $encoding_candidates, $expanded_accept_encoding[ $key ][ 0 ] );
+		}
+		
+		if ( !( in_array( 'identity', $encoding_candidates ) ) )
+			array_push( $encoding_candidates, 'identity' );
+		
+		$invalid_candidates = array();
+		foreach( $expanded_accept_encoding as $aea )
+			if ( $aea[ 1 ] == 0.0 )
+				array_push( $invalid_candidates, $aea[ 0 ] );
+		
+		$encoding_candidates = array_diff( $encoding_candidates, $invalid_candidates );
+		$intersection        = array_intersect( $encoding_candidates, $available_encodings  );
+		$winner              = reset( $intersection );
+		
+		return $winner;
+	}
+
+	/**
 	 * Recursively removes 'type' and 'values' keys from parsed params.
 	 * 
 	 * This function removes query-processing information from an array, leaving
