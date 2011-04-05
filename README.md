@@ -44,6 +44,7 @@ Fully-tested and Production Ready
 * <tt>Config</tt>: allows environment configuration before running middleware apps
 * <tt>ContentLength</tt>: ensures a response has a proper Content-Length header
 * <tt>ContentType</tt>: ensures a response has a proper Content-Type header
+* <tt>Deflater<sup>*deflater</sup></tt>: gzip- and deflate-encoded responses via middleware
 * <tt>ETag</tt>: checksums a page's contents
 * <tt>File</tt>: serve static files via Prack
 * <tt>Head</tt>: removes body from response for requests using HEAD method
@@ -56,11 +57,15 @@ Fully-tested and Production Ready
 * <tt>RewindableInput</tt>: adds rewindability to any stream
 * <tt>Runtime</tt>: records the runtime of a partial or full stack of middleware apps
 * <tt>Sendfile</tt>: mod_sendfile support
-* <tt>ShowExceptions</tt>: catches uncaught exceptions and show them as pretty HTML with context
+* <tt>ShowExceptions</tt>: catches uncaught exceptions/errors and show them as pretty HTML with context
 * <tt>Static</tt>: static asset server
 * <tt>URLMap</tt>: used by Builder to map middleware (stacks) to a URL endpoints
 * <tt>Utils_HeaderHash</tt>: case-insensitive, multiple-value supporting assoc array wrapper
 * <tt>Interfaces</tt>: MiddlewareApp
+
+<sup>*deflater</sup> PHP's <tt>ob\_gzhandler</tt> works just fine, but it relies on global state
+in <tt>$\_SERVER</tt>, namely the <tt>HTTP\_ACCEPT_ENCODING</tt> header. This is why global state
+is bad--it removes the possibility of doing things in a self-contained way.
 
 Works perfectly, but Lacks a Feature or Two
 -------------------------------------------
@@ -69,7 +74,7 @@ Works perfectly, but Lacks a Feature or Two
 * <tt>Lint</tt>: Ensures response sanity. (pending</tt>: sessions)
 * <tt>Request</tt>: Actual request (pending</tt>: multipart form data)
 * <tt>Response</tt>: Actual response, delegates some methods (pending</tt>: cookie management)
-* <tt>Utils</tt>: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending</tt>: multipart, cookies, encoding selection)
+* <tt>Utils</tt>: This is gonna have a lot of stuff in it, some of which comes natively from PHP (pending</tt>: multipart, cookies)
 
 Works, but isn't properly/entirely tested
 -----------------------------------------
