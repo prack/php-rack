@@ -1,17 +1,212 @@
+Related Projects
+================
+
+The other two projects related to php-rack ("Prack") are:
+
+* <tt>livesite</tt>: A website running on Prack. \([repo](https://github.com/prack/livesite)\)
+* <tt>php-ruby</tt>: Used internally (and minimally) by Prack to simplify some routines.
+\([repo](https://github.com/prack/php-rb)\)
+
+I'm putting these at the top of this README in the hopes that they get some traffic. The livesite
+is a wonderful way to understand Prack.
+
 Prack
 =====
 
-Prack is Ruby's Rack ported to PHP 5.2+, designed against Ruby Rack's own test suite.
+php-rack ("Prack") is a _partial_, conceptual port of Ruby's Rack. It does differ in some key
+ways, as explained below in "Differences from Rack." However, it allows coders to structure
+their code similarly to Rack application stacks. Future versions of Prack will hopefully
+bring it more in line with Rack's core functionality. You can learn more about Rack on
+[its homepage](http://rack.rubyforge.org/ "Rack Homepage").
 
-See Prack's [livesite](http://github.com/prack/livesite) for a demo! _Prack is very
-well tested and probably suited for your next project!_
-
-You can learn more about Rack on [its homepage](http://rack.rubyforge.org/ "Rack Homepage").
-The webserver interface specification upon which Rack and Prack are built is 
+The Rack webserver interface
+specification, upon which Rack and Prack are built, is
 [here](http://rack.rubyforge.org/doc/SPEC.html "Rack Specification").
 
-Dependencies
-============
+Overview
+========
+
+Anyone familiar with Ruby Rack will see similarities in this explanation.
+
+Basically, all code used by Prack implements the interface <tt>Prack\_I_MiddlewareApp</tt>,
+which defines one function:
+
+	public function call( $env );
+
+This function takes one argument <tt>$env</tt>, which is passed by reference, and contains
+all data extracted from the request. Literally everything--cookies, request headers, server
+environment--goes into <tt>$env</tt>. You _can_ still use superglobals, but not doing so
+is highly recommended, as Prack's middleware ignores them.
+
+Middleware apps must always, without exception, return an array of three elements:
+
+1. status code (an integer)
+2. response headers (an associative array<sup>*array</sup>)
+3. the response body (one of: string, array of strings, or Prb\_I\_Enumerable<sup>*prb</sup>)
+
+Because we have a standard interface with one function <tt>call</tt> which returns an array,
+we are able to chain middleware applications together:
+
+	         -> ┌──────────────────┐ -> ┌────────────┐
+	  server    │ prack_auth_basic │    │ controller │
+	         <- └──────────────────┘ <- └────────────┘
+
+Middleware apps typically call the next app in the chain thusly:
+
+	list( $status, $headers, $body ) = $this->middleware_app->call( $env );
+
+within their own call method. The <tt>$middleware_app</tt> property is set upon object
+construction. An astute reader might ask "OK, great, so how does this stack get built?"
+For this task, we have a custom middleware app called <tt>Builder</tt>, which is used
+to construct a domain. A properly configured virtual host serving Prack code routes all
+incoming requests through <tt>rackup.php</tt>, which would have code like this for the
+above-depicted stack:
+
+	// Hypothetical rackup.php:
+	
+	include "lib/php-rack/autoload.php";
+	include "lib/php-ruby/autoload.php";
+	include "lib/myproject/autoload.php";
+	
+	function onAuthBasicAuthenticate( $username, $password )
+	{
+		return ( $password == 'secret' );
+	}
+	
+	// Build our domain at root-level (mapped to '/' in our website)
+	$domain = Prack_Builder::domain()
+	  ->using( 'Prack_Auth_Basic' )->withArgs( 'Admin Area' )->andCallback( 'onAuthBasicAuthenticate' )->push()
+	  ->run( new Controller() );
+	
+	// Our builder implements Prack_I_MiddlewareApp.
+	list( $status, $headers, $body ) = $domain->call( $env );
+	
+	// Handling the response:
+	$modphp_compat = Prack_ModPHP_Compat::singleton();
+	$env           = $modphp_compat->extractEnv( $_SERVER );
+	
+	$modphp_compat->render( $domain->call( $env ) );
+
+Prack has tons of useful middleware. For a complete list, see "Prack Implementation."
+
+Writing your own Prack-compatible Middleware Apps
+=================================================
+
+Continuing with the above example, we're gonna need to write the 'controller' middleware.
+
+Obviously, for 'Controller', we're gonna have to write the class:
+
+	class Controller
+	  implements Prack_I_MiddlewareApp
+	{
+		private $message;
+		
+		function __construct( $message = 'Hello there!' )
+		{
+			$this->message = $message;
+		}
+		
+		public function call( &$env )
+		{
+			return array( 200, array( 'Content-Type' => 'text/html' ), array( $this->message ) );
+		}
+	}
+
+<tt>Controller</tt> is invoked at the end of our middleware stack. If it had another middleware
+app to call, it would be constructed thusly:
+
+	class Controller
+	  implements Prack_I_MiddlewareApp
+	{
+		private $middleware_app;
+		private $message;
+		
+		function __construct( $middleware_app, $message = 'Hello there!' )
+		{
+			$this->middleware_app = $middleware_app;
+			$this->message        = $message;
+		}
+		
+		public function call( &$env )
+		{
+			// Just forward request without modifications:
+			list( $status, $headers, $body ) = $this->middleware_app( $env );
+			
+			// Prack_Response wraps a response and exposes a lot of utility:
+			$response = Prack_Response::with( $body, $status, $headers );
+			if ( $response->get( 'Content-Type' ) == 'text/html' )
+			{
+				if ( $response->isOK() )
+				{
+					$modified_response_body = preg_replace( '/<body>/', '<body>'.$this->message, $response->getBody(), 1 );
+					$body                   = array( $modified_response_body );
+				}
+				else if ( $response->isForbidden() )
+					$body = array( 'Fine, then.' ); // Nuke the callee's response for snark!
+				else
+					$body = array( $response->getBody() );
+				
+				// Prack_Response gets and sets headers case-insensitively:
+				$response->set( 'content-length', (string)strlen( $body[ 0 ] ) );
+			}
+			
+			return $response->finish(); // converts response object to expected array.
+		}
+	}
+
+And our rackup.php would have this modification:
+
+	// Build our domain at root-level (mapped to '/' in our website)
+	$domain = Prack_Builder::domain()
+	  ->using( 'Prack_Auth_Basic' )->withArgs( 'Admin Area' )->andCallback( 'onAuthBasicAuthenticate' )->push()
+	  ->using( 'Controller'       )->withArgs( 'This is my message!' )->push()
+	  ->run( new WhatControllerCalls() );
+
+With the resulting middleware stack:
+
+	         -> ┌──────────────────┐ -> ┌────────────┐ -> ┌─────────────────────┐
+	  server    │ prack_auth_basic │    │ controller │    │ whatcontrollercalls │
+	         <- └──────────────────┘ <- └────────────┘ <- └─────────────────────┘
+
+If it seems weird that we're wrapping the response body in an <tt>array</tt>, it's not:
+we need an array for future compatibility plans. (Objects implementing ArrayAccess will let
+us duck-type responses by treating them as arrays.) Prack\_Response handles <tt>string</tt>
+as the third item in a response <tt>array</tt>, but this functionality is going to be deprecated.
+
+<sup>*array</sup> Response header arrays are key-value pairs of header => value. When a header has multiple
+values, the value is endline-separated, and in the response they are sent as multiple same-named
+headers mapped one to one with the values.
+
+<sup>*prb</sup> php-ruby ("Prb") is a library prack uses internally to simplify its operations. It will
+likely be deprecated at some point in the future. Prb is used mostly for its IO, Logger,
+and Time classes.
+
+Differences from Rack
+=====================
+
+In Ruby's Rack, an 'app' is any callable object. It can be an object instance or anonymous
+function ("lambda")--either way, Ruby's language semantics allow any object with a <tt>call</tt>
+method to be called directly, similar to PHP 5.3's <tt>\_\_invoke</tt>.
+
+In Prack, 'middleware apps' are PHP object instances which implement the interface
+<tt>Prack\_I\_MiddlewareApp</tt>. This means that prack middleware apps are not at all 'callable'
+at an object-level. They are not closures and won't be until Prack is refactored for 5.3+.
+
+Prack is currently a port of Rack's core middleware suite,
+fully tested, with a tiny compatibility layer for PHP code running in <tt>mod\_php</tt>.
+It does not offer handlers for starting servers, since most PHP code already runs in the context
+of a hosting fileserver like Apache, Nginx, or Lighttpd.
+
+Eventually, I hope to implement a daemonized version of Prack a la
+[Appserver-in-PHP](https://github.com/indeyets/appserver-in-php), which will function more like
+Ruby. This will have to be accomplished via forking, and will almost certainly require language
+features present in 5.3+.
+
+Requirements and Dependencies
+=============================
+
+Prack is currently implemented in a way that allows it to run on PHP5.2+. It will eventually be
+restructured for 5.3+, which will cause some notable changes in the codebase.
 
 Prack is built on top of a "Rubification" library called
 [php-ruby](http://github.com/prack/php-rb "Prb Homepage") ("Prb" for short). After a recent
@@ -22,14 +217,17 @@ use of the following Prb functionality internally:
 * Logger
 * IO
 
-But not so much of the other stuff anything else. This means that you don't need to know
-anything about Prb, except maybe its logger.
+But not so much of anything else. This means that you don't need to know anything about Prb,
+except maybe its logger. Documentation forthcoming for <tt>Prb_Logger</tt>. Feel free to look
+at its Prb implementation.
 
-Check out Prack's [livesite](http://github.com/prack/livesite) for info on the logger.
+_Plans are to ditch this library for the 5.3+ rewrite. It is not my goal to make PHP behave like
+Ruby. However, 5.2's SPL is not suitable for Prack._
 
+Prack Implementation
+====================
 
-Progress
-========
+The following core Rack components have been, are being, or will not be ported to Prack.
 
 Fully-tested and Production Ready
 ---------------------------------
@@ -61,7 +259,7 @@ Fully-tested and Production Ready
 * <tt>Static</tt>: static asset server
 * <tt>URLMap</tt>: used by Builder to map middleware (stacks) to a URL endpoints
 * <tt>Utils_HeaderHash</tt>: case-insensitive, multiple-value supporting assoc array wrapper
-* <tt>Interfaces</tt>: MiddlewareApp
+* Interfaces: <tt>MiddlewareApp</tt>
 
 <sup>*deflater</sup> PHP's <tt>ob\_gzhandler</tt> works just fine, but it relies on global state
 in <tt>$\_SERVER</tt>, namely the <tt>HTTP\_ACCEPT_ENCODING</tt> header. This is why global state
@@ -81,13 +279,22 @@ Works, but isn't properly/entirely tested
 
 * <tt>ModPHP_Compat</tt>: jiggers <tt>$\_SERVER</tt> into an acceptable request environment for Prack; renders response arrays
 
-To Do
------
+Currently Unimplemented
+-----------------------
 
 * Sessions
 * Cookies
 * Multipart-form-data processing
-* Everything else in Ruby Rack :)
+* <tt>Handler</tt>: This application server code isn't yet included in Prack.
+* <tt>Recursive</tt>: Relies too much on lambdas to be viable for Prack in 5.2.
+
+Will Not Implement
+------------------
+
+_These middleware apps do not make sense in a PHP context._
+
+* <tt>Lock</tt>: PHP doesn't have multithreading.
+* <tt>Reloader</tt>: PHP doesn't let developers undefine classes. Reloading will be accomplished another way.
 
 Running Tests
 =============
@@ -105,32 +312,6 @@ To run tests:
 Of course, you must have PHPUnit installed, preferably alongside XDebug. I'm using
 PHPUnit 3.5.
 
-
-Getting started
-===============
-
-All Prack applications must conform to the <tt>Prack\_I_MiddlewareApp</tt> interface,
-which is stupidly easy to implement:
-
-	interface Prack_I_MiddlewareApp
-	{
-		public function call( &$env ); // $env is an array
-	}
-
-I put this interface in place for 5.2-compatibility, but when Prack is reworked for 5.3,
-this interface may be dropped for <tt>__invoke</tt> and straightup lambdas (like Rack).
-
-<tt>call</tt> MUST return an <tt>array</tt> as its response with the following items, in this order:
-
-<pre>
-1. status  - integer
-2. headers - array
-3. body    - string, array of strings, or a Prb_I_Enumerable
-</pre>
-
-
-See Prack's [livesite](http://github.com/prack/livesite) for a working demo app!
-
 If all this confuses you, grok the [Rack spec](http://rack.rubyforge.org/doc/SPEC.html "Rack Interface Specification").
 Prack works exactly the same way, even in the environment variable names it uses.
 
@@ -138,13 +319,8 @@ Prack works exactly the same way, even in the environment variable names it uses
 Things I'm would love guidance on/help with
 ===========================================
 
-* String encoding in Ruby is very different from PHP. I'm not sure about all the ramifications
-of this.
-* PHP runs in the context of the Apache web server. Ruby is much more general-purpose than PHP,
-so Prack doesn't yet have a way to start up a server. This will probably involve a custom SAPI,
-which I totally don't want to write. In the context of Apache PHP, we can get there 80% of the
-way with a compatibility layer: currently, ModPHP_Compat.
-
+* String encoding in Ruby is different from PHP. I'm not sure if this is an issue.
+* Writing an application server wrapper for PHP and Prack.
 
 Acknowledgments
 ===============
