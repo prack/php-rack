@@ -1,5 +1,10 @@
 PHPUnit 3.5.11 by Sebastian Bergmann.
 
+Prack_Arachnid
+ [x] It should look like a spider
+ [x] It should be flippable
+ [x] It should provide crashing for testing purposes
+
 Prack_Auth_Basic
  [x] It should challenge correctly when no credentials are specified
  [x] It should rechallenge if incorrect credentials are specified
@@ -71,6 +76,16 @@ Prack_ContentType
  [x] It should not change Content Type if it is already set
  [x] It should detect Content Type case insensitive
 
+Prack_Deflater
+ [x] It should be able to deflate bodies that respond to each
+ [x] It should be able to deflate string bodies
+ [x] It should be able to gzip bodies that respond to each
+ [x] It should be able to fallback to no deflation
+ [x] It should be able to skip when there is no response entity body
+ [x] It should handle the lack of an acceptable encoding
+ [x] It should handle gzip resource with Last Modified header
+ [x] It should do nothing when no transform Cache Control directive present
+
 Prack_Directory
  [x] It should serve directory indices
  [x] It should pass to app if file found
@@ -91,6 +106,7 @@ Prack_File
  [x] It should 404 if it can t find the file
  [x] It should detect Prb Exception System
  [x] It should return bodies that respond to toPath
+ [x] It should respond to toPath
 
 Prack_Head
  [x] It should pass GET  POST  PUT  DELETE  OPTIONS  TRACE requests
@@ -235,8 +251,17 @@ Prack_Runtime
  [x] It should allow a suffix to be set
  [x] It should allow multiple timers to be set
 
+Prack_Sendfile
+ [x] It does nothing when no X Sendfile Type header present
+ [x] It sets X Sendfile response header and discards body
+ [x] It sets X Lighttpd Send File response header and discards body
+ [x] It sets X Accel Redirect response header and discards body
+ [x] It writes to rack error when no X Accel Mapping is specified
+ [x] It does nothing when body does not respond to toPath
+
 Prack_ShowExceptions
  [x] It catches exceptions
+ [x] It optionally handles PHP errors  rethrowing them as exceptions
 
 Prack_Static
  [x] It serves files
@@ -271,6 +296,7 @@ Prack_Utils
  [x] It should parse nested query strings correctly
  [x] It should build query strings correctly
  [x] It should build nested query strings correctly
+ [x] It should figure out which encodings are acceptable
 
 
 Writing code coverage data to XML file, this may take a moment.
