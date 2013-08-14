@@ -1,9 +1,15 @@
+Development Notice
+==================
+
+php-rack is no longer actively maintained. I'm leaving it here as a curiosity--please feel free
+to fork it and improve on it if it fits your needs.
+
+
 Related Projects
 ================
 
-The other two projects related to php-rack ("Prack") are:
+The other project related to php-rack ("Prack") is:
 
-* <tt>livesite</tt>: A website running on Prack. \([repo](https://github.com/prack/livesite)\)
 * <tt>php-ruby</tt>: Used internally (and minimally) by Prack to simplify some routines.
 \([repo](https://github.com/prack/php-rb)\)
 
